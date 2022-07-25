@@ -1,0 +1,28 @@
+[package]
+name = "ardwino"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ufmt = "0.1.0"
+nb = "0.1.2"
+embedded-hal = "0.2.3"
+atmega-hal = {path = "avr-hal/mcu/atmega-hal", features = ["atmega32u4"]}
+avr-progmem = "0.3.1"
+avr-device = "0.3.4"
+
+[build-dependencies]
+bindgen = "0.60.1"
+cmake = "0.1"
+
+[profile.dev]
+panic = "abort"
+lto = true
+opt-level = "z"
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+debug = false
+lto = true
+opt-level = "z"

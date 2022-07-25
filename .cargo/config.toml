@@ -1,0 +1,11 @@
+[build]
+target = ".cargo/targets/avr-atmega16u2.json"
+
+[env]
+MCU = "atmega16u2"
+
+[target.'cfg(target_arch = "avr")']
+runner = "sh upload_image.sh"
+
+[unstable]
+build-std = ["core"]
