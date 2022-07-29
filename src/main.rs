@@ -2,13 +2,13 @@
 #![no_main]
 
 mod lufa;
+mod panic;
+mod usb;
 
-use core::panic::PanicInfo;
-use atmega_hal::{clock, Peripherals, pins, Wdt};
-use atmega_hal::delay::Delay;
-use embedded_hal::prelude::_embedded_hal_blocking_delay_DelayMs;
-use crate::lufa::bindings::{LUFA_get_line_encoding};
-use crate::lufa::wrapper::Endpoint_ConfigureEndpoint;
+use atmega_hal::{Peripherals, Wdt};
+use crate::lufa::bindings::{get_state, LUFA_Endpoint_ClearIN, LUFA_Endpoint_ClearOUT, LUFA_Endpoint_Full, LUFA_Endpoint_IsOUTReceived, LUFA_Endpoint_Read_Stream_LE, LUFA_Endpoint_Select, LUFA_Endpoint_WaitUntilReady, LUFA_Endpoint_Write_Stream_LE};
+use crate::lufa::wrapper::get_line_encoding;
+use crate::usb::constants::DEVICE_STATE_CONFIGURED;
 
 #[no_mangle]
 pub extern fn main() -> !{
@@ -24,47 +24,33 @@ pub extern fn main() -> !{
     };
 
     loop{
-        unsafe{ lufa::bindings::CDC_Task(); } //tmp
-        unsafe{ lufa::bindings::LUFA_USB_Task(); }
+        unsafe{
+            cdc_task();
+            //lufa::bindings::CDC_Task();
+            lufa::bindings::LUFA_USB_Task();
+        }
     }
 }
 
+unsafe fn cdc_task() -> (){
+    let line_encoding = get_line_encoding();
 
-#[panic_handler]
-unsafe fn panic_handler(_reason: &PanicInfo) -> !{
-    let ic = Peripherals::steal();
-    let pins = pins!(ic);
-    let mut delay = Delay::<clock::MHz16>::new();
-    let mut tx_pin = pins.pd5.into_output();
-    loop{
-        tx_pin.toggle();
-        delay.delay_ms(500 as u16);
+    if get_state() != DEVICE_STATE_CONFIGURED || line_encoding.BaudRateBPS == 0{
+        return
     }
-}
+    LUFA_Endpoint_Select(0x00 | 4); //rx ep
+    if LUFA_Endpoint_IsOUTReceived(){
+        let mut read: [u8; 50] = [0; 50];
+        LUFA_Endpoint_Read_Stream_LE(read.as_mut_ptr(), 50);
+        LUFA_Endpoint_ClearOUT();
 
-#[no_mangle]
-pub unsafe extern "C" fn EVENT_USB_Device_ConfigurationChanged() {
-    Endpoint_ConfigureEndpoint(0x80 | 2, 3, 8, 1).unwrap();
-    Endpoint_ConfigureEndpoint(0x80 | 3, 2, 16, 1).unwrap();
-    Endpoint_ConfigureEndpoint(0x80 | 4, 2, 16, 1).unwrap();
-    let mut line_encoding_struct = * LUFA_get_line_encoding();
-    line_encoding_struct.BaudRateBPS = 0;
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn EVENT_USB_Device_Connect(){
-    let ic = Peripherals::steal();
-    let pins = pins!(ic);
-
-    let mut tx = pins.pd5.into_output();
-    tx.set_low();
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn EVENT_USB_Device_Disconnect(){
-    let ic = Peripherals::steal();
-    let pins = pins!(ic);
-
-    let mut tx = pins.pd5.into_output();
-    tx.set_high();
+        LUFA_Endpoint_Select(0x80 | 3); //tx ep
+        LUFA_Endpoint_Write_Stream_LE(read.as_ptr(), read.len() as u16);
+        let is_full = LUFA_Endpoint_Full();
+        LUFA_Endpoint_ClearIN();
+        if is_full {
+            LUFA_Endpoint_WaitUntilReady();
+            LUFA_Endpoint_ClearIN();
+        }
+    }
 }

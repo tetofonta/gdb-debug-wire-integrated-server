@@ -33,40 +33,76 @@ bool LUFA_Endpoint_ConfigureEndpoint(const uint8_t address, const uint8_t type, 
     return Endpoint_ConfigureEndpoint(address, type, size, banks);
 }
 
+void LUFA_Endpoint_ClearSETUP(void){
+    Endpoint_ClearSETUP();
+}
+
+void LUFA_Endpoint_ClearStatusStage(void){
+    Endpoint_ClearStatusStage();
+}
+
+void LUFA_Endpoint_ClearOUT(void){
+    Endpoint_ClearOUT();
+}
+
+void LUFA_Endpoint_ClearIN(void){
+    Endpoint_ClearIN();
+}
+
+void LUFA_Endpoint_Write_Control_Stream_LE(const uint8_t * data, uint16_t size){
+    Endpoint_Write_Control_Stream_LE(data, size);
+}
+
+void LUFA_Endpoint_Read_Control_Stream_LE(uint8_t * data_dest, uint16_t len){
+    Endpoint_Read_Control_Stream_LE(data_dest, len);
+}
+
+void LUFA_EP_write_line_encoding(void){
+    Endpoint_Write_Control_Stream_LE(&LineEncoding, sizeof(CDC_LineEncoding_t));
+}
+
+void LUFA_EP_read_line_encoding(void){
+    Endpoint_Read_Control_Stream_LE(&LineEncoding, sizeof(CDC_LineEncoding_t));
+}
+
+void LUFA_Endpoint_Select(uint8_t ep){
+    Endpoint_SelectEndpoint(ep);
+}
+
+bool LUFA_Endpoint_IsOUTReceived(void){
+    return Endpoint_IsOUTReceived();
+}
+
+void LUFA_Endpoint_Write_Stream_LE(const uint8_t * data, uint16_t len){
+    Endpoint_Write_Stream_LE(data, len, NULL);
+}
+
+void LUFA_Endpoint_Read_Stream_LE(uint8_t * data, uint16_t len){
+    Endpoint_Read_Stream_LE(data, len, NULL);
+}
+
+bool LUFA_Endpoint_Full(){
+    return Endpoint_BytesInEndpoint() == CDC_TXRX_EPSIZE;
+}
+
+void LUFA_Endpoint_WaitUntilReady(void){
+    Endpoint_WaitUntilReady();
+}
+
+uint8_t get_state(void){
+    return USB_DeviceState;
+}
+
+void set_state(uint8_t new_state){
+    USB_DeviceState = new_state;
+}
+
+
 
 extern void EVENT_USB_Device_Connect(void);
 extern void EVENT_USB_Device_Disconnect(void);
 extern void EVENT_USB_Device_ConfigurationChanged(void);
-
-void EVENT_USB_Device_ControlRequest(void) {
-    switch (USB_ControlRequest.bRequest) {
-        case CDC_REQ_GetLineEncoding:
-            if (USB_ControlRequest.bmRequestType == (REQDIR_DEVICETOHOST | REQTYPE_CLASS | REQREC_INTERFACE)) {
-                Endpoint_ClearSETUP();
-
-                /* Write the line coding data to the control endpoint */
-                Endpoint_Write_Control_Stream_LE(&LineEncoding, sizeof(CDC_LineEncoding_t));
-                Endpoint_ClearOUT();
-            }
-            break;
-        case CDC_REQ_SetLineEncoding:
-            if (USB_ControlRequest.bmRequestType == (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) {
-                Endpoint_ClearSETUP();
-                Endpoint_Read_Control_Stream_LE(&LineEncoding, sizeof(CDC_LineEncoding_t));
-                if(LineEncoding.BaudRateBPS == 19200 ){
-                    DDRD |= (1 << 4);
-                }
-                Endpoint_ClearIN();
-            }
-            break;
-        case CDC_REQ_SetControlLineState:
-            if (USB_ControlRequest.bmRequestType == (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) {
-                Endpoint_ClearSETUP();
-                Endpoint_ClearStatusStage();
-            }
-            break;
-    }
-}
+extern void EVENT_USB_Device_ControlRequest(void);
 
 /** Function to manage CDC data transmission and reception to and from the host. */
 void CDC_Task(void) {
@@ -87,7 +123,7 @@ void CDC_Task(void) {
         Endpoint_SelectEndpoint(CDC_TX_EPADDR);
 
         /* Write the String to the Endpoint */
-        Endpoint_Write_Stream_LE(ReportString, strlen(ReportString), NULL);
+        LUFA_Endpoint_Write_Stream_LE(ReportString, strlen(ReportString));
 
         /* Remember if the packet to send completely fills the endpoint */
         bool IsFull = (Endpoint_BytesInEndpoint() == CDC_TXRX_EPSIZE);
@@ -110,7 +146,10 @@ void CDC_Task(void) {
     Endpoint_SelectEndpoint(CDC_RX_EPADDR);
 
     /* Throw away any received data from the host */
-    if (Endpoint_IsOUTReceived())
+    if (Endpoint_IsOUTReceived()){
+        PORTD |= (1 << 5);
+        while(1);
         Endpoint_ClearOUT();
+    }
 }
 

@@ -12,9 +12,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "alloc-no-stdlib"
+version = "2.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "35ef4730490ad1c4eae5c4325b2a95f521d023e5c885853ff7aca0a6a1631db3"
+
+[[package]]
 name = "ardwino"
 version = "0.1.0"
 dependencies = [
+ "alloc-no-stdlib",
  "atmega-hal",
  "avr-device",
  "avr-progmem",

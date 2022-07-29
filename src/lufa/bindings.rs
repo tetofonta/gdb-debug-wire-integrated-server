@@ -272,5 +272,53 @@ extern "C" {
     pub fn LUFA_Endpoint_ConfigureEndpoint(address: u8, type_: u8, size: u16, banks: u8) -> bool;
 }
 extern "C" {
+    pub fn LUFA_Endpoint_ClearSETUP();
+}
+extern "C" {
+    pub fn LUFA_Endpoint_ClearStatusStage();
+}
+extern "C" {
+    pub fn LUFA_Endpoint_ClearOUT();
+}
+extern "C" {
+    pub fn LUFA_Endpoint_ClearIN();
+}
+extern "C" {
+    pub fn LUFA_Endpoint_Write_Control_Stream_LE(data: *const u8, size: u16);
+}
+extern "C" {
+    pub fn LUFA_Endpoint_Read_Control_Stream_LE(data_dest: *mut u8, len: u16);
+}
+extern "C" {
+    pub fn LUFA_EP_write_line_encoding();
+}
+extern "C" {
+    pub fn LUFA_EP_read_line_encoding();
+}
+extern "C" {
+    pub fn LUFA_Endpoint_Select(ep: u8);
+}
+extern "C" {
+    pub fn LUFA_Endpoint_IsOUTReceived() -> bool;
+}
+extern "C" {
+    pub fn LUFA_Endpoint_Write_Stream_LE(data: *const u8, len: u16);
+}
+extern "C" {
+    pub fn LUFA_Endpoint_Read_Stream_LE(data: *mut u8, len: u16);
+}
+extern "C" {
+    pub fn LUFA_Endpoint_Full() -> bool;
+}
+extern "C" {
+    pub fn LUFA_Endpoint_WaitUntilReady();
+}
+extern "C" {
+    pub fn get_state() -> u8;
+}
+extern "C" {
+    pub fn set_state(new_state: u8);
+}
+extern "C" {
     pub fn CDC_Task();
 }

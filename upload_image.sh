@@ -8,6 +8,7 @@ avr-size --mcu="${MCU}" -C "${ELF_FILE}"
 avr-objdump -d "${ELF_FILE}" > "${OUT_DIR}/asm.txt"
 
 avr-objcopy -O ihex -R .eeprom -R .fuse -R .lock -R .signature "${ELF_FILE}" "${OUT_DIR}/${IMAGE_BASE_NAME}.flash.hex"
+avr-objcopy -O binary -R .eeprom -R .fuse -R .lock -R .signature "${ELF_FILE}" "${OUT_DIR}/${IMAGE_BASE_NAME}.flash.bin"
 avr-objcopy -O ihex -j .eeprom "${ELF_FILE}" "${OUT_DIR}/${IMAGE_BASE_NAME}.eep.hex"
 avr-objcopy -O ihex -j .fuse "${ELF_FILE}" "${OUT_DIR}/${IMAGE_BASE_NAME}.fuses.hex"
 
