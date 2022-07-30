@@ -305,7 +305,7 @@ extern "C" {
     pub fn LUFA_Endpoint_Write_Stream_LE(data: *const u8, len: u16);
 }
 extern "C" {
-    pub fn LUFA_Endpoint_Read_Stream_LE(data: *mut u8, len: u16);
+    pub fn LUFA_Endpoint_Read_Stream_LE(data: *mut u8, len: u16) -> u16;
 }
 extern "C" {
     pub fn LUFA_Endpoint_Full() -> bool;
@@ -321,4 +321,13 @@ extern "C" {
 }
 extern "C" {
     pub fn CDC_Task();
+}
+extern "C" {
+    pub fn LUFA_Endpoint_read_byte() -> u8;
+}
+extern "C" {
+    pub fn LUFA_Endpoint_write_byte(data: u8);
+}
+extern "C" {
+    pub fn LUFA_Endpoint_BytesInEndpoints() -> u16;
 }

@@ -1,10 +1,10 @@
-use crate::lufa::wrapper::{endpoint_configure, get_last_request_header, get_line_encoding};
+use crate::usb::lufa::wrapper::{endpoint_configure, get_last_request_header, get_line_encoding};
 use crate::usb::cdc_constants;
 use atmega_hal::{Peripherals, pins};
-use crate::lufa::bindings::{LUFA_Endpoint_ClearIN, LUFA_Endpoint_ClearOUT, LUFA_Endpoint_ClearSETUP, LUFA_Endpoint_ClearStatusStage, LUFA_EP_read_line_encoding, LUFA_EP_write_line_encoding, USB_Request_Header_t};
+use crate::usb::lufa::bindings::{LUFA_Endpoint_ClearIN, LUFA_Endpoint_ClearOUT, LUFA_Endpoint_ClearSETUP, LUFA_Endpoint_ClearStatusStage, LUFA_EP_read_line_encoding, LUFA_EP_write_line_encoding, USB_Request_Header_t};
 
 #[no_mangle]
-pub unsafe extern "C" fn EVENT_USB_Device_ConfigurationChanged() {
+pub extern "C" fn EVENT_USB_Device_ConfigurationChanged() {
     endpoint_configure(0x80 | 2, 3, 8, 1).unwrap();
     endpoint_configure(0x80 | 3, 2, 16, 1).unwrap();
     endpoint_configure(0x00 | 4, 2, 16, 1).unwrap();

@@ -43,11 +43,14 @@ void LUFA_EP_read_line_encoding(void);
 void LUFA_Endpoint_Select(uint8_t ep);
 bool LUFA_Endpoint_IsOUTReceived(void);
 void LUFA_Endpoint_Write_Stream_LE(const uint8_t * data, uint16_t len);
-void LUFA_Endpoint_Read_Stream_LE(uint8_t * data, uint16_t len);
-bool LUFA_Endpoint_Full();
+uint16_t LUFA_Endpoint_Read_Stream_LE(uint8_t * data, uint16_t len);
+bool LUFA_Endpoint_Full(void);
 void LUFA_Endpoint_WaitUntilReady(void);
 uint8_t get_state(void);
 void set_state(uint8_t new_state);
 void CDC_Task(void);
+uint8_t LUFA_Endpoint_read_byte(void);
+void LUFA_Endpoint_write_byte(uint8_t data);
+uint16_t LUFA_Endpoint_BytesInEndpoints(void);
 
 #endif //ARDWINO_BINDINGS_H

@@ -13,6 +13,6 @@ fn main() {
         .expect("Unable to generate bindings");
 
     bindings
-        .write_to_file("./src/lufa/bindings.rs")
+        .write_to_file("./src/usb/lufa/bindings.rs")
         .expect("Couldn't write bindings!");
 }

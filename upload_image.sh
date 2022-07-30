@@ -34,3 +34,4 @@ fi
 
 # shellcheck disable=SC2090
 avrdude $ARG_LIST
+avr-size --mcu="${MCU}" -C "${ELF_FILE}"

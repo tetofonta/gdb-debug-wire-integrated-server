@@ -77,11 +77,13 @@ void LUFA_Endpoint_Write_Stream_LE(const uint8_t * data, uint16_t len){
     Endpoint_Write_Stream_LE(data, len, NULL);
 }
 
-void LUFA_Endpoint_Read_Stream_LE(uint8_t * data, uint16_t len){
-    Endpoint_Read_Stream_LE(data, len, NULL);
+uint16_t LUFA_Endpoint_Read_Stream_LE(uint8_t * data, uint16_t len){
+    uint16_t processed = 0;
+    while(Endpoint_Read_Stream_LE(data, len, &processed) == ENDPOINT_RWSTREAM_IncompleteTransfer);
+    return processed;
 }
 
-bool LUFA_Endpoint_Full(){
+bool LUFA_Endpoint_Full(void){
     return Endpoint_BytesInEndpoint() == CDC_TXRX_EPSIZE;
 }
 
@@ -97,59 +99,71 @@ void set_state(uint8_t new_state){
     USB_DeviceState = new_state;
 }
 
+uint8_t LUFA_Endpoint_read_byte(void){
+    return Endpoint_Read_8();
+}
+
+void LUFA_Endpoint_write_byte(uint8_t data){
+    return Endpoint_Write_8(data);
+}
+
+uint16_t LUFA_Endpoint_BytesInEndpoints(void){
+    return Endpoint_BytesInEndpoint();
+}
 
 
 extern void EVENT_USB_Device_Connect(void);
 extern void EVENT_USB_Device_Disconnect(void);
 extern void EVENT_USB_Device_ConfigurationChanged(void);
 extern void EVENT_USB_Device_ControlRequest(void);
+extern void EVENT_USB_Device_UnhandledControlRequest(void);
 
-/** Function to manage CDC data transmission and reception to and from the host. */
-void CDC_Task(void) {
-
-    char *ReportString = NULL;
-    static bool ActionSent = false;
-
-    /* Device must be connected and configured for the task to run */
-    if (USB_DeviceState != DEVICE_STATE_Configured)
-        return;
-
-    ReportString = "tetonta\r\n";
-
-    /* Flag management - Only allow one string to be sent per action */
-    if ((ReportString != NULL) && (ActionSent == false) && LineEncoding.BaudRateBPS) {
-
-        /* Select the Serial Tx Endpoint */
-        Endpoint_SelectEndpoint(CDC_TX_EPADDR);
-
-        /* Write the String to the Endpoint */
-        LUFA_Endpoint_Write_Stream_LE(ReportString, strlen(ReportString));
-
-        /* Remember if the packet to send completely fills the endpoint */
-        bool IsFull = (Endpoint_BytesInEndpoint() == CDC_TXRX_EPSIZE);
-
-        /* Finalize the stream transfer to send the last packet */
-        Endpoint_ClearIN();
-
-        /* If the last packet filled the endpoint, send an empty packet to release the buffer on
-         * the receiver (otherwise all data will be cached until a non-full packet is received) */
-        if (IsFull) {
-            /* Wait until the endpoint is ready for another packet */
-            Endpoint_WaitUntilReady();
-
-            /* Send an empty packet to ensure that the host does not buffer data sent to it */
-            Endpoint_ClearIN();
-        }
-    }
-
-    /* Select the Serial Rx Endpoint */
-    Endpoint_SelectEndpoint(CDC_RX_EPADDR);
-
-    /* Throw away any received data from the host */
-    if (Endpoint_IsOUTReceived()){
-        PORTD |= (1 << 5);
-        while(1);
-        Endpoint_ClearOUT();
-    }
-}
+///** Function to manage CDC data transmission and reception to and from the host. */
+//void CDC_Task(void) {
+//
+//    char *ReportString = NULL;
+//    static bool ActionSent = false;
+//
+//    /* Device must be connected and configured for the task to run */
+//    if (USB_DeviceState != DEVICE_STATE_Configured)
+//        return;
+//
+//    ReportString = "tetonta\r\n";
+//
+//    /* Flag management - Only allow one string to be sent per action */
+//    if ((ReportString != NULL) && (ActionSent == false) && LineEncoding.BaudRateBPS) {
+//
+//        /* Select the Serial Tx Endpoint */
+//        Endpoint_SelectEndpoint(CDC_TX_EPADDR);
+//
+//        /* Write the String to the Endpoint */
+//        LUFA_Endpoint_Write_Stream_LE(ReportString, strlen(ReportString));
+//
+//        /* Remember if the packet to send completely fills the endpoint */
+//        bool IsFull = (Endpoint_BytesInEndpoint() == CDC_TXRX_EPSIZE);
+//
+//        /* Finalize the stream transfer to send the last packet */
+//        Endpoint_ClearIN();
+//
+//        /* If the last packet filled the endpoint, send an empty packet to release the buffer on
+//         * the receiver (otherwise all data will be cached until a non-full packet is received) */
+//        if (IsFull) {
+//            /* Wait until the endpoint is ready for another packet */
+//            Endpoint_WaitUntilReady();
+//
+//            /* Send an empty packet to ensure that the host does not buffer data sent to it */
+//            Endpoint_ClearIN();
+//        }
+//    }
+//
+//    /* Select the Serial Rx Endpoint */
+//    Endpoint_SelectEndpoint(CDC_RX_EPADDR);
+//
+//    /* Throw away any received data from the host */
+//    if (Endpoint_IsOUTReceived()){
+//        PORTD |= (1 << 5);
+//        while(1);
+//        Endpoint_ClearOUT();
+//    }
+//}
 
