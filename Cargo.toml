@@ -9,7 +9,7 @@ nb = "0.1.2"
 embedded-hal = "0.2.3"
 atmega-hal = {path = "avr-hal/mcu/atmega-hal", features = ["atmega32u4"]}
 avr-progmem = "0.3.1"
-avr-device = "0.3.4"
+avr-device = {version="0.3.4", features=["rt"]}
 alloc-no-stdlib = "2.0.3"
 
 [build-dependencies]
