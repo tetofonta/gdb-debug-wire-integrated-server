@@ -5,21 +5,20 @@
 #include <avr/interrupt.h>
 
 #include <usb_cdc.h>
+#include <open_drain_serial.h>
 #include <debug_wire.h>
 
 void cdc_task(void);
 
-open_drain_pin_t dw_pin;
 int main(void) {
     DDRB |= (1 << PINB7);
     PORTB |= (1 << PINB7);
 
-    usb_cdc_init();
-    open_drain_init(&dw_pin, &PIND, (1 << PIND7));
-    open_drain_set_high(&dw_pin);
+    DDRD &= ~(1 << PIND7);
+    PORTD |= (1 << PIND7);
 
-    dw_init(&dw_pin, 8000000);
-    dw_set_speed(128);
+    usb_cdc_init();
+    od_uart_init(62500);
 
     sei();
 
@@ -30,14 +29,25 @@ int main(void) {
 }
 
 uint8_t buffer[5];
-uint8_t * a;
+uint8_t *a;
+
 void cdc_task(void) {
     if (USB_DeviceState != DEVICE_STATE_Configured)
         return;
 
     uint16_t len = usb_cdc_read(buffer, 5);
-    if(len > 0) {
-        dw_send(buffer[0]);
-        dw_recv_enable();
+    if (len > 0) {
+        if (buffer[0] == 1) {
+            usb_cdc_write(&uart_rx_buffer_pointer, 1);
+            usb_cdc_write(uart_rx_buffer, uart_rx_buffer_pointer);
+        } else if (buffer[0] == 2) {
+            od_uart_tx(0x82);
+            while(od_uart_busy());
+            od_uart_init(125000);
+        } else {
+            usb_cdc_write(buffer, len);
+            od_uart_tx(buffer[0]);
+        }
     }
+
 }

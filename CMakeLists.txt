@@ -79,6 +79,7 @@ set(LUFA_SRC
         )
 
 include_directories(${LUFA_ROOT_PATH} src/Config src/include)
+
 add_compile_definitions(F_CPU=${F_CPU})
 add_compile_definitions(F_USB=${F_USB})
 add_compile_definitions(DMBS_ARCH_${ARCH})
@@ -95,11 +96,19 @@ set(CMAKE_CXX_COMPILER avr-g++)
 
 set(CMAKE_C_FLAGS "-pipe -mrelax -fno-jump-tables -g${DEBUG_FORMAT} -fpack-struct -mmcu=${MCU} -fshort-enums -fno-inline-small-functions -g${DEBUG_LEVEL} -Wall -fno-strict-aliasing -funsigned-char -funsigned-bitfields -ffunction-sections -O${OPTIMIZATION} -Wstrict-prototypes")
 set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -fno-exceptions -fno-threadsafe-statics")
-set(CMAKE_ASM_FLAGS "-x assembler-with-cpp")
+set(CMAKE_ASM_FLAGS "${CMAKE_C_FLAGS} -x assembler-with-cpp")
 set(CMAKE_LINK_LIBRARY_FLAG "-lm -Wl,--cref -Wl,--gc-sections -Wl,--relax -mmcu=${MCU}")
 
 add_library(cdc STATIC ${LUFA_SRC_USB})
 
-add_executable(ardwino src/Descriptors.c src/main.c src/usb/usb_events.c src/usb/usb_cdc.c src/dw/debug_wire.c src/include/debug_wire.h src/dw/open_drain.c)
+add_executable(ardwino
+        src/Descriptors.c
+        src/main.c
+        src/usb/usb_events.c
+        src/usb/usb_cdc.c
+        src/dw/debug_wire.c
+        src/include/debug_wire.h
+        src/dw/open_drain_serial.c
+        )
 target_link_libraries(ardwino cdc)
 add_custom_target(upload COMMAND MCU=${MCU} sh ${CMAKE_SOURCE_DIR}/upload_image.sh ${CMAKE_BINARY_DIR}/ardwino DEPENDS ardwino)
