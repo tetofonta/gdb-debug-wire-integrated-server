@@ -35,7 +35,7 @@
  *  the device's capabilities and functions.
  */
 
-#include "Descriptors.h"
+#include "include/Descriptors.h"
 
 
 /** Device descriptor structure. This descriptor, located in FLASH memory, describes the overall

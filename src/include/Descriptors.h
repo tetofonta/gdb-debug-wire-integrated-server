@@ -37,9 +37,9 @@
 #define _DESCRIPTORS_H_
 
 /* Includes: */
-#include <Drivers/USB/USB.h>
+#include "../../lufa/LUFA/Drivers/USB/USB.h"
 
-#include <avr/pgmspace.h>
+#include "../../../../../../../usr/avr/include/avr/pgmspace.h"
 
 /* Macros: */
 /** Endpoint address of the CDC device-to-host notification IN endpoint. */

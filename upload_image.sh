@@ -2,7 +2,7 @@
 set -e
 ELF_FILE="$1"
 OUT_DIR=$(dirname "$ELF_FILE")
-IMAGE_BASE_NAME="${CARGO_PKG_NAME}-${CARGO_PKG_VERSION}-${RUSTUP_TOOLCHAIN}"
+IMAGE_BASE_NAME="ardwino"
 
 avr-size --mcu="${MCU}" -C "${ELF_FILE}"
 avr-objdump -d "${ELF_FILE}" > "${OUT_DIR}/asm.txt"
@@ -11,13 +11,6 @@ avr-objcopy -O ihex -R .eeprom -R .fuse -R .lock -R .signature "${ELF_FILE}" "${
 avr-objcopy -O binary -R .eeprom -R .fuse -R .lock -R .signature "${ELF_FILE}" "${OUT_DIR}/${IMAGE_BASE_NAME}.flash.bin"
 avr-objcopy -O ihex -j .eeprom "${ELF_FILE}" "${OUT_DIR}/${IMAGE_BASE_NAME}.eep.hex"
 avr-objcopy -O ihex -j .fuse "${ELF_FILE}" "${OUT_DIR}/${IMAGE_BASE_NAME}.fuses.hex"
-
-echo "Upload? [Y/n]"
-read -r DO_UPLOAD
-
-case $DO_UPLOAD in
-  [nN] ) exit;;
-esac
 
 ARG_LIST="-c ft232r -p ${MCU} -U flash:w:${OUT_DIR}/${IMAGE_BASE_NAME}.flash.hex"
 if [ ! "$(wc -c "${OUT_DIR}/${IMAGE_BASE_NAME}.eep.hex" | cut -d ' ' -f1)" = "0" ]; then

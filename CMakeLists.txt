@@ -52,7 +52,7 @@ set(LUFA_SRC_USBCLASS_HOST
         ${LUFA_ROOT_PATH}/Drivers/USB/Class/Host/RNDISClassHost.c
         ${LUFA_ROOT_PATH}/Drivers/USB/Class/Host/StillImageClassHost.c
         )
-set(LUFA_SRC_USB ${LUFA_SRC_USB_COMMON} ${LUFA_SRC_USB_HOST} ${LUFA_SRC_USB_DEVICE})
+set(LUFA_SRC_USB ${LUFA_SRC_USB_COMMON} ${LUFA_SRC_USB_HOST} ${LUFA_SRC_USB_DEVICE} src/usb/usb_cdc.c)
 list(SORT LUFA_SRC_USB)
 
 set(LUFA_SRC_USBCLASS ${LUFA_SRC_USBCLASS_DEVICE} ${LUFA_SRC_USBCLASS_HOST})
@@ -78,7 +78,7 @@ set(LUFA_SRC
         ${LUFA_SRC_PLATFORM}
         )
 
-include_directories(${LUFA_ROOT_PATH} lufa_rust_binding/Config)
+include_directories(${LUFA_ROOT_PATH} src/Config src/include)
 add_compile_definitions(F_CPU=${F_CPU})
 add_compile_definitions(F_USB=${F_USB})
 add_compile_definitions(DMBS_ARCH_${ARCH})
@@ -98,4 +98,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -fno-exceptions -fno-threadsafe-statics")
 set(CMAKE_ASM_FLAGS "-x assembler-with-cpp")
 set(CMAKE_LINK_LIBRARY_FLAG "-lm -Wl,--cref -Wl,--gc-sections -Wl,--relax -mmcu=${MCU}")
 
-add_library(cdc STATIC ${LUFA_SRC_USB} lufa_rust_binding/Descriptors.c lufa_rust_binding/bindings.c)
+add_library(cdc STATIC ${LUFA_SRC_USB})
+
+add_executable(ardwino src/Descriptors.c src/main.c src/usb/usb_events.c src/usb/usb_cdc.c src/dw/debug_wire.c src/include/debug_wire.h src/dw/open_drain.c)
+target_link_libraries(ardwino cdc)
+add_custom_target(upload COMMAND MCU=${MCU} sh ${CMAKE_SOURCE_DIR}/upload_image.sh ${CMAKE_BINARY_DIR}/ardwino DEPENDS ardwino)
