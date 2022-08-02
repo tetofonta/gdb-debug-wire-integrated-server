@@ -7,10 +7,13 @@
 #define TIMER_IRQ_ENABLE() TIMSK1 |= (1 << OCIE1A)
 #define TIMER_IRQ_DISABLE() TIMSK1 &= ~(1 << OCIE1A)
 #define TIMER_IRQ_CLEAR() TIFR1 = 0
-
 #define FE_IRQ_ENABLE() EIMSK |= (1 << INT7)
 #define FE_IRQ_DISABLE() EIMSK &= ~(1 << INT7)
 #define FE_IRQ_CLEAR() EIFR &= ~(1 << INT7)
+
+#define _OD_UART_BUSY     (flags & OD_UART_FLAG_BUSY_MASK)
+#define _OD_UART_WRT      (flags & OD_UART_FLAG_WRT_MASK)
+#define _OD_UART_AVAIL    (flags & OD_UART_FLAG_AVAIL_MASK)
 
 volatile register uint8_t uart_data asm("r5");
 volatile register uint8_t flags asm("r6"); // (nextval) (busy) (wrt) (avail) (cnt3)(cnt2)(cnt1)(cnt0)
@@ -43,21 +46,21 @@ void od_uart_init(uint32_t baud_rate){
     TIMER_IRQ_DISABLE();
 }
 
-uint8_t od_uart_busy(void){
-    return flags & (1 << 6);
+uint8_t od_uart_status(void){
+    return flags & 0xF0;
 }
 
 void od_uart_tx(uint8_t data){
-    if(uart_tx_buffer_full) return;
+    if(OD_UART_TX_FULL()) return;
     uart_tx_buffer_full = 1;
     uart_tx_buffer = data;
 
-    if((flags & (1 << 6)) != 0) return;
+    if(_OD_UART_BUSY) return;
 
     FE_IRQ_DISABLE();
     uart_tx_buffer_full = 0;
     uart_data = uart_tx_buffer;
-    flags |= (1 << 6) | (1 << 5);
+    flags |= OD_UART_FLAG_BUSY_MASK | OD_UART_FLAG_WRT_MASK;
 
     DDRD &= ~(1 << PIND7);
     PORTD |= (1 << PIND7);
@@ -67,20 +70,18 @@ void od_uart_tx(uint8_t data){
 }
 
 ISR(TIMER1_COMPA_vect){
-    register uint8_t value = PIND & (1 << PIND7);
-    PORTB ^= (1 << PINB7);
-
-    if(flags & (1 << 5)){
-        register uint8_t v = ++flags & 15;
+    register uint8_t value = PIND;
+    if(_OD_UART_WRT){
         if ((PORTD ^ flags) & (1 << PIND7) ){
             DDRD ^= (1 << PIND7);
             PORTD ^= (1 << PIND7); //write last calculated value
         }
+        register uint8_t v = ++flags & 15;
         if(v > 9 ){
             flags = 0;
-            if(uart_tx_buffer_full){
+            if(OD_UART_TX_FULL()){
                 uart_data = uart_tx_buffer;
-                flags |= (1 << 6) | (1 << 5);
+                flags |= OD_UART_FLAG_BUSY_MASK | OD_UART_FLAG_WRT_MASK;
                 uart_tx_buffer_full = 0;
             } else {
                 TIMER_IRQ_DISABLE();
@@ -100,9 +101,9 @@ ISR(TIMER1_COMPA_vect){
         register uint8_t v = ++flags & 15;
         if(v <= 9) {
             uart_data >>= 1;
-            uart_data |= value;
+            uart_data |= value & (1 << PIND7);
         } if( v > 9){
-            flags = (1 << 4);
+            flags = OD_UART_FLAG_AVAIL_MASK;
             uart_rx_buffer[uart_rx_buffer_pointer++] = uart_data;
             if(uart_rx_buffer_pointer == OD_UART_RX_BUFFER_SIZE)
                 uart_rx_buffer_pointer = 0;
@@ -115,7 +116,8 @@ ISR(TIMER1_COMPA_vect){
 
 ISR(INT7_vect){
     FE_IRQ_DISABLE();
-    flags = (1 << 6);
+    flags |= OD_UART_FLAG_BUSY_MASK;
+    flags &= ~OD_UART_FLAG_WRT_MASK;
     TIMER_IRQ_ENABLE();
     TCNT1 = OCR1A - 1;
     //asm volatile("jmp __vector_15");

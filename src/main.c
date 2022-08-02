@@ -11,6 +11,8 @@
 void cdc_task(void);
 
 int main(void) {
+    DDRD |= (1 << PIND5);
+
     DDRB |= (1 << PINB7);
     PORTB |= (1 << PINB7);
 
@@ -38,11 +40,11 @@ void cdc_task(void) {
     uint16_t len = usb_cdc_read(buffer, 5);
     if (len > 0) {
         if (buffer[0] == 1) {
-            usb_cdc_write(&uart_rx_buffer_pointer, 1);
-            usb_cdc_write(uart_rx_buffer, uart_rx_buffer_pointer);
+            usb_cdc_write(&OD_UART_AVAILABLE(), 1);
+            usb_cdc_write(OD_UART_DATA_PTR, OD_UART_AVAILABLE());
         } else if (buffer[0] == 2) {
             od_uart_tx(0x82);
-            while(od_uart_busy());
+            while(OD_UART_BUSY());
             od_uart_init(125000);
         } else {
             usb_cdc_write(buffer, len);
