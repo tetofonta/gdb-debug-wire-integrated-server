@@ -1,8 +1,8 @@
 #ifndef _USB_CDC_H_
 #define _USB_CDC_H_
 
-#include <Drivers/USB/USB.h>
-#include <Descriptors.h>
+#include "Drivers/USB/USB.h"
+#include "Descriptors.h"
 #include <avr/wdt.h>
 #include <avr/power.h>
 

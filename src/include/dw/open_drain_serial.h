@@ -7,8 +7,9 @@
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <stddef.h>
 
-#define OD_UART_RX_BUFFER_SIZE 8
+#define OD_UART_RX_BUFFER_SIZE 128
 
 #define OD_UART_FLAG_BUSY_MASK      (1 << 6)
 #define OD_UART_FLAG_WRT_MASK       (1 << 5)
@@ -26,10 +27,21 @@
 
 extern volatile uint8_t uart_tx_buffer_full;
 extern volatile uint8_t uart_rx_buffer_pointer;
-extern uint8_t uart_rx_buffer[8];
+extern uint8_t uart_rx_buffer[OD_UART_RX_BUFFER_SIZE];
 
 uint8_t od_uart_status(void);
 void od_uart_init(uint32_t baud_rate);
-void od_uart_tx(uint8_t data);
+void od_uart_tx_byte(uint8_t data);
+void od_uart_clear(void);
+void od_uart_break(void);
+void od_uart_blank(void);
+
+void od_uart_send(void * data, uint16_t len);
+void od_uart_recv(void * buffer, uint16_t expected_len);
+#define od_uart_discard(n) od_uart_recv(NULL, n)
+
+extern inline void od_uart_irq_rx(uint8_t data);
+extern inline void od_uart_irq_break(void);
+extern inline void od_uart_irq_frame_error(void);
 
 #endif

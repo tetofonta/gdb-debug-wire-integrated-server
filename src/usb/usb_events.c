@@ -1,4 +1,4 @@
-#include <usb_cdc.h>
+#include "usb/usb_cdc.h"
 
 void EVENT_USB_Device_Connect(void) {
     PORTD &= ~(1 << PIND5);

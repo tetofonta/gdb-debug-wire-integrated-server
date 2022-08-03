@@ -1,4 +1,4 @@
-#include <usb_cdc.h>
+#include "usb/usb_cdc.h"
 
 CDC_LineEncoding_t LineEncoding = {.BaudRateBPS = 0,
         .CharFormat  = CDC_LINEENCODING_OneStopBit,

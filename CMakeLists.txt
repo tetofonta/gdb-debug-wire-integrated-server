@@ -5,7 +5,7 @@ set(MCU atmega16u2)
 set(ARCH AVR8)
 set(F_CPU 16000000)
 set(F_USB 16000000)
-set(OPTIMIZATION z)
+set(OPTIMIZATION s)
 
 set(CMAKE_C_FLAGS "")
 
@@ -52,7 +52,7 @@ set(LUFA_SRC_USBCLASS_HOST
         ${LUFA_ROOT_PATH}/Drivers/USB/Class/Host/RNDISClassHost.c
         ${LUFA_ROOT_PATH}/Drivers/USB/Class/Host/StillImageClassHost.c
         )
-set(LUFA_SRC_USB ${LUFA_SRC_USB_COMMON} ${LUFA_SRC_USB_HOST} ${LUFA_SRC_USB_DEVICE} src/usb/usb_cdc.c)
+set(LUFA_SRC_USB ${LUFA_SRC_USB_COMMON} ${LUFA_SRC_USB_HOST} ${LUFA_SRC_USB_DEVICE} src/usb/usb_cdc.c src/include/dw/devices.h)
 list(SORT LUFA_SRC_USB)
 
 set(LUFA_SRC_USBCLASS ${LUFA_SRC_USBCLASS_DEVICE} ${LUFA_SRC_USBCLASS_HOST})
@@ -94,21 +94,34 @@ set(CMAKE_C_COMPILER avr-gcc)
 set(CMAKE_ASM_COMPILER avr-gcc)
 set(CMAKE_CXX_COMPILER avr-g++)
 
-set(CMAKE_C_FLAGS "-pipe -mrelax -fno-jump-tables -g${DEBUG_FORMAT} -Wno-array-bounds -fpack-struct -mmcu=${MCU} -fshort-enums -fno-inline-small-functions -g${DEBUG_LEVEL} -Wall -fno-strict-aliasing -funsigned-char -funsigned-bitfields -ffunction-sections -O${OPTIMIZATION} -Wstrict-prototypes")
+set(CMAKE_C_FLAGS "-pipe -flto -fdata-sections -mrelax -g${DEBUG_FORMAT} -Wno-array-bounds -fpack-struct -mmcu=${MCU} -fshort-enums -fno-inline-small-functions -g${DEBUG_LEVEL} -Wall -fno-strict-aliasing -funsigned-char -funsigned-bitfields -ffunction-sections -O${OPTIMIZATION} -Wstrict-prototypes")
 set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -fno-exceptions -fno-threadsafe-statics")
 set(CMAKE_ASM_FLAGS "${CMAKE_C_FLAGS} -x assembler-with-cpp")
-set(CMAKE_LINK_LIBRARY_FLAG "-lm -Wl,--cref -Wl,--gc-sections -Wl,--relax -mmcu=${MCU}")
+set(CMAKE_LINK_LIBRARY_FLAG "-lm -flto -Wl,--cref -Wl,--gc-sections -Wl,--relax -mmcu=${MCU} -Oz")
 
 add_library(cdc STATIC ${LUFA_SRC_USB})
 
-add_executable(ardwino
-        src/Descriptors.c
+add_library(dw_devices STATIC src/dw/devices.c)
+
+add_executable(ardwino_elf
+        src/usb/Descriptors.c
         src/main.c
         src/usb/usb_events.c
         src/usb/usb_cdc.c
-        src/dw/debug_wire.c
-        src/include/debug_wire.h
-        src/dw/open_drain_serial.c
+        src/dw/debug_wire_ll.c
+        src/include/dw/debug_wire.h
+        src/dw/phisical/open_drain_serial.c
+        src/include/dw/open_drain.h
+        src/panic.c
+        src/include/panic.h
         )
-target_link_libraries(ardwino cdc)
-add_custom_target(upload COMMAND MCU=${MCU} sh ${CMAKE_SOURCE_DIR}/upload_image.sh ${CMAKE_BINARY_DIR}/ardwino DEPENDS ardwino)
+target_link_libraries(ardwino_elf cdc dw_devices)
+
+add_custom_target(ardwino
+        COMMAND avr-objdump -d \"${CMAKE_BINARY_DIR}/ardwino_elf\" > \"${CMAKE_BINARY_DIR}/ardwino-asm.txt\";
+        COMMAND avr-objcopy -O ihex -R .eeprom -R .fuse -R .lock -R .signature \"${CMAKE_BINARY_DIR}/ardwino_elf\" \"${CMAKE_BINARY_DIR}/ardwino.flash.hex\";
+        COMMAND avr-size --mcu="${MCU}" -C \"${CMAKE_BINARY_DIR}/ardwino_elf\";
+        DEPENDS ardwino_elf
+        )
+
+add_custom_target(upload COMMAND avrdude -c ft232r -p ${MCU} -U \"flash:w:${CMAKE_BINARY_DIR}/ardwino.flash.hex\" USES_TERMINAL DEPENDS ardwino)
