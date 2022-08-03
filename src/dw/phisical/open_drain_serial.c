@@ -18,8 +18,9 @@
 #define _OD_UART_WRT      (flags & OD_UART_FLAG_WRT_MASK)
 #define _OD_UART_AVAIL    (flags & OD_UART_FLAG_AVAIL_MASK)
 
-volatile register uint8_t uart_data asm("r5");
-volatile register uint8_t flags asm("r6"); // (nextval) (busy) (wrt) (avail) (cnt3)(cnt2)(cnt1)(cnt0)
+volatile register uint8_t uart_data asm("r2");
+volatile register uint8_t flags asm("r3"); // (nextval) (busy) (wrt) (avail) (cnt3)(cnt2)(cnt1)(cnt0)
+
 volatile uint8_t uart_tx_buffer_full;
 uint8_t  uart_tx_buffer;
 uint8_t  uart_rx_buffer[OD_UART_RX_BUFFER_SIZE];
@@ -37,9 +38,11 @@ static uint8_t _od_uart_calc_prescaler(uint32_t baud_rate){
     return 0;
 }
 
-void od_uart_init(uint32_t baud_rate){
-
+inline void od_uart_init(uint32_t baud_rate){
     //setup counter
+    TIMER_IRQ_DISABLE();
+    FE_IRQ_DISABLE();
+
     TCCR1A = (0 << COM1A0) | (0 << COM1B0) | (0 << WGM10);
     TCCR1B = (1 << WGM12) | (_od_uart_calc_prescaler(baud_rate) << CS10);
     EICRB |= (0 << ISC70);
@@ -51,7 +54,6 @@ void od_uart_init(uint32_t baud_rate){
 
     FE_IRQ_CLEAR();
     FE_IRQ_ENABLE();
-    TIMER_IRQ_DISABLE();
 }
 
 uint8_t od_uart_status(void){
@@ -173,15 +175,15 @@ ISR(TIMER1_COMPA_vect){
             if(uart_rx_buffer_pointer == OD_UART_RX_BUFFER_SIZE)
                 uart_rx_buffer_pointer = 0;
             TIMER_IRQ_DISABLE();
-            FE_IRQ_CLEAR();
-            FE_IRQ_ENABLE();
-            sei();
             if(value & (1 << PIND7))
                 od_uart_irq_rx(uart_data);
             else if (uart_data)
                 od_uart_irq_frame_error();
             else
                 od_uart_irq_break();
+            FE_IRQ_CLEAR();
+            FE_IRQ_ENABLE();
+            sei();
         }
     }
     sei();

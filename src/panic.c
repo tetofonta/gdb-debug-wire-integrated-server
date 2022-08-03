@@ -6,6 +6,9 @@
 #include <avr/interrupt.h>
 #include "panic.h"
 
+volatile register uint8_t uart_data asm("r5");
+volatile register uint8_t flags asm("r6");
+
 __attribute__((noreturn))
 void panic(void){
     cli();

@@ -35,7 +35,14 @@ int main(void) {
 
     usb_cdc_init();
     sei();
+
+    uint16_t pc  = 0;
     MUST_SUCCEED(dw_init(16000000), 1);
+    dw_cmd_reset();
+    dw_cmd_set(DW_CMD_REG_PC, &pc);
+    dw_set_context(DW_GO_CNTX_CONTINUE);
+    dw_cmd_set(DW_CMD_REG_PC, &pc);
+    dw_cmd_go();
 
     for (;;) {
         if((PINB & (1 << PINB6))){
@@ -78,6 +85,9 @@ void cdc_task(void) {
                 dw_cmd_reset(); return;
             case 6:
                 dw_cmd_halt(); return;
+            case 7:
+                dw_cmd(debug_wire_g.cur_divisor);
+                return;
             case 255:
                 usb_cdc_write(&uart_rx_buffer_pointer, 1);
                 usb_cdc_write(uart_rx_buffer, uart_rx_buffer_pointer);
