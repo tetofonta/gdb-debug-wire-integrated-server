@@ -14,7 +14,6 @@ typedef struct debug_wire {
     uint8_t cur_divisor;
 
     uint8_t status;
-    uint8_t flags;
 
     dw_device_definition_t * device;
 } debug_wire_t;
@@ -40,7 +39,7 @@ uint8_t dw_cmd_get_8(uint8_t cmd);
 void dw_cmd_send_multiple(uint8_t command, void * data, uint8_t len);
 
 
-#define dw_cmd(cmd)                     do{ while(OD_UART_TX_FULL()); od_uart_tx_byte(cmd); }while(0);
+#define dw_cmd(cmd)                     od_uart_tx_byte(cmd)
 
 #define DW_CMD_REG_PC                   0x00
 #define DW_CMD_REG_HWBP                 0x01
@@ -89,10 +88,13 @@ uint8_t dw_cmd_set_speed(uint8_t divisor);
 #define dw_cmd_start_sram_cycle()       dw_cmd(DW_CMD_START_SRAM_CYCLE)
 #define dw_cmd_start_sram_cycle_ss()    dw_cmd(DW_CMD_START_SRAM_CYCLE_SS)
 #define dw_cmd_execute_loaded           dw_cmd(DW_CMD_EXECUTE_LOADED_INSTR)
-#define dw_cmd_go()                     dw_cmd(DW_CMD_GO)
 #define dw_cmd_ss()                     dw_cmd(DW_CMD_SS)
+void dw_cmd_go(void);
 
 //contexts
 #define dw_set_context(ctx)             dw_cmd(ctx)
+
+//FULL COMMANDS
+void dw_full_reset(void);
 
 #endif //ARDWINO_DEBUG_WIRE_H

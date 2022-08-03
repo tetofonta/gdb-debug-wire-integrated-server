@@ -8,55 +8,30 @@
 #include <dw/open_drain.h>
 #include <panic.h>
 #include "dw/devices.h"
+#include "user_button.h"
 
-static uint8_t usr_pshbtn_last_state = 0;
-static uint8_t usr_pshbtn_debounce = 0;
-static uint8_t usr_pshbtn_debounce_counter = 0;
-
-ISR(TIMER0_OVF_vect){
-    if(usr_pshbtn_debounce_counter++ == 16) usr_pshbtn_debounce = 0;
-}
+static user_button_state_t rst_button;
 
 void cdc_task(void);
-void usr_pshbtn_reset(void);
 
 int main(void) {
-    DDRB &= (1 << PINB6);
-    PORTB |= (1 << PINB6); //reset button
+    usr_btn_setup();
+    usr_btn_init(&rst_button, &PINB, 6);
 
     DDRD |= (1 << PIND5); //tx led
     DDRD |= (1 << PIND4); //rx led
 
     OD_HIGH(D, 7);
 
-    TCCR0A = 0;
-    TCCR0B = (5 << CS00); //timer for debounce. 255 * (1024/16) us = 16ms
-    TIMSK0 |= (1 << TOIE0);
-
     usb_cdc_init();
     sei();
 
     uint16_t pc  = 0;
     MUST_SUCCEED(dw_init(16000000), 1);
-    dw_cmd_reset();
-    dw_cmd_set(DW_CMD_REG_PC, &pc);
-    dw_set_context(DW_GO_CNTX_CONTINUE);
-    dw_cmd_set(DW_CMD_REG_PC, &pc);
-    dw_cmd_go();
+    dw_full_reset();
 
     for (;;) {
-        if((PINB & (1 << PINB6))){
-            usr_pshbtn_last_state = 1;
-        } else {
-            if(usr_pshbtn_last_state && !usr_pshbtn_debounce){//if falling edge
-                usr_pshbtn_reset();
-                usr_pshbtn_debounce = 1;
-                usr_pshbtn_debounce_counter = 0;
-                TCNT0 = 0;
-            }
-            usr_pshbtn_last_state = 0;
-        }
-
+        usr_btn_task(&rst_button);
         cdc_task();
         USB_USBTask();
     }
@@ -100,6 +75,6 @@ void cdc_task(void) {
     }
 }
 
-void usr_pshbtn_reset(void){
-
+void usr_btn_event(user_button_state_t * btn){
+    dw_full_reset();
 }

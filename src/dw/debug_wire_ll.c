@@ -47,10 +47,9 @@ uint8_t dw_cmd_halt(void){
 
     uint8_t ret;
     od_uart_recv(&ret, 1);
-    if(ret != 0x55){
+    if(ret != 0x55)
         od_uart_recv(&ret, 1);
-        PORTD ^= (1 << PIND4);
-    }
+
     if(ret != 0x55) return 0;
     debug_wire_g.status = DW_STATUS_HALTED;
 
@@ -84,6 +83,11 @@ void dw_cmd_reset(void){
     waiting_break = 1;
     dw_cmd(DW_CMD_RESET);
     while(waiting_break);
+}
+
+void dw_cmd_go(void){
+    dw_cmd(DW_CMD_GO);
+    debug_wire_g.status = DW_STATUS_RUNNING;
 }
 
 inline void od_uart_irq_rx(uint8_t data){}

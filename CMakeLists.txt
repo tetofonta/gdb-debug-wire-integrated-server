@@ -114,7 +114,7 @@ add_executable(ardwino_elf
         src/include/dw/open_drain.h
         src/panic.c
         src/include/panic.h
-        src/dw/debug_wire.c)
+        src/dw/debug_wire.c src/user_button/user_button.c src/include/user_button.h)
 target_link_libraries(ardwino_elf cdc dw_devices)
 
 add_custom_target(ardwino

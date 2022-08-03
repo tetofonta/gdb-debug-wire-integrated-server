@@ -61,7 +61,7 @@ uint8_t od_uart_status(void){
 }
 
 void od_uart_tx_byte(uint8_t data){
-    if(OD_UART_TX_FULL()) return;
+    while(OD_UART_TX_FULL());
     uart_tx_buffer_full = 1;
     uart_tx_buffer = data;
 
