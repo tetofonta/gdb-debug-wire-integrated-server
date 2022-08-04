@@ -45,6 +45,7 @@ uint8_t dw_cmd_halt(void){
     od_uart_clear();
     od_uart_break();
 
+    od_uart_clear();
     uint8_t ret;
     od_uart_recv(&ret, 1);
     if(ret != 0x55)
@@ -60,12 +61,14 @@ uint8_t dw_cmd_halt(void){
 
 uint16_t dw_cmd_get_16(uint8_t cmd){
     uint16_t ret;
+    od_uart_clear();
     dw_cmd(cmd);
     od_uart_recv(&ret, 2);
     return ret;
 }
 uint8_t dw_cmd_get_8(uint8_t cmd){
     uint8_t ret;
+    od_uart_clear();
     dw_cmd(cmd);
     od_uart_recv(&ret, 1);
     return ret;
@@ -102,10 +105,8 @@ void dw_cmd_go(uint8_t is_sw_brkpt){
 
 
 inline void od_uart_irq_rx(uint8_t data){}
-inline void od_uart_irq_frame_error(void){
-
-}
 inline void od_uart_irq_break(void){
+    od_uart_clear();
     dw_init(debug_wire_g.target_frequency);
     od_uart_discard(1);
     dw_cmd_set_speed(debug_wire_g.cur_divisor);

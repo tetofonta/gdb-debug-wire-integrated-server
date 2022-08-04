@@ -43,6 +43,5 @@ void od_uart_recv_be(void * buffer, uint16_t expected_len);
 
 extern inline void od_uart_irq_rx(uint8_t data);
 extern inline void od_uart_irq_break(void);
-extern inline void od_uart_irq_frame_error(void);
 
 #endif

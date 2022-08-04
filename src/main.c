@@ -20,6 +20,10 @@ int main(void) {
 
     DDRD |= (1 << PIND5); //tx led
     DDRD |= (1 << PIND4); //rx led
+    PORTD ^= (1 << PIND4);
+
+    DDRB |= (1 << PINB4) | (1 << PINB7);
+    PORTB |= (1 << PINB4);
 
     OD_HIGH(D, 7);
 
@@ -37,19 +41,20 @@ int main(void) {
     }
 }
 
-uint8_t buffer[5];
-uint8_t *a;
-uint16_t answ;
+uint8_t buffer[32];
 
 void cdc_task(void) {
     if (USB_DeviceState != DEVICE_STATE_Configured)
         return;
 
     uint16_t len = usb_cdc_read(buffer, 5);
+
     if (len > 0) {
         switch (buffer[0]) {
             case 1:
-                debug_wire_halt(); break;
+                debug_wire_halt();
+                PORTD &= ~(1 << PIND4);
+                break;
             case 2:
                 debug_wire_resume(DW_GO_CNTX_CONTINUE); break;
             case 3:
@@ -66,18 +71,26 @@ void cdc_task(void) {
             case 5:
                 dw_cmd_get(DW_CMD_REG_PC);
                 dw_cmd_get(DW_CMD_REG_IR);
+            case 6: {
+                uint8_t len = buffer[1];
+                debug_wire_read_registers(0, len, buffer);
+                usb_cdc_write(buffer, len);
+                break;
+            }
+            case 7:
+                cli();
+                _delay_ms(3000);
+                sei();
+                usb_cdc_write(&uart_rx_buffer_pointer, 1);
+                break;
             case 255:
                 usb_cdc_write(&uart_rx_buffer_pointer, 1);
                 usb_cdc_write(uart_rx_buffer, uart_rx_buffer_pointer);
-                return;
-            default: {
-                return;
-            };
+                break;
         }
-        usb_cdc_write(&answ, 2);
     }
 }
 
 void usr_btn_event(user_button_state_t * btn){
-    debug_wire_device_reset();
+    //debug_wire_device_reset();
 }

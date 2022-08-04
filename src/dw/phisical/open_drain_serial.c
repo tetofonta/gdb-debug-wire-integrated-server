@@ -152,9 +152,8 @@ void od_uart_recv_be(void * buffer, uint16_t expected_len){
     }
 }
 
-#pragma GCC push_options
-#pragma GCC optimize ("Ofast")
-ISR(TIMER1_COMPA_vect){
+
+__attribute__((optimize("-Ofast"))) ISR(TIMER1_COMPA_vect){
     cli();
     register uint8_t value = PIND;
     if(_OD_UART_WRT){
@@ -183,19 +182,20 @@ ISR(TIMER1_COMPA_vect){
         }
     } else {
         register uint8_t v = ++flags & 15;
-        if(v <= 9) {
-            uart_data >>= 1;
-            uart_data |= value & (1 << PIND7);
-        } if( v > 9){
-            flags = OD_UART_FLAG_AVAIL_MASK;
+        PORTB ^= (1 << PINB4);
+        uart_data >>= 1;
+        uart_data |= value & (1 << PIND7);
+        if( v == 8) {
+            flags |= OD_UART_FLAG_AVAIL_MASK;
             uart_rx_buffer[uart_rx_buffer_pointer++] = uart_data;
             if(uart_rx_buffer_pointer == OD_UART_RX_BUFFER_SIZE)
                 uart_rx_buffer_pointer = 0;
+
+        } else if (v > 8){
+            flags &= ~OD_UART_FLAG_BUSY_MASK & 0xF0;
             TIMER_IRQ_DISABLE();
             if(value & (1 << PIND7))
                 od_uart_irq_rx(uart_data);
-            else if (uart_data)
-                od_uart_irq_frame_error();
             else
                 od_uart_irq_break();
             FE_IRQ_CLEAR();
@@ -206,12 +206,14 @@ ISR(TIMER1_COMPA_vect){
     sei();
 }
 
-ISR(INT7_vect){
+__attribute__((optimize("-Ofast"))) ISR(INT7_vect){
     FE_IRQ_DISABLE();
-    flags |= OD_UART_FLAG_BUSY_MASK;
-    flags &= ~OD_UART_FLAG_WRT_MASK;
+    PORTB ^= (1 << PINB7);
+    flags = OD_UART_FLAG_BUSY_MASK;
+
+    TIMER_IRQ_CLEAR();
+    while(TIFR1 & (1 << OCF1A));
+    TIMER_IRQ_CLEAR();
+    PORTB ^= (1 << PINB7);
     TIMER_IRQ_ENABLE();
-    TCNT1 = OCR1A - 1;
-    //asm volatile("jmp __vector_15");
 }
-#pragma GCC pop_options
