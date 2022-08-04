@@ -9,13 +9,24 @@
 #include "open_drain_serial.h"
 #include "devices.h"
 
+#define DW_SW_BRKPT_SIZE 10
+
+typedef struct dw_sw_brkpt{
+    uint16_t address;
+    uint16_t instruction;
+} dw_sw_brkpt_t;
+
 typedef struct debug_wire {
     uint32_t target_frequency;
     uint8_t cur_divisor;
+    uint16_t program_counter;
 
-    uint8_t status;
-
+    uint8_t halted : 1;
+    uint8_t run_timers : 1;
     dw_device_definition_t * device;
+
+    dw_sw_brkpt_t swbrkpt[DW_SW_BRKPT_SIZE];
+    uint8_t swbrkpt_n;
 } debug_wire_t;
 extern debug_wire_t debug_wire_g;
 
@@ -27,9 +38,6 @@ extern debug_wire_t debug_wire_g;
 #define DW_DIVISOR_4                0xA1
 #define DW_DIVISOR_2                0xA2
 #define DW_DIVISOR_1                0xA1
-
-#define DW_STATUS_HALTED    0
-#define DW_STATUS_RUNNING   255
 
 #define DW_FLAG_RUN_TIMERS  (1 << 5)
 
@@ -53,6 +61,7 @@ void dw_cmd_send_multiple(uint8_t command, void * data, uint8_t len);
 #define DW_CMD_EXECUTE_LOADED_INSTR     0x23
 #define DW_CMD_GO                       0x30
 #define DW_CMD_SS                       0x31
+#define DW_CMD_GO_FROM_IR               0x32
 
 #define DW_GO_CNTX_CONTINUE             0x60
 #define DW_GO_CNTX_HWBP                 0x61
@@ -87,14 +96,16 @@ uint8_t dw_cmd_set_speed(uint8_t divisor);
 //flow control
 #define dw_cmd_start_sram_cycle()       dw_cmd(DW_CMD_START_SRAM_CYCLE)
 #define dw_cmd_start_sram_cycle_ss()    dw_cmd(DW_CMD_START_SRAM_CYCLE_SS)
-#define dw_cmd_execute_loaded           dw_cmd(DW_CMD_EXECUTE_LOADED_INSTR)
-#define dw_cmd_ss()                     dw_cmd(DW_CMD_SS)
-void dw_cmd_go(void);
+#define dw_cmd_execute_loaded()         dw_cmd(DW_CMD_EXECUTE_LOADED_INSTR)
+#define dw_cmd_ss(swbkpt)               (dw_cmd((swbkpt) ? DW_CMD_EXECUTE_LOADED_INSTR : DW_CMD_SS))
+void dw_cmd_go(uint8_t is_sw_brkpt);
 
 //contexts
 #define dw_set_context(ctx)             dw_cmd(ctx)
 
 //FULL COMMANDS
-void dw_full_reset(void);
+void debug_wire_device_reset(void);
+void debug_wire_resume(uint8_t context);
+void debug_wire_halt(void);
 
 #endif //ARDWINO_DEBUG_WIRE_H

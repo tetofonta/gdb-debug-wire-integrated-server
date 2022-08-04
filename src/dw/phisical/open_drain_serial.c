@@ -135,6 +135,23 @@ void od_uart_recv(void * buffer, uint16_t expected_len){
     }
 }
 
+void od_uart_recv_be(void * buffer, uint16_t expected_len){
+    od_uart_clear();
+    if(buffer != NULL)
+        buffer += (expected_len - 1);
+
+    while(expected_len > 0){
+        uint8_t to_read = expected_len < OD_UART_RX_BUFFER_SIZE ? expected_len : OD_UART_RX_BUFFER_SIZE;
+        while(uart_rx_buffer_pointer < to_read);
+        if(buffer != NULL){
+            for (int i = 0; i < to_read; ++i)
+                *((uint8_t *) buffer--) = uart_rx_buffer[uart_rx_buffer_pointer + i];
+        }
+        expected_len -= to_read;
+        uart_rx_buffer_pointer -= to_read;
+    }
+}
+
 #pragma GCC push_options
 #pragma GCC optimize ("Ofast")
 ISR(TIMER1_COMPA_vect){

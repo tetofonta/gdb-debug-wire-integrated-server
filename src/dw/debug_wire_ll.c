@@ -51,9 +51,11 @@ uint8_t dw_cmd_halt(void){
         od_uart_recv(&ret, 1);
 
     if(ret != 0x55) return 0;
-    debug_wire_g.status = DW_STATUS_HALTED;
+    debug_wire_g.halted = 1;
 
-    return dw_cmd_set_speed(DW_DIVISOR_128);
+    MUST_SUCCEED(dw_cmd_set_speed(DW_DIVISOR_128), 1);
+    debug_wire_g.program_counter = dw_cmd_get(DW_CMD_REG_PC); //save the program counter
+    return 1;
 }
 
 uint16_t dw_cmd_get_16(uint8_t cmd){
@@ -85,10 +87,11 @@ void dw_cmd_reset(void){
     while(waiting_break);
 }
 
-void dw_cmd_go(void){
-    dw_cmd(DW_CMD_GO);
-    debug_wire_g.status = DW_STATUS_RUNNING;
+void dw_cmd_go(uint8_t is_sw_brkpt){
+    debug_wire_g.halted = 0;
+    dw_cmd(is_sw_brkpt ? DW_CMD_GO_FROM_IR : DW_CMD_GO);
 }
+
 
 inline void od_uart_irq_rx(uint8_t data){}
 inline void od_uart_irq_frame_error(void){
@@ -98,5 +101,7 @@ inline void od_uart_irq_break(void){
     dw_init(debug_wire_g.target_frequency);
     od_uart_discard(1);
     dw_cmd_set_speed(debug_wire_g.cur_divisor);
+    debug_wire_g.program_counter = dw_cmd_get(DW_CMD_REG_PC); //save the program counter
+    debug_wire_g.halted = 1;
     waiting_break = 0;
 }

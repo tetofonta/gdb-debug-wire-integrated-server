@@ -28,7 +28,7 @@ int main(void) {
 
     uint16_t pc  = 0;
     MUST_SUCCEED(dw_init(16000000), 1);
-    dw_full_reset();
+    debug_wire_device_reset();
 
     for (;;) {
         usr_btn_task(&rst_button);
@@ -49,20 +49,22 @@ void cdc_task(void) {
     if (len > 0) {
         switch (buffer[0]) {
             case 1:
-                answ = dw_cmd_get(DW_CMD_REG_PC); break;
+                debug_wire_halt(); break;
             case 2:
-                answ = dw_cmd_get(DW_CMD_REG_HWBP); break;
+                debug_wire_resume(DW_GO_CNTX_CONTINUE); break;
             case 3:
-                answ = dw_cmd_get(DW_CMD_REG_IR); break;
+                debug_wire_resume(DW_GO_CNTX_SS); break;
             case 4:
-                answ = dw_cmd_get(DW_CMD_REG_SIGNATURE); break;
+                debug_wire_g.swbrkpt[0].address = 0x0200;
+                debug_wire_g.swbrkpt[0].instruction = 0x259a; //SBI PORTB, 5
+                debug_wire_g.swbrkpt_n = 1;
+                debug_wire_g.program_counter = 0x0200;
+                dw_cmd_multi_const((DW_CMD_REG_PC | 0xD0), 2, 0, 2);
+                dw_cmd_get(DW_CMD_REG_PC);
+                debug_wire_resume(DW_GO_CNTX_SS); break;
             case 5:
-                dw_cmd_reset(); return;
-            case 6:
-                dw_cmd_halt(); return;
-            case 7:
-                dw_cmd(debug_wire_g.cur_divisor);
-                return;
+                dw_cmd_get(DW_CMD_REG_PC);
+                dw_cmd_get(DW_CMD_REG_IR);
             case 255:
                 usb_cdc_write(&uart_rx_buffer_pointer, 1);
                 usb_cdc_write(uart_rx_buffer, uart_rx_buffer_pointer);
@@ -76,5 +78,5 @@ void cdc_task(void) {
 }
 
 void usr_btn_event(user_button_state_t * btn){
-    dw_full_reset();
+    debug_wire_device_reset();
 }
