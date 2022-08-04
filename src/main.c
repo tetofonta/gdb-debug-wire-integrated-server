@@ -59,9 +59,10 @@ void cdc_task(void) {
                 debug_wire_g.swbrkpt[0].instruction = 0x259a; //SBI PORTB, 5
                 debug_wire_g.swbrkpt_n = 1;
                 debug_wire_g.program_counter = 0x0200;
-                dw_cmd_multi_const((DW_CMD_REG_PC | 0xD0), 2, 0, 2);
+                dw_cmd_send_multiple_consts((DW_CMD_REG_PC | 0xD0), 2, 0, 2);
                 dw_cmd_get(DW_CMD_REG_PC);
-                debug_wire_resume(DW_GO_CNTX_SS); break;
+                debug_wire_resume(DW_GO_CNTX_SS);
+                break;
             case 5:
                 dw_cmd_get(DW_CMD_REG_PC);
                 dw_cmd_get(DW_CMD_REG_IR);

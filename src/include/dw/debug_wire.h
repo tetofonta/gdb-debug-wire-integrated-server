@@ -6,6 +6,7 @@
 #define ARDWINO_DEBUG_WIRE_H
 
 #include <stdint.h>
+#include <stdarg.h>
 #include "open_drain_serial.h"
 #include "devices.h"
 
@@ -45,7 +46,7 @@ uint8_t dw_init(uint32_t target_freq);
 uint16_t dw_cmd_get_16(uint8_t cmd);
 uint8_t dw_cmd_get_8(uint8_t cmd);
 void dw_cmd_send_multiple(uint8_t command, void * data, uint8_t len);
-
+void dw_cmd_send_multiple_consts(uint8_t command, uint16_t n, ...);
 
 #define dw_cmd(cmd)                     od_uart_tx_byte(cmd)
 
@@ -82,8 +83,6 @@ uint8_t dw_cmd_halt(void);
 
 
 //setters
-#define dw_cmd_multi_const(cmd, len, data...)      do{uint8_t d[] = {data}; dw_cmd_send_multiple(cmd, d, len);}while(0)
-
 #define dw_cmd_multi(cmd, data_ptr, len)    (dw_cmd_send_multiple(cmd, data_ptr, len))
 #define dw_cmd_set(reg, data_ptr)           (dw_cmd_multi((0xD0 | reg), data_ptr, 2))
 #define dw_cmd_set_l(reg, data_ptr)         (dw_cmd_multi((0xD0 | reg), data_ptr, 1))
@@ -102,6 +101,8 @@ void dw_cmd_go(uint8_t is_sw_brkpt);
 
 //contexts
 #define dw_set_context(ctx)             dw_cmd(ctx)
+
+//memory
 
 //FULL COMMANDS
 void debug_wire_device_reset(void);

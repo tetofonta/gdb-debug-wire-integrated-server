@@ -23,6 +23,7 @@ void debug_wire_resume(uint8_t context){
         dw_set_context(DW_GO_CNTX_SWBP ^ (debug_wire_g.run_timers << 5));
         dw_cmd_set(DW_CMD_REG_IR, &swbrkpt->instruction);
         dw_cmd_go(1);
+        return;
     }
 
     dw_cmd_set(DW_CMD_REG_PC, &debug_wire_g.program_counter);
@@ -36,8 +37,9 @@ void debug_wire_device_reset(void){
         dw_cmd_halt();
 
     dw_cmd_reset();
-    dw_cmd_multi_const(( 0x0D | DW_CMD_REG_PC ), 2, 0, 0);
+    dw_cmd_send_multiple_consts(( 0xD0 | DW_CMD_REG_PC ), 2, 0, 0);
     dw_set_context(DW_GO_CNTX_CONTINUE);
-    dw_cmd_multi_const(( 0x0D | DW_CMD_REG_PC ), 2, 0, 0);
+    dw_cmd_send_multiple_consts(( 0xD0 | DW_CMD_REG_PC ), 2, 0, 0);
     dw_cmd_go(0);
 }
+

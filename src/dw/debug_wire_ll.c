@@ -80,6 +80,14 @@ void dw_cmd_send_multiple(uint8_t command, void * data, uint8_t len){
     od_uart_send(data, len);
 }
 
+void dw_cmd_send_multiple_consts(uint8_t command, uint16_t n, ...){
+    va_list ptr;
+    va_start(ptr, n);
+    dw_cmd(command);
+    while(n--)od_uart_tx_byte((uint8_t) va_arg(ptr, int));
+    va_end(ptr);
+}
+
 void dw_cmd_reset(void){
     od_uart_clear();
     waiting_break = 1;
