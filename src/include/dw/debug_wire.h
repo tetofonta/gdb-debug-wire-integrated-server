@@ -113,8 +113,12 @@ void debug_wire_device_reset(void);
 void debug_wire_resume(uint8_t context);
 void debug_wire_halt(void);
 
-void debug_wire_read_registers(void * read_buffer, uint16_t len, uint16_t address);
-void debug_wire_write_registers(void *buffer, uint16_t len, uint16_t address);
-void debug_wire_read_sram(void *buffer, uint16_t len, uint16_t address);
+uint8_t debug_wire_read_register(uint8_t reg);
+void debug_wire_write_register(uint8_t reg, uint8_t data);
+void debug_wire_read_registers(uint8_t from, uint8_t to, void * buffer);
+void debug_wire_write_registers(uint8_t from, uint8_t to, void * buffer);
+void debug_wire_read_sram(uint8_t from, uint8_t len, void * buffer);
+void debug_wire_write_sram(uint8_t from, uint8_t len, void * buffer);
+void debug_wire_read_flash(uint8_t from, uint8_t len, void * buffer);
 
 #endif //ARDWINO_DEBUG_WIRE_H

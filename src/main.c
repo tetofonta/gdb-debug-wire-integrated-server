@@ -30,8 +30,8 @@ int main(void) {
     usb_cdc_init();
     sei();
 
-    uint16_t pc  = 0;
-    MUST_SUCCEED(dw_init(16000000), 1);
+    _delay_ms(100);
+    MUST_SUCCEED(dw_init(2*8000000), 1);
     debug_wire_device_reset();
 
     for (;;) {
@@ -51,7 +51,10 @@ void cdc_task(void) {
 
     if (len > 0) {
         switch (buffer[0]) {
-            case 1:
+            case 0: {
+                uint16_t sig = dw_cmd_get(DW_CMD_REG_SIGNATURE);
+                usb_cdc_write(&sig, 2);
+            } case 1:
                 debug_wire_halt();
                 PORTD &= ~(1 << PIND4);
                 break;
@@ -73,18 +76,22 @@ void cdc_task(void) {
                 dw_cmd_get(DW_CMD_REG_IR);
             case 6: {
                 uint8_t len = buffer[1];
-                debug_wire_read_registers(buffer, len, 30);
+                debug_wire_read_registers(0, len, buffer);
                 usb_cdc_write(buffer, len);
                 break;
             } case 7: {
                 uint8_t len = buffer[1];
-                debug_wire_write_registers(buffer + 2, len, 30);
+                debug_wire_write_registers(0, len, buffer + 2);
                 usb_cdc_write(buffer + 2, len);
+                break;
+            } case 8: {
+                uint8_t len = buffer[1];
+                debug_wire_read_flash(0, len, NULL);
                 break;
             } case 9: {
                 uint8_t len = buffer[1];
-                debug_wire_read_sram(buffer, len, 0x24);
-                usb_cdc_write(buffer, len);
+                debug_wire_write_sram(0x24, len, buffer + 2);
+                usb_cdc_write(buffer + 2, len);
                 break;
             } case 255:
                 usb_cdc_write(&uart_rx_buffer_pointer, 1);
