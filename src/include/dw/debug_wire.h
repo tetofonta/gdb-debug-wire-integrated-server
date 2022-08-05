@@ -71,6 +71,7 @@ uint8_t dw_cmd_halt(void);
 //setters
 #define dw_cmd_multi(cmd, data_ptr, len)    (dw_cmd_send_multiple(cmd, data_ptr, len))
 #define dw_cmd_set(reg, data_ptr)           (dw_cmd_multi((0xD0 | reg), data_ptr, 2))
+#define dw_cmd_set_multi(reg, a, b)         (dw_cmd_send_multiple_consts((0xD0 | reg), 2, a, b))
 #define dw_cmd_set_l(reg, data_ptr)         (dw_cmd_multi((0xC0 | reg), data_ptr, 1))
 
 //reset/disable
@@ -79,8 +80,8 @@ void dw_cmd_reset(void);
 uint8_t dw_cmd_set_speed(uint8_t divisor);
 
 //flow control
-#define dw_cmd_start_sram_cycle()       dw_cmd(DW_CMD_START_SRAM_CYCLE)
-#define dw_cmd_start_sram_cycle_ss()    dw_cmd(DW_CMD_START_SRAM_CYCLE_SS)
+#define dw_cmd_start_mem_cycle()        dw_cmd(DW_CMD_START_SRAM_CYCLE)
+#define dw_cmd_start_mem_cycle_ss()     dw_cmd(DW_CMD_START_SRAM_CYCLE_SS)
 #define dw_cmd_execute_loaded()         dw_cmd(DW_CMD_EXECUTE_LOADED_INSTR)
 #define dw_cmd_ss(swbkpt)               (dw_cmd((swbkpt) ? DW_CMD_EXECUTE_LOADED_INSTR : DW_CMD_SS))
 void dw_cmd_go(uint8_t is_sw_brkpt);
@@ -112,7 +113,8 @@ void debug_wire_device_reset(void);
 void debug_wire_resume(uint8_t context);
 void debug_wire_halt(void);
 
-#define debug_wire_read_registers(from, to, buffer)     _debug_wire_read_sram(from, to, buffer)
-void _debug_wire_read_sram(uint16_t from, uint16_t to, void * read_buffer);
+void debug_wire_read_registers(void * read_buffer, uint16_t len, uint16_t address);
+void debug_wire_write_registers(void *buffer, uint16_t len, uint16_t address);
+void debug_wire_read_sram(void *buffer, uint16_t len, uint16_t address);
 
 #endif //ARDWINO_DEBUG_WIRE_H

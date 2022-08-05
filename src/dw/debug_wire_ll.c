@@ -108,7 +108,10 @@ inline void od_uart_irq_rx(uint8_t data){}
 inline void od_uart_irq_break(void){
     od_uart_clear();
     dw_init(debug_wire_g.target_frequency);
-    od_uart_discard(1);
+
+    od_uart_blank(4);
+    od_uart_clear();
+
     dw_cmd_set_speed(debug_wire_g.cur_divisor);
     debug_wire_g.program_counter = dw_cmd_get(DW_CMD_REG_PC); //save the program counter
     debug_wire_g.halted = 1;

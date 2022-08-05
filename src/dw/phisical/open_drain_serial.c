@@ -87,10 +87,10 @@ void od_uart_clear(void){
     flags &= ~OD_UART_FLAG_AVAIL_MASK;
 }
 
-static void _line_clear(void){
+static void _line_clear(uint8_t frames){
     TIMER_IRQ_CLEAR();
     TIMER_IRQ_ENABLE();
-    uint8_t count = 20;
+    uint8_t count = 10 * frames;
     while(count--){
         while(! (TIFR1 & (1 << OCF1A)));
         TIMER_IRQ_CLEAR();
@@ -99,17 +99,17 @@ static void _line_clear(void){
     FE_IRQ_CLEAR();
 }
 
-void od_uart_blank(void){
+void od_uart_blank(uint8_t frames){
     cli();
     OD_HIGH(D, 7);
-    _line_clear();
+    _line_clear(frames);
     sei();
 }
 
 void od_uart_break(void){
     cli();
     OD_LOW(D, 7);
-    _line_clear();
+    _line_clear(2);
     OD_HIGH(D, 7);
     sei();
 }
@@ -124,7 +124,7 @@ void od_uart_send(void * data, uint16_t len){
 void od_uart_recv(void * buffer, uint16_t expected_len){
     od_uart_clear();
     while(expected_len > 0){
-        uint8_t to_read = expected_len < OD_UART_RX_BUFFER_SIZE ? expected_len : OD_UART_RX_BUFFER_SIZE;
+        uint8_t to_read = expected_len < OD_UART_RX_BUFFER_SIZE ? expected_len : OD_UART_RX_BUFFER_SIZE; //theres a bug hidden in here? what about reading full?
         while(uart_rx_buffer_pointer < to_read);
         if(buffer != NULL){
             memcpy(buffer, uart_rx_buffer, to_read);
@@ -133,6 +133,12 @@ void od_uart_recv(void * buffer, uint16_t expected_len){
         expected_len -= to_read;
         uart_rx_buffer_pointer -= to_read;
     }
+}
+
+uint8_t od_uart_recv_byte(void){
+    od_uart_clear();
+    while(uart_rx_buffer_pointer < 1);
+    return *uart_rx_buffer;
 }
 
 void od_uart_recv_be(void * buffer, uint16_t expected_len){

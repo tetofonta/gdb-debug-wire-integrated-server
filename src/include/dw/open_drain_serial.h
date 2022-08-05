@@ -34,10 +34,11 @@ void od_uart_init(uint32_t baud_rate);
 void od_uart_tx_byte(uint8_t data);
 void od_uart_clear(void);
 void od_uart_break(void);
-void od_uart_blank(void);
+void od_uart_blank(uint8_t frames);
 
 void od_uart_send(void * data, uint16_t len);
 void od_uart_recv(void * buffer, uint16_t expected_len);
+uint8_t od_uart_recv_byte(void);
 void od_uart_recv_be(void * buffer, uint16_t expected_len);
 #define od_uart_discard(n) od_uart_recv(NULL, n)
 

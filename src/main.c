@@ -73,17 +73,20 @@ void cdc_task(void) {
                 dw_cmd_get(DW_CMD_REG_IR);
             case 6: {
                 uint8_t len = buffer[1];
-                debug_wire_read_registers(0, len, buffer);
+                debug_wire_read_registers(buffer, len, 30);
                 usb_cdc_write(buffer, len);
                 break;
-            }
-            case 7:
-                cli();
-                _delay_ms(3000);
-                sei();
-                usb_cdc_write(&uart_rx_buffer_pointer, 1);
+            } case 7: {
+                uint8_t len = buffer[1];
+                debug_wire_write_registers(buffer + 2, len, 30);
+                usb_cdc_write(buffer + 2, len);
                 break;
-            case 255:
+            } case 9: {
+                uint8_t len = buffer[1];
+                debug_wire_read_sram(buffer, len, 0x24);
+                usb_cdc_write(buffer, len);
+                break;
+            } case 255:
                 usb_cdc_write(&uart_rx_buffer_pointer, 1);
                 usb_cdc_write(uart_rx_buffer, uart_rx_buffer_pointer);
                 break;
@@ -92,5 +95,5 @@ void cdc_task(void) {
 }
 
 void usr_btn_event(user_button_state_t * btn){
-    //debug_wire_device_reset();
+    debug_wire_device_reset();
 }
