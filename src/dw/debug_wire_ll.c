@@ -149,23 +149,23 @@ static void dw_ll_reg_rw_setup(uint8_t from, uint8_t to, uint8_t target){
     else
         dw_cmd_start_mem_cycle();
 }
-uint8_t dw_ll_read_register(uint8_t reg){
+uint8_t dw_ll_register_read(uint8_t reg){
     dw_ll_reg_rw_setup(reg, reg + 1, DW_MODE_REGS_READ);
     return od_uart_recv_byte();
 }
-void dw_ll_write_register(uint8_t reg, uint8_t data){
+void dw_ll_register_write(uint8_t reg, uint8_t data){
     dw_ll_reg_rw_setup(reg, reg + 1, DW_MODE_REGS_WRITE);
     od_uart_tx_byte(data);
 }
-void dw_ll_read_registers(uint8_t from, uint8_t to, void * buffer){
+void dw_ll_registers_read(uint8_t from, uint8_t to, void * buffer){
     dw_ll_reg_rw_setup(from, to, DW_MODE_REGS_READ);
     od_uart_recv(buffer, to - from);
 }
-void dw_ll_write_registers(uint8_t from, uint8_t to, const void * buffer){
+void dw_ll_registers_write(uint8_t from, uint8_t to, const void * buffer){
     dw_ll_reg_rw_setup(from, to, DW_MODE_REGS_WRITE);
     od_uart_send(buffer, to - from);
 }
-void dw_ll_write_registers_multi(uint8_t from, uint16_t len, ...){
+void dw_ll_registers_write_multi(uint8_t from, uint16_t len, ...){
     va_list ptr;
     va_start(ptr, len);
     dw_ll_reg_rw_setup(from, from + len, DW_MODE_REGS_WRITE);
@@ -174,7 +174,7 @@ void dw_ll_write_registers_multi(uint8_t from, uint16_t len, ...){
 }
 
 static void dw_ll_mem_rw_setup(uint16_t from, uint16_t len, uint8_t target){
-    dw_ll_write_registers(30, 32, &from);
+    dw_ll_registers_write(30, 32, &from);
     len *= 2;
     if(target == DW_MODE_SRAM_WRITE)
         len += 1;
@@ -183,21 +183,13 @@ static void dw_ll_mem_rw_setup(uint16_t from, uint16_t len, uint8_t target){
     dw_cmd_mode_set(target);
     dw_cmd_start_mem_cycle();
 }
-void dw_ll_read_sram(uint16_t from, uint16_t len, void * buffer){
+void dw_ll_sram_read(uint16_t from, uint16_t len, void * buffer){
     dw_ll_mem_rw_setup(from, len, DW_MODE_SRAM_READ);
     od_uart_recv(buffer, len);
 }
-void dw_ll_write_sram(uint16_t from, uint16_t len, void * buffer){
+void dw_ll_sram_write(uint16_t from, uint16_t len, void * buffer){
     dw_ll_mem_rw_setup(from, len, DW_MODE_SRAM_WRITE);
     od_uart_send(buffer, len);
-}
-
-void dw_ll_read_flash(uint16_t from, uint16_t len, void * buffer){
-    dw_ll_mem_rw_setup(from, len, DW_MODE_FLASH_READ);
-    if(buffer == NULL)
-        od_uart_wait_until(len);
-    else
-        od_uart_recv(buffer, len);
 }
 
 static void dw_ll_flash_buffer_reset(void){
@@ -209,12 +201,18 @@ static void dw_ll_flash_buffer_reset(void){
     dw_ll_exec(AVR_INSTR_OUT(debug_wire_g.device.reg_spmcsr, r28), 0);
     dw_ll_exec(AVR_INSTR_SPM(), 1);
 }
-
-void dw_ll_clear_flash_page(uint16_t address){
+void dw_ll_flash_read(uint16_t from, uint16_t len, void * buffer){
+    dw_ll_mem_rw_setup(from, len, DW_MODE_FLASH_READ);
+    if(buffer == NULL)
+        od_uart_wait_until(len);
+    else
+        od_uart_recv(buffer, len);
+}
+void dw_ll_flash_clear_page(uint16_t address){
     uint16_t flash_end = debug_wire_g.device.flash_end - debug_wire_g.device.flash_page_end + 2;
     flash_end = BE(flash_end);
 
-    dw_ll_write_registers_multi(reg_X, 6, 0x03, 0x01, 0x05, 0x40, MULTI_LE(address));
+    dw_ll_registers_write_multi(reg_X, 6, 0x03, 0x01, 0x05, 0x40, MULTI_LE(address));
 
     dw_cmd_set(DW_CMD_REG_PC, &flash_end); //set pc to boot section
     dw_set_context(DW_GO_CNTX_FLASH_WRT);
@@ -222,16 +220,14 @@ void dw_ll_clear_flash_page(uint16_t address){
     dw_ll_exec(BE(AVR_INSTR_OUT(debug_wire_g.device.reg_spmcsr, r26)), 0);
     dw_ll_exec(BE(AVR_INSTR_SPM()), 1);
 }
+uint8_t dw_ll_flash_write_page_begin(uint16_t address){
 
-uint8_t dw_ll_write_flash_page_begin(uint16_t address){
-
-    dw_ll_clear_flash_page(address);
+    dw_ll_flash_clear_page(address);
     dw_set_context(DW_GO_CNTX_FLASH_WRT & ~(1 << 5));
     _delay_ms(10);
     return debug_wire_g.device.flash_page_end;
 }
-
-uint8_t dw_ll_write_flash_populate_buffer(const uint16_t * buffer, uint16_t len, uint16_t remaining){
+uint8_t dw_ll_flash_write_populate_buffer(const uint16_t * buffer, uint16_t len, uint16_t remaining){
     uint16_t flash_end = debug_wire_g.device.flash_end - debug_wire_g.device.flash_page_end + 2;
     flash_end = BE(flash_end);
 
@@ -248,8 +244,7 @@ uint8_t dw_ll_write_flash_populate_buffer(const uint16_t * buffer, uint16_t len,
     }
     return len - remaining;
 }
-
-void dw_ll_write_flash_execute(void){
+void dw_ll_flash_write_execute(void){
     uint16_t flash_end = debug_wire_g.device.flash_end - debug_wire_g.device.flash_page_end + 2;
     flash_end = BE(flash_end);
 
@@ -259,4 +254,34 @@ void dw_ll_write_flash_execute(void){
     dw_ll_exec(BE(AVR_INSTR_SPM()), 1);
 
     dw_ll_flash_buffer_reset();
+}
+
+uint8_t dw_ll_eeprom_read_byte(uint16_t address){
+    uint8_t ret;
+    dw_ll_registers_write_multi(reg_Y, 4, 0x01, 0x01, MULTI_LE(address));
+    dw_set_context(DW_GO_CNTX_FLASH_WRT & ~(1 << 5));
+    dw_ll_exec(BE(AVR_INSTR_OUT((debug_wire_g.device.reg_eearl + 1), r31)), 0);
+    dw_ll_exec(BE(AVR_INSTR_OUT(debug_wire_g.device.reg_eearl, r30)), 0);
+    dw_ll_exec(BE(AVR_INSTR_OUT(debug_wire_g.device.reg_eecr, r28)), 0);
+    dw_ll_exec(BE(AVR_INSTR_IN(r0, debug_wire_g.device.reg_eedr)), 0);
+    dw_ll_exec(BE(AVR_INSTR_OUT(debug_wire_g.device.reg_dwdr, r0)), 0);
+    od_uart_recv(&ret, 1);
+    return ret;
+}
+void dw_ll_eeprom_read(void * buffer, uint16_t address, uint16_t len){
+    while(len--) *((uint8_t *) buffer++) = dw_ll_eeprom_read_byte(address++);
+}
+void dw_ll_eeprom_write_byte(uint16_t address, uint8_t data){
+    dw_ll_registers_write_multi(reg_X, 6, 0x04, 0x02, 0x01, 0x01, MULTI_LE(address));
+    dw_set_context(DW_GO_CNTX_FLASH_WRT & ~(1 << 5));
+    dw_ll_exec(BE(AVR_INSTR_OUT((debug_wire_g.device.reg_eearl + 1), r31)), 0);
+    dw_ll_exec(BE(AVR_INSTR_OUT(debug_wire_g.device.reg_eearl, r30)), 0);
+    dw_ll_exec(BE(AVR_INSTR_IN(r0, debug_wire_g.device.reg_dwdr)), 0);
+    od_uart_tx_byte(data);
+    dw_ll_exec(BE(AVR_INSTR_OUT(debug_wire_g.device.reg_eedr, r0)), 0);
+    dw_ll_exec(BE(AVR_INSTR_OUT(debug_wire_g.device.reg_eecr, r26)), 0);
+    dw_ll_exec(BE(AVR_INSTR_OUT(debug_wire_g.device.reg_eecr, r27)), 0);
+}
+void dw_ll_eeprom_write(const void * buffer, uint16_t address, uint16_t len){
+    while(len--) dw_ll_eeprom_write_byte(address++, *((uint8_t *) buffer++));
 }

@@ -114,17 +114,22 @@ void debug_wire_device_reset(void);
 void debug_wire_resume(uint8_t context);
 
 void dw_ll_exec(uint16_t instruction, uint8_t long_instruction);
-uint8_t dw_ll_read_register(uint8_t reg);
-void dw_ll_write_register(uint8_t reg, uint8_t data);
-void dw_ll_read_registers(uint8_t from, uint8_t to, void * buffer);
-void dw_ll_write_registers(uint8_t from, uint8_t to, const void * buffer);
-void dw_ll_read_sram(uint16_t from, uint16_t len, void * buffer);
-void dw_ll_write_sram(uint16_t from, uint16_t len, void * buffer);
-void dw_ll_read_flash(uint16_t from, uint16_t len, void * buffer);
-void dw_ll_clear_flash_page(uint16_t address);
+uint8_t dw_ll_register_read(uint8_t reg);
+void dw_ll_register_write(uint8_t reg, uint8_t data);
+void dw_ll_registers_read(uint8_t from, uint8_t to, void * buffer);
+void dw_ll_registers_write(uint8_t from, uint8_t to, const void * buffer);
+void dw_ll_sram_read(uint16_t from, uint16_t len, void * buffer);
+void dw_ll_sram_write(uint16_t from, uint16_t len, void * buffer);
+void dw_ll_flash_read(uint16_t from, uint16_t len, void * buffer);
+void dw_ll_flash_clear_page(uint16_t address);
 
-uint8_t dw_ll_write_flash_page_begin(uint16_t address);
-uint8_t dw_ll_write_flash_populate_buffer(const uint16_t * buffer, uint16_t len, uint16_t remaining);
-void dw_ll_write_flash_execute(void);
+uint8_t dw_ll_flash_write_page_begin(uint16_t address);
+uint8_t dw_ll_flash_write_populate_buffer(const uint16_t * buffer, uint16_t len, uint16_t remaining);
+void dw_ll_flash_write_execute(void);
+
+uint8_t dw_ll_eeprom_read_byte(uint16_t address);
+void dw_ll_eeprom_read(void * buffer, uint16_t address, uint16_t len);
+void dw_ll_eeprom_write_byte(uint16_t address, uint8_t data);
+void dw_ll_eeprom_write(const void * buffer, uint16_t address, uint16_t len);
 
 #endif //ARDWINO_DEBUG_WIRE_H

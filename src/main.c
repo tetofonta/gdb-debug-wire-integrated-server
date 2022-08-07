@@ -52,23 +52,28 @@ void cdc_task(void) {
     if (len > 0) {
         switch (buffer[0]) {
             case 0: {
-                dw_ll_read_flash(debug_wire_g.device.flash_page_end*2*buffer[1], debug_wire_g.device.flash_page_end*2, NULL);
+                dw_ll_flash_read(debug_wire_g.device.flash_page_end * 2 * buffer[1],
+                                 debug_wire_g.device.flash_page_end * 2, NULL);
                 usb_cdc_write(uart_rx_buffer, debug_wire_g.device.flash_page_end*2);
                 od_uart_clear();
                 break;
             } case 1: {
-                dw_ll_clear_flash_page(buffer[1] * debug_wire_g.device.flash_page_end*2);
+                dw_ll_flash_clear_page(buffer[1] * debug_wire_g.device.flash_page_end * 2);
                 dw_cmd_reset();
                 break;
+            case 2:
+                buffer[0] = dw_ll_eeprom_read_byte(0);
+                usb_cdc_write(buffer, 1);
+                break;
             } case 3: {
-                uint16_t rem = dw_ll_write_flash_page_begin(buffer[1] * debug_wire_g.device.flash_page_end*2);
+                uint16_t rem = dw_ll_flash_write_page_begin(buffer[1] * debug_wire_g.device.flash_page_end * 2);
                 uint16_t a = 0xcfff;
                 for (uint16_t i = 0; i < debug_wire_g.device.flash_page_end; ++i) {
-                    a = 255 - i;
-                    rem = dw_ll_write_flash_populate_buffer(&a, 1, rem);
+                    a = 0xAAAA - i;
+                    rem = dw_ll_flash_write_populate_buffer(&a, 1, rem);
                     if(rem == 0) break;
                 }
-                dw_ll_write_flash_execute();
+                dw_ll_flash_write_execute();
                 break;
             } case 4:
                 dw_cmd_reset();

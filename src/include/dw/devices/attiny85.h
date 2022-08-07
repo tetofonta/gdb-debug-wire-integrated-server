@@ -5,5 +5,8 @@
 #ifndef ARDWINO_ATTINY85_H
 #define ARDWINO_ATTINY85_H
 #include <dw/devices.h>
-#define DW_DEF_ATTINY85 { .signature = 0x0B93, .sram_base = 0x60, .flash_page_end = 32, .flash_end = 0x0FFF, .sram_end = 0x025F, .eeprom_end = 0x1FF, .reg_spmcsr = 0x37, .reg_dwdr = 0x22 }
+
+//                                  sig     sram_base   sram_end    flash_page_end  flash_end   eeprom_end  spmcsr  dwdr  eearl eecr  eedr
+#define DW_DEF_ATTINY85  DW_DEV_DEF(0x0B93, 0x60,      0x025F,      32,             0x0FFF,     0x1FF,      0x37,   0x22, 0x1E, 0x1C, 0x1D)
+
 #endif //ARDWINO_ATTINY85_H
