@@ -54,6 +54,10 @@ volatile uint8_t uart_flags;
 volatile uint8_t uart_tx_buffer_full;
 uint8_t  uart_tx_buffer;
 uint8_t  uart_rx_buffer[OD_UART_RX_BUFFER_SIZE];
+/**
+ * points to the next location on the buffer to be filled.
+ * last available rx byte is in *(uart_rx_buffer + uart_rx_buffer_pointer - 1)
+ */
 uint8_t  volatile uart_rx_buffer_pointer;
 
 /**
@@ -226,9 +230,8 @@ void od_uart_recv(void * buffer, uint16_t expected_len){
  * @return received byte
  */
 uint8_t od_uart_recv_byte(void){
-    od_uart_clear();
     while(uart_rx_buffer_pointer < 1);
-    return *uart_rx_buffer;
+    return *(uart_rx_buffer + uart_rx_buffer_pointer - 1);
 }
 
 /**
@@ -237,13 +240,12 @@ uint8_t od_uart_recv_byte(void){
  * @return received byte
  */
 uint8_t od_uart_recv_byte_timeout(uint16_t * timeout_ms){
-    od_uart_clear();
     while(uart_rx_buffer_pointer < 1){
         _delay_ms(1);
         *timeout_ms = *timeout_ms - 1;
         if(!(*timeout_ms)) return 0;
     }
-    return *uart_rx_buffer;
+    return *(uart_rx_buffer + uart_rx_buffer_pointer - 1);
 }
 
 

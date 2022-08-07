@@ -61,7 +61,7 @@ uint8_t dw_cmd_halt(void){
 
     //vi sono due tipi di break:
     // nel caso di halt da stato runnning: il controllore risponde dopo la fine del break e ritorna 0x55
-    // nel casp di halt inatteso (già halted) il controllore asserisce oltre la durata causando un interrupt startbit
+    // nel caso di halt inatteso (già halted) il controllore asserisce oltre la durata causando un interrupt startbit
     uint16_t timeout = 500;
     uint8_t ret = od_uart_recv_byte_timeout(&timeout);
     if(!timeout) return 0;
@@ -92,6 +92,7 @@ uint16_t dw_cmd_get_16(uint8_t cmd){
  * @return
  */
 uint8_t dw_cmd_get_8(uint8_t cmd){
+    od_uart_clear();
     dw_cmd(cmd);
     return od_uart_recv_byte();
 }
@@ -222,6 +223,7 @@ static void dw_ll_reg_rw_setup(uint8_t from, uint8_t to, uint8_t target){
  * @return
  */
 uint8_t dw_ll_register_read(uint8_t reg){
+    od_uart_clear();
     dw_ll_reg_rw_setup(reg, reg, DW_MODE_REGS_READ);
     return od_uart_recv_byte();
 }
@@ -250,7 +252,7 @@ void dw_ll_register_write(uint8_t reg, uint8_t data){
  */
 void dw_ll_registers_read(uint8_t from, uint8_t to, void * buffer){
     dw_ll_reg_rw_setup(from, to, DW_MODE_REGS_READ);
-    od_uart_recv(buffer, to - from);
+    od_uart_recv(buffer, to - from + 1);
 }
 /**
  * writes the register file register
@@ -264,7 +266,7 @@ void dw_ll_registers_read(uint8_t from, uint8_t to, void * buffer){
  */
 void dw_ll_registers_write(uint8_t from, uint8_t to, const void * buffer){
     dw_ll_reg_rw_setup(from, to, DW_MODE_REGS_WRITE);
-    od_uart_send(buffer, to - from);
+    od_uart_send(buffer, to - from + 1);
 }
 /**
  * write the register file register from a const varag list
@@ -458,7 +460,7 @@ uint8_t dw_ll_flash_write_populate_buffer(const uint16_t * buffer, uint16_t len,
         dw_ll_exec(BE(AVR_INSTR_ADIW(adiw_reg_Z, 2)), 0);
         buffer += 1;
     }
-    return len - remaining;
+    return remaining - len;
 }
 /**
  * see dw_ll_flash_write_page_begin
@@ -507,6 +509,8 @@ uint8_t dw_ll_eeprom_read_byte(uint16_t address){
     dw_ll_exec(BE(AVR_INSTR_OUT(debug_wire_g.device.reg_eearl, r30)), 0);
     dw_ll_exec(BE(AVR_INSTR_OUT(debug_wire_g.device.reg_eecr, r28)), 0);
     dw_ll_exec(BE(AVR_INSTR_IN(r0, debug_wire_g.device.reg_eedr)), 0);
+
+    od_uart_clear();
     dw_ll_exec(BE(AVR_INSTR_OUT(debug_wire_g.device.reg_dwdr, r0)), 0);
     return od_uart_recv_byte();
 }
