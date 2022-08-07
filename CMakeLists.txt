@@ -52,7 +52,7 @@ set(LUFA_SRC_USBCLASS_HOST
         ${LUFA_ROOT_PATH}/Drivers/USB/Class/Host/RNDISClassHost.c
         ${LUFA_ROOT_PATH}/Drivers/USB/Class/Host/StillImageClassHost.c
         )
-set(LUFA_SRC_USB ${LUFA_SRC_USB_COMMON} ${LUFA_SRC_USB_HOST} ${LUFA_SRC_USB_DEVICE} src/usb/usb_cdc.c src/include/dw/devices.h)
+set(LUFA_SRC_USB ${LUFA_SRC_USB_COMMON} ${LUFA_SRC_USB_HOST} ${LUFA_SRC_USB_DEVICE} src/usb/usb_cdc.c src/include/dw/devices.h src/include/avr_isa.h)
 list(SORT LUFA_SRC_USB)
 
 set(LUFA_SRC_USBCLASS ${LUFA_SRC_USBCLASS_DEVICE} ${LUFA_SRC_USBCLASS_HOST})

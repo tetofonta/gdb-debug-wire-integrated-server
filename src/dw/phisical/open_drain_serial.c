@@ -59,7 +59,7 @@ inline void od_uart_init(uint32_t baud_rate){
 }
 
 uint8_t od_uart_status(void){
-    return fast_flags & 0xF0;
+    return (fast_flags | uart_flags) & 0xF0;
 }
 
 void od_uart_tx_byte(uint8_t data){
@@ -89,7 +89,7 @@ void od_uart_tx_byte(uint8_t data){
 
 void od_uart_clear(void){
     uart_rx_buffer_pointer = 0;
-    fast_flags &= ~OD_UART_FLAG_AVAIL_MASK;
+    uart_flags = 0;
 }
 
 static void _line_clear(uint8_t frames){
@@ -108,6 +108,7 @@ void od_uart_blank(uint8_t frames){
     cli();
     OD_HIGH(D, 7);
     _line_clear(frames);
+    FE_IRQ_CLEAR();
     sei();
 }
 
@@ -116,6 +117,7 @@ void od_uart_break(void){
     OD_LOW(D, 7);
     _line_clear(2);
     OD_HIGH(D, 7);
+    FE_IRQ_CLEAR();
     sei();
 }
 
@@ -126,11 +128,15 @@ void od_uart_send(void * data, uint16_t len){
     }
 }
 
+void od_uart_wait_until(uint16_t to_read){
+    while(!_OD_UART_AVAIL || uart_rx_buffer_pointer < to_read);
+}
+
 void od_uart_recv(void * buffer, uint16_t expected_len){
     od_uart_clear();
     while(expected_len > 0){
-        uint8_t to_read = expected_len < OD_UART_RX_BUFFER_SIZE ? expected_len : OD_UART_RX_BUFFER_SIZE; //theres a bug hidden in here? what about reading full?
-        while(!_OD_UART_AVAIL || uart_rx_buffer_pointer < to_read);
+        uint8_t to_read = expected_len < OD_UART_RX_BUFFER_SIZE ? expected_len : OD_UART_RX_BUFFER_SIZE;
+        od_uart_wait_until(to_read);
         if(buffer != NULL){
             memcpy(buffer, uart_rx_buffer, to_read);
             buffer += to_read;
@@ -182,6 +188,7 @@ __attribute__((optimize("-Ofast"))) ISR(TIMER1_COMPA_vect){
         uart_data >>= 1;
         uart_data |= value & (1 << PIND7);
         if( v == 8) {
+            PORTB ^= (1 << PINB4);
             if(uart_rx_buffer_pointer == OD_UART_RX_BUFFER_SIZE)
                 uart_rx_buffer_pointer = 0;
             uart_rx_buffer[uart_rx_buffer_pointer++] = uart_data;
@@ -208,7 +215,7 @@ __attribute__((optimize("-Ofast"))) ISR(INT7_vect){
     PORTB ^= (1 << PINB7);
     fast_flags = 0;
     uart_flags |= OD_UART_FLAG_BUSY_MASK;
-    TCNT1 = 32;
+    TCNT1 = OCR1A >> 2;
     TIMER_IRQ_ENABLE();
     TIMER_IRQ_CLEAR();
     sei();

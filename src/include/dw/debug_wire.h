@@ -24,7 +24,7 @@ typedef struct debug_wire {
 
     uint8_t halted : 1;
     uint8_t run_timers : 1;
-    dw_device_definition_t * device;
+    dw_device_definition_t device;
 
     dw_sw_brkpt_t swbrkpt[DW_SW_BRKPT_SIZE];
     uint8_t swbrkpt_n;
@@ -56,6 +56,7 @@ void dw_cmd_send_multiple_consts(uint8_t command, uint16_t n, ...);
 #define DW_CMD_GO                       0x30
 #define DW_CMD_SS                       0x31
 #define DW_CMD_GO_FROM_IR               0x32
+#define DW_CMD_EXECUTE_LOADED_INSTR_LNG 0x33
 
 uint8_t dw_cmd_halt(void);
 
@@ -111,14 +112,19 @@ void dw_cmd_go(uint8_t is_sw_brkpt);
 //FULL COMMANDS
 void debug_wire_device_reset(void);
 void debug_wire_resume(uint8_t context);
-void debug_wire_halt(void);
 
-uint8_t debug_wire_read_register(uint8_t reg);
-void debug_wire_write_register(uint8_t reg, uint8_t data);
-void debug_wire_read_registers(uint8_t from, uint8_t to, void * buffer);
-void debug_wire_write_registers(uint8_t from, uint8_t to, void * buffer);
-void debug_wire_read_sram(uint8_t from, uint8_t len, void * buffer);
-void debug_wire_write_sram(uint8_t from, uint8_t len, void * buffer);
-void debug_wire_read_flash(uint8_t from, uint8_t len, void * buffer);
+void dw_ll_exec(uint16_t instruction, uint8_t long_instruction);
+uint8_t dw_ll_read_register(uint8_t reg);
+void dw_ll_write_register(uint8_t reg, uint8_t data);
+void dw_ll_read_registers(uint8_t from, uint8_t to, void * buffer);
+void dw_ll_write_registers(uint8_t from, uint8_t to, const void * buffer);
+void dw_ll_read_sram(uint16_t from, uint16_t len, void * buffer);
+void dw_ll_write_sram(uint16_t from, uint16_t len, void * buffer);
+void dw_ll_read_flash(uint16_t from, uint16_t len, void * buffer);
+void dw_ll_clear_flash_page(uint16_t address);
+
+uint8_t dw_ll_write_flash_page_begin(uint16_t address);
+uint8_t dw_ll_write_flash_populate_buffer(const uint16_t * buffer, uint16_t len, uint16_t remaining);
+void dw_ll_write_flash_execute(void);
 
 #endif //ARDWINO_DEBUG_WIRE_H

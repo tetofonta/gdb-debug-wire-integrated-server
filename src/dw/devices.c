@@ -5,9 +5,9 @@
 #include <dw/devices/attiny85.h>
 
 const struct dw_devices devices PROGMEM = {
-        .items = 1,
+        .items = 2,
         .devices = {
+                DW_DEF_ATTINY85,
                 DW_DEF_ATMEGA328,
-                DW_DEF_ATTINY85
         }
 };

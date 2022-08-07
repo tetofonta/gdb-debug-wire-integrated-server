@@ -52,50 +52,43 @@ void cdc_task(void) {
     if (len > 0) {
         switch (buffer[0]) {
             case 0: {
-                uint16_t sig = dw_cmd_get(DW_CMD_REG_SIGNATURE);
-                usb_cdc_write(&sig, 2);
-            } case 1:
-                debug_wire_halt();
-                PORTD &= ~(1 << PIND4);
+                dw_ll_read_flash(debug_wire_g.device.flash_page_end*2*buffer[1], debug_wire_g.device.flash_page_end*2, NULL);
+                usb_cdc_write(uart_rx_buffer, debug_wire_g.device.flash_page_end*2);
+                od_uart_clear();
                 break;
-            case 2:
-                debug_wire_resume(DW_GO_CNTX_CONTINUE); break;
-            case 3:
-                debug_wire_resume(DW_GO_CNTX_SS); break;
-            case 4:
-                debug_wire_g.swbrkpt[0].address = 0x0200;
-                debug_wire_g.swbrkpt[0].instruction = 0x259a; //SBI PORTB, 5
-                debug_wire_g.swbrkpt_n = 1;
-                debug_wire_g.program_counter = 0x0200;
-                dw_cmd_send_multiple_consts((DW_CMD_REG_PC | 0xD0), 2, 0, 2);
-                dw_cmd_get(DW_CMD_REG_PC);
-                debug_wire_resume(DW_GO_CNTX_SS);
+            } case 1: {
+                dw_ll_clear_flash_page(buffer[1] * debug_wire_g.device.flash_page_end*2);
+                dw_cmd_reset();
+                break;
+            } case 3: {
+                uint16_t rem = dw_ll_write_flash_page_begin(buffer[1] * debug_wire_g.device.flash_page_end*2);
+                uint16_t a = 0xcfff;
+                for (uint16_t i = 0; i < debug_wire_g.device.flash_page_end; ++i) {
+                    a = 255 - i;
+                    rem = dw_ll_write_flash_populate_buffer(&a, 1, rem);
+                    if(rem == 0) break;
+                }
+                dw_ll_write_flash_execute();
+                break;
+            } case 4:
+                dw_cmd_reset();
                 break;
             case 5:
                 dw_cmd_get(DW_CMD_REG_PC);
-                dw_cmd_get(DW_CMD_REG_IR);
-            case 6: {
-                uint8_t len = buffer[1];
-                debug_wire_read_registers(0, len, buffer);
-                usb_cdc_write(buffer, len);
                 break;
-            } case 7: {
-                uint8_t len = buffer[1];
-                debug_wire_write_registers(0, len, buffer + 2);
-                usb_cdc_write(buffer + 2, len);
+            case 6:
+                dw_cmd_set_multi(DW_CMD_REG_PC, buffer[1], buffer[2]);
                 break;
-            } case 8: {
-                uint8_t len = buffer[1];
-                debug_wire_read_flash(0, len, NULL);
+            case 0xf0: {
+                dw_cmd(DW_CMD_DISABLE);
                 break;
-            } case 9: {
-                uint8_t len = buffer[1];
-                debug_wire_write_sram(0x24, len, buffer + 2);
-                usb_cdc_write(buffer + 2, len);
+            }case 254: {
+                dw_cmd_halt();
                 break;
             } case 255:
-                usb_cdc_write(&uart_rx_buffer_pointer, 1);
-                usb_cdc_write(uart_rx_buffer, uart_rx_buffer_pointer);
+                if(uart_rx_buffer_pointer)
+                    usb_cdc_write(uart_rx_buffer, uart_rx_buffer_pointer);
+                od_uart_clear();
                 break;
         }
     }
