@@ -36,9 +36,10 @@ void od_uart_clear(void);
 void od_uart_break(void);
 void od_uart_blank(uint8_t frames);
 
-void od_uart_send(void * data, uint16_t len);
+void od_uart_send(const void *data, uint16_t len);
 void od_uart_recv(void * buffer, uint16_t expected_len);
 uint8_t od_uart_recv_byte(void);
+uint8_t od_uart_recv_byte_timeout(uint16_t * timeout_ms);
 void od_uart_wait_until(uint16_t to_read);
 #define od_uart_discard(n) od_uart_recv(NULL, n)
 
