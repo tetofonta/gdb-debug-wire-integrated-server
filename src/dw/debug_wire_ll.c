@@ -4,6 +4,7 @@
 
 #include <avr/io.h>
 #include <util/delay.h>
+#include <dw/debug_wire_ll.h>
 #include <dw/debug_wire.h>
 #include <dw/devices.h>
 #include <panic.h>
@@ -382,9 +383,9 @@ void dw_ll_flash_read(uint16_t from, uint16_t len, void * buffer){
  * USES:
  *  - PC
  *  - HWBP
+ *  - Z (r30, r31)
  *  - X (r26, r27)
  *  - Y (r28, r29)
- *  - Z (r30, r31)
  *  - IR
  *  - r24
  * @param address

@@ -23,7 +23,7 @@ uint16_t usb_cdc_available(void) {
     return Endpoint_BytesInEndpoint();
 }
 
-void usb_cdc_write(void *data, size_t len) {
+void usb_cdc_write(const void *data, size_t len) {
     Endpoint_SelectEndpoint(CDC_TX_EPADDR);
     Endpoint_Write_Stream_LE(data, len, NULL);
     bool is_full = Endpoint_BytesInEndpoint() == CDC_TXRX_EPSIZE;
@@ -32,6 +32,33 @@ void usb_cdc_write(void *data, size_t len) {
         Endpoint_WaitUntilReady();
         Endpoint_ClearIN();
     }
+}
+
+void usb_cdc_write_PSTR(const void * data, size_t len) {
+    Endpoint_SelectEndpoint(CDC_TX_EPADDR);
+    Endpoint_Write_PStream_LE(data, len, NULL);
+    bool is_full = Endpoint_BytesInEndpoint() == CDC_TXRX_EPSIZE;
+    Endpoint_ClearIN();
+    if (is_full) {
+        Endpoint_WaitUntilReady();
+        Endpoint_ClearIN();
+    }
+}
+
+uint8_t usb_cdc_read_byte(void){
+    Endpoint_SelectEndpoint(CDC_RX_EPADDR);
+    uint8_t r = Endpoint_Read_8();
+    if(!Endpoint_IsReadWriteAllowed()){
+        Endpoint_ClearOUT();
+        USB_USBTask();
+    }
+    Endpoint_WaitUntilReady();
+    return r;
+}
+
+uint8_t usb_cdc_discard(void){
+    Endpoint_SelectEndpoint(CDC_RX_EPADDR);
+    while(Endpoint_BytesInEndpoint()) Endpoint_ClearIN();
 }
 
 void usb_cdc_init(void){

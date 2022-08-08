@@ -52,7 +52,7 @@ set(LUFA_SRC_USBCLASS_HOST
         ${LUFA_ROOT_PATH}/Drivers/USB/Class/Host/RNDISClassHost.c
         ${LUFA_ROOT_PATH}/Drivers/USB/Class/Host/StillImageClassHost.c
         )
-set(LUFA_SRC_USB ${LUFA_SRC_USB_COMMON} ${LUFA_SRC_USB_HOST} ${LUFA_SRC_USB_DEVICE} src/usb/usb_cdc.c src/include/dw/devices.h src/include/avr_isa.h)
+set(LUFA_SRC_USB ${LUFA_SRC_USB_COMMON} ${LUFA_SRC_USB_HOST} ${LUFA_SRC_USB_DEVICE} src/usb/usb_cdc.c src/include/gdb/utils.h avrtest/main.c)
 list(SORT LUFA_SRC_USB)
 
 set(LUFA_SRC_USBCLASS ${LUFA_SRC_USBCLASS_DEVICE} ${LUFA_SRC_USBCLASS_HOST})
@@ -93,11 +93,12 @@ set(DEBUG_LEVEL 2)
 set(CMAKE_C_COMPILER avr-gcc)
 set(CMAKE_ASM_COMPILER avr-gcc)
 set(CMAKE_CXX_COMPILER avr-g++)
+set(USE_LTO "-flto")
 
-set(CMAKE_C_FLAGS "-pipe -flto -fdata-sections -mrelax -g${DEBUG_FORMAT} -Wno-array-bounds -fpack-struct -mmcu=${MCU} -fshort-enums -fno-inline-small-functions -g${DEBUG_LEVEL} -Wall -fno-strict-aliasing -funsigned-char -funsigned-bitfields -ffunction-sections -O${OPTIMIZATION} -Wstrict-prototypes")
+set(CMAKE_C_FLAGS "-pipe ${USE_LTO} -fdata-sections -mrelax -g${DEBUG_FORMAT} -Wno-array-bounds -fpack-struct -mmcu=${MCU} -fshort-enums -fno-inline-small-functions -g${DEBUG_LEVEL} -Wall -fno-strict-aliasing -funsigned-char -funsigned-bitfields -ffunction-sections -O${OPTIMIZATION} -Wstrict-prototypes")
 set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -fno-exceptions -fno-threadsafe-statics")
 set(CMAKE_ASM_FLAGS "${CMAKE_C_FLAGS} -x assembler-with-cpp")
-set(CMAKE_LINK_LIBRARY_FLAG "-lm -flto -Wl,--cref -Wl,--gc-sections -Wl,--relax -mmcu=${MCU} -Oz")
+set(CMAKE_LINK_LIBRARY_FLAG "-lm ${USE_LTO} -Wl,--cref -Wl,--gc-sections -Wl,--relax -mmcu=${MCU} -Oz")
 
 add_library(cdc STATIC ${LUFA_SRC_USB})
 
@@ -114,7 +115,9 @@ add_executable(ardwino_elf
         src/include/dw/open_drain.h
         src/panic.c
         src/include/panic.h
-        src/dw/debug_wire.c src/user_button/user_button.c src/include/user_button.h)
+        src/dw/debug_wire.c src/user_button/user_button.c src/include/user_button.h
+        src/gdb/gdb.c src/include/gdb/gdb.h src/gdb/commands/gdb_query_command.c src/gdb/commands/gdb_v_command.c
+        src/include/dw/devices.h src/include/avr_isa.h src/include/dw/debug_wire_ll.h src/include/gdb/commands.h src/gdb/utils.c src/gdb/commands/gdb_command_read_registers.c src/gdb/commands/gdb_command_end.c)
 target_link_libraries(ardwino_elf cdc dw_devices)
 
 add_custom_target(ardwino

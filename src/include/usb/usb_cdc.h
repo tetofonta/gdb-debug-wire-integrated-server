@@ -8,8 +8,11 @@
 
 uint16_t usb_cdc_read(void *dest, size_t len);
 uint16_t usb_cdc_available(void);
-void usb_cdc_write(void *data, size_t len);
+void usb_cdc_write(const void *data, size_t len);
+void usb_cdc_write_PSTR(const void * data, size_t len);
 void usb_cdc_init(void);
+uint8_t usb_cdc_read_byte(void);
+uint8_t usb_cdc_discard(void);
 
 extern CDC_LineEncoding_t LineEncoding;
 
