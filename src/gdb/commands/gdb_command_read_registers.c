@@ -31,11 +31,12 @@ void gdb_cmd_read_registers(void){
     checksum = gdb_send_add_data((const char *) &tmp, 2, checksum);
 
     //pc
-    tmp = byte2hex(cur_state.pc & 0xFF);
+    uint16_t pc_le = cur_state.pc << 8 | cur_state.pc >> 8;
+    tmp = byte2hex((pc_le << 1) & 0xff);
     checksum = gdb_send_add_data((const char *) &tmp, 2, checksum);
-    tmp = byte2hex(cur_state.pc >> 8);
+    tmp = byte2hex(pc_le >> 7);
     checksum = gdb_send_add_data((const char *) &tmp, 2, checksum);
-    tmp = '0' | '0' << 8;
+    tmp = ('0' + (pc_le >> 15)) | '0' << 8;
     checksum = gdb_send_add_data((const char *) &tmp, 2, checksum);
     checksum = gdb_send_add_data((const char *) &tmp, 2, checksum);
 

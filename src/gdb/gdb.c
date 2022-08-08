@@ -24,6 +24,14 @@ void gdb_init(void){
     }
 
     gdb_state_g.state = GDB_STATE_SIGHUP;
+    panic();
+}
+
+static void gdb_send_state(void){
+    buffer[0] = 'S';
+    buffer[1] = nib2hex((gdb_state_g.state >> 4) & 0x0F);
+    buffer[2] = nib2hex(gdb_state_g.state & 0x0F);
+    gdb_send(buffer, 3);
 }
 
 void gdb_send_PSTR(const char * data, uint16_t len){
@@ -71,19 +79,25 @@ void gdb_send_finalize(uint8_t checksum){
 static void gdb_parse_command(const char * buf, uint16_t len){
     switch (*buf) {
         case '?':
-            buffer[0] = 'S';
-            buffer[1] = nib2hex((gdb_state_g.state >> 4) & 0x0F);
-            buffer[2] = nib2hex(gdb_state_g.state & 0x0F);
-            gdb_send(buffer, 3);
+            gdb_send_state();
+            break;
+        case 'C':
+        case 'c':
+            debug_wire_resume(DW_GO_CNTX_HWBP);
+            gdb_state_g.state = GDB_STATE_IDLE;
+            gdb_send_ack();
             break;
         case 'q':
-            gdb_cmd_query((char *) (buffer + 1), len);
+            gdb_cmd_query((char *) (buffer + 1), len - 1 );
             break;
         case 'v':
-            gdb_cmd_v((char *) (buffer + 1), len);
+            gdb_cmd_v((char *) (buffer + 1), len - 1);
             break;
         case 'g':
             gdb_cmd_read_registers();
+            break;
+        case 'm':
+            gdb_cmd_read_memory(buffer + 1, len - 1);
             break;
         case 'k':
         case 'D':
@@ -134,7 +148,9 @@ void gdb_task(void){
                 break; //ack, just ignore it
             case '-':
                 panic(); //nack, should resend but too ram heavy for now. maybe I'll think out something...
-            case 0x03: break;
+            case 0x03:
+                gdb_state_g.state = debug_wire_halt() ? GDB_STATE_SIGINT : GDB_STATE_SIGHUP;
+                gdb_send_state();
             case '$':
                 gdb_handle_command();
                 break;

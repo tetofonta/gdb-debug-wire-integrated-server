@@ -117,7 +117,7 @@ add_executable(ardwino_elf
         src/include/panic.h
         src/dw/debug_wire.c src/user_button/user_button.c src/include/user_button.h
         src/gdb/gdb.c src/include/gdb/gdb.h src/gdb/commands/gdb_query_command.c src/gdb/commands/gdb_v_command.c
-        src/include/dw/devices.h src/include/avr_isa.h src/include/dw/debug_wire_ll.h src/include/gdb/commands.h src/gdb/utils.c src/gdb/commands/gdb_command_read_registers.c src/gdb/commands/gdb_command_end.c)
+        src/include/dw/devices.h src/include/avr_isa.h src/include/dw/debug_wire_ll.h src/include/gdb/commands.h src/gdb/utils.c src/gdb/commands/gdb_command_read_registers.c src/gdb/commands/gdb_command_end.c src/gdb/commands/gdb_cmd_read_memory.c)
 target_link_libraries(ardwino_elf cdc dw_devices)
 
 add_custom_target(ardwino

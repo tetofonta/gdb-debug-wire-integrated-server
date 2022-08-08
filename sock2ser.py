@@ -36,16 +36,17 @@ def thread_to_dev():
 
 
 def stop_session(*args, **kwargs):
-    global stop, ser, sock
+    global stop, ser, sock, threads
     print("Terminating session...")
     stop = True
     for tr in threads:
         tr.join(1)
+    threads = []
     print("OK")
-    sock.close()
-    ser.close()
-    sock = None
-    ser = None
+    if sock is not None:
+        sock.close()
+    if ser is not None:
+        ser.close()
     stop = False
 
 

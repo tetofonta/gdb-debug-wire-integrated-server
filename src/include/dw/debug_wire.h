@@ -20,6 +20,7 @@ extern struct dw_state cur_state;
 #define DW_GO_CNTX_SWBP                 0x79
 #define DW_GO_CNTX_SS                   0x7a
 
+uint8_t debug_wire_halt(void);
 uint8_t dw_init(uint32_t target_freq);
 void debug_wire_device_reset(void);
 void debug_wire_resume(uint8_t context);

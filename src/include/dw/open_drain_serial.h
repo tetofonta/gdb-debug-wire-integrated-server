@@ -9,7 +9,7 @@
 #include <avr/interrupt.h>
 #include <stddef.h>
 
-#define OD_UART_RX_BUFFER_SIZE 32
+#define OD_UART_RX_BUFFER_SIZE 64
 
 #define OD_UART_FLAG_BUSY_MASK      (1 << 6)
 #define OD_UART_FLAG_WRT_MASK       (1 << 5)

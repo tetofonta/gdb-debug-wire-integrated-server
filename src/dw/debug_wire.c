@@ -36,6 +36,13 @@ void debug_wire_device_reset(void) {
     if (!debug_wire_g.halted)
         dw_cmd_halt();
     dw_cmd_reset();
+    dw_cmd_set_multi(DW_CMD_REG_HWBP, 0xff, 0xff);
+}
+
+uint8_t debug_wire_halt(void){
+    if (!debug_wire_g.halted)
+        return dw_cmd_halt();
+    return 1;
 }
 
 struct dw_state cur_state;
