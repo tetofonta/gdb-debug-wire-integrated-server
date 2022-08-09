@@ -90,8 +90,9 @@ void dw_ll_sram_read(uint16_t from, uint16_t len, void * buffer);
 void dw_ll_sram_write(uint16_t from, uint16_t len, void * buffer);
 void dw_ll_flash_read(uint16_t from, uint16_t len, void * buffer);
 void dw_ll_flash_clear_page(uint16_t address);
+void dw_ll_enable_rww(void);
 
-uint8_t dw_ll_flash_write_page_begin(void);
+uint8_t dw_ll_flash_write_page_begin(uint16_t address);
 uint8_t dw_ll_flash_write_populate_buffer(const uint16_t * buffer, uint16_t len, uint16_t remaining);
 void dw_ll_flash_write_execute(void);
 
@@ -99,5 +100,10 @@ uint8_t dw_ll_eeprom_read_byte(uint16_t address);
 void dw_ll_eeprom_read(void * buffer, uint16_t address, uint16_t len);
 void dw_ll_eeprom_write_byte(uint16_t address, uint8_t data);
 void dw_ll_eeprom_write(const void * buffer, uint16_t address, uint16_t len);
+
+void dw_ll_add_breakpoint(uint16_t word_address);
+void dw_ll_remove_breakpoint(uint16_t word_address);
+void dw_ll_clear_breakpoints(void);
+void dw_ll_flush_breakpoints(uint16_t * buffer, uint16_t len);
 
 #endif //ARDWINO_DEBUG_WIRE_LL_H

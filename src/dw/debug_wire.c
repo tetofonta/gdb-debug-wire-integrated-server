@@ -7,7 +7,7 @@
 #include "avr_isa.h"
 
 static dw_sw_brkpt_t *_dw_is_swprkpt(void) {
-    for (int i = 0; i < debug_wire_g.swbrkpt_n; ++i)
+    for (uint8_t i = 0; i < debug_wire_g.swbrkpt_n; ++i)
         if (debug_wire_g.swbrkpt[i].address == debug_wire_g.program_counter) return &debug_wire_g.swbrkpt[i];
     return NULL;
 }
@@ -72,7 +72,6 @@ void dw_env_open(uint8_t env_type){
 
     dw_ll_registers_read(r26, r27, &cur_state.x);
     dw_ll_registers_read(r28, r29, &cur_state.y);
-    cur_state.reg24 = dw_ll_register_read(r24);
     save_ir: cur_state.ir = dw_cmd_get(DW_CMD_REG_IR);
     if(env_type == 1) return;
     env_type--;

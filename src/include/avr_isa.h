@@ -14,7 +14,7 @@
 #define AVR_INSTR_MOVW(wd, wr)              ((uint16_t) (0b0000000100000000 | (((wd >> 1) & 0x0F) << 4) | ((wr >> 1) & 0x0F)))
 #define AVR_INSTR_SPM()                     ((uint16_t) (0b1001010111101000))
 #define AVR_INSTR_ADIW(w, K)                ((uint16_t) (0b1001011000000000 | ((K & 0x30) << 2) | (K & 0x0F) | ((w & 0x03) << 4)))
-#define AVR_INSTR_LDI(rd, K)                ((uint16_t) (0b1110000000000000 | ((K & 0xF0) << 8) | (K & 0x0F) | ((rd & 0x0F) << 4)))
+#define AVR_INSTR_LDI(rd, K)                ((uint16_t) (0b1110000000000000 | ((K & 0xF0) << 4) | (K & 0x0F) | ((rd & 0x0F) << 4)))
 #define AVR_INSTR_BREAK()                   ((uint16_t) (0b1001010110011000))
 
 #define r0                                  0

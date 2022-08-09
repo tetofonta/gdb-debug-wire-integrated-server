@@ -120,7 +120,7 @@ void od_uart_tx_byte(uint8_t data){
 
     while(_OD_UART_BUSY && !_OD_UART_WRT);
     if(_OD_UART_BUSY) return; //already transmitting
-    PORTB ^= (1 << PINB7);
+    //PORTB ^= (1 << PINB7);
 
     FE_IRQ_DISABLE();
     uart_tx_buffer_full = 0;
@@ -251,7 +251,7 @@ uint8_t od_uart_recv_byte_timeout(uint16_t * timeout_ms){
 
 __attribute__((optimize("-Ofast"))) ISR(TIMER1_COMPA_vect){
     cli();
-    PORTB ^= (1 << PINB7);
+//    PORTB ^= (1 << PINB7);
     register uint8_t value = PIND; //read the bus state now, we should not wait.
     if(_OD_UART_WRT){
         if ((PORTD ^ fast_flags) & (1 << PIND7) ) //if next_value is different than current bus status (set)
