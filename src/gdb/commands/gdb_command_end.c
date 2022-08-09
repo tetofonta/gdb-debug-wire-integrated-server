@@ -3,11 +3,14 @@
 //
 #include <gdb/gdb.h>
 #include <avr/pgmspace.h>
-#include <dw/debug_wire.h>
+#include <dw/debug_wire_ll.h>
 
-void gdb_cmd_end(uint8_t restart){
+void gdb_cmd_end(uint8_t restart, uint16_t * buffer, uint16_t len){
 
-    //todo update breakpoints
+    dw_ll_clear_breakpoints();
+    dw_env_open(DW_GO_CNTX_FLASH_WRT);
+    dw_ll_flush_breakpoints((uint16_t *) buffer, len);
+    dw_env_close(DW_GO_CNTX_FLASH_WRT);
 
     debug_wire_device_reset();
     gdb_state_g.state = GDB_STATE_SIGTRAP;

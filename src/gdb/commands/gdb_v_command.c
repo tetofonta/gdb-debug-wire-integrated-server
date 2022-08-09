@@ -8,7 +8,7 @@
 
 void gdb_cmd_v(char * buffer, uint16_t len){
     if(!memcmp_P(buffer, PSTR("Kill"), 4)){
-        gdb_cmd_end(1);
+        gdb_cmd_end(1,(uint16_t *) buffer, 32);
     }
     gdb_send_empty();
 }

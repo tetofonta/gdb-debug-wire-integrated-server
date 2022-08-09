@@ -19,7 +19,7 @@ void gdb_init(void){
 
     if(dw_init(2*8000000)){//todo get frequency from eeprom
         debug_wire_device_reset();
-        //debug_wire_resume(DW_GO_CNTX_CONTINUE);
+        debug_wire_resume(DW_GO_CNTX_CONTINUE);
         gdb_state_g.state = GDB_STATE_DISCONNECTED;
         return;
     }
@@ -91,12 +91,20 @@ static void gdb_parse_command(const char * buf, uint16_t len){
             break;
         case 'C':
         case 'c':
+            dw_env_open(DW_GO_CNTX_FLASH_WRT);
+            dw_ll_flush_breakpoints((uint16_t *) buffer, 32);
+            dw_env_close(DW_GO_CNTX_FLASH_WRT);
+
             debug_wire_resume(DW_GO_CNTX_HWBP);
             gdb_state_g.state = GDB_STATE_IDLE;
             gdb_send_ack();
             break;
         case 'S':
         case 's':
+            dw_env_open(DW_GO_CNTX_FLASH_WRT);
+            dw_ll_flush_breakpoints((uint16_t *) buffer, 32);
+            dw_env_close(DW_GO_CNTX_FLASH_WRT);
+
             gdb_send_ack();
             gdb_state_g.state = GDB_STATE_IDLE;
             debug_wire_resume(DW_GO_CNTX_SS);
@@ -115,14 +123,14 @@ static void gdb_parse_command(const char * buf, uint16_t len){
             break;
         case 'k':
         case 'D':
-            gdb_cmd_end(true);
+            gdb_cmd_end(true, (uint16_t *) buffer, 32);
         case 'H':
         case 'T':
             gdb_send_PSTR(PSTR("$OK#9a"), 6);
             break;
         case 'r':
         case 'R':
-            gdb_cmd_end(false);
+            gdb_cmd_end(false, (uint16_t *) buffer, 32);
             gdb_send_ack();
             gdb_send_state();
             break;
@@ -164,47 +172,24 @@ void gdb_task(void){
     if(Endpoint_IsOUTReceived()){
         uint8_t cmd_type = usb_cdc_read_byte();
 
-        switch(cmd_type){
+        switch (cmd_type) {
             case '+':
-                //push sencond page
-                dw_ll_flash_read(128, 64, buffer);
-                usb_cdc_write(buffer, 64);
-                dw_ll_flash_read(128+64, 64, buffer);
-                usb_cdc_write(buffer, 64);
-                break;
+                break; //ack, just ignore it
             case '-':
-                //set bp
-                dw_ll_add_breakpoint(32+64+10);
-                usb_cdc_write(&debug_wire_g.swbrkpt, sizeof(dw_sw_brkpt_t));
+                panic(); //nack, should resend but too ram heavy for now. maybe I'll think out something...
+            case 0x03:
+                gdb_state_g.state = GDB_STATE_SIGINT;
+                gdb_state_g.state = debug_wire_halt() ? GDB_STATE_SIGINT : GDB_STATE_SIGHUP;
+                gdb_send_state();
                 break;
-            case '/':
-                //set bp
-                dw_ll_remove_breakpoint(32+64+10);
-                usb_cdc_write(&debug_wire_g.swbrkpt, sizeof(dw_sw_brkpt_t));
+            case '$':
+                gdb_handle_command();
+                Endpoint_SelectEndpoint(CDC_RX_EPADDR);
+                Endpoint_ClearOUT();
                 break;
-            case '*':
-                dw_env_open(DW_ENV_FLASH_WRITE);
-                dw_ll_flush_breakpoints((uint16_t *) buffer, 32);
-                dw_env_close(DW_ENV_FLASH_WRITE);
+            default:
+                break;
         }
-//        switch (cmd_type) {
-//            case '+':
-//                break; //ack, just ignore it
-//            case '-':
-//                panic(); //nack, should resend but too ram heavy for now. maybe I'll think out something...
-//            case 0x03:
-//                gdb_state_g.state = GDB_STATE_SIGINT;
-//                gdb_state_g.state = debug_wire_halt() ? GDB_STATE_SIGINT : GDB_STATE_SIGHUP;
-//                gdb_send_state();
-//                break;
-//            case '$':
-//                gdb_handle_command();
-//                Endpoint_SelectEndpoint(CDC_RX_EPADDR);
-//                Endpoint_ClearOUT();
-//                break;
-//            default:
-//                break;
-//        }
     }
 }
 

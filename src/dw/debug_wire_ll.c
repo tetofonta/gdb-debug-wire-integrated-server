@@ -31,6 +31,7 @@ uint8_t dw_init(uint32_t target_freq) {
 
     if(debug_wire_g.device.signature == 0x00){ //if not already initialized
         debug_wire_g.device.signature = 0x01; //no infinite recursion
+        debug_wire_g.swbrkpt_n = 0;
         if(!dw_cmd_halt()) return 0;
         uint16_t signature = dw_cmd_get(DW_CMD_REG_SIGNATURE);
 
@@ -619,6 +620,8 @@ static inline uint8_t is_bp_addr_gt(dw_sw_brkpt_t * a, dw_sw_brkpt_t * b){
 }
 
 static void dw_ll_internal_update_bp_references(void){
+    if(debug_wire_g.swbrkpt_n < 2) return;
+
     //performs an insertion sort
     dw_sw_brkpt_t tmp;
     for (int16_t i = 1; i < debug_wire_g.swbrkpt_n; ++i) {
@@ -691,7 +694,6 @@ static uint8_t dw_ll_internal_write_breakpoints(uint16_t page_address, dw_sw_brk
 
 void dw_ll_flush_breakpoints(uint16_t * buffer, uint16_t len){
     dw_ll_internal_update_bp_references();
-
     uint8_t bp_len = 0;
     while(bp_len < debug_wire_g.swbrkpt_n){
         uint16_t page_address = ((((debug_wire_g.swbrkpt + bp_len)->address) / debug_wire_g.device.flash_page_end) * debug_wire_g.device.flash_page_end);
