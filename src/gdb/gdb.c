@@ -11,15 +11,16 @@
 #include "gdb/utils.h"
 
 struct gdb_state gdb_state_g;
+uint8_t ack_enabled = 1;
 uint8_t buffer[64];
-uint8_t aux;
 
 void gdb_init(void){
     _delay_ms(100);
+
     if(dw_init(2*8000000)){//todo get frequency from eeprom
         debug_wire_device_reset();
         debug_wire_resume(DW_GO_CNTX_CONTINUE);
-        gdb_state_g.state = GDB_STATE_IDLE;
+        gdb_state_g.state = GDB_STATE_DISCONNECTED;
         return;
     }
 
@@ -46,7 +47,7 @@ void gdb_send(const char * data, uint16_t len){
 }
 
 void gdb_send_ack(void){
-    usb_cdc_write_PSTR(PSTR("+"), 1);
+    if(ack_enabled) usb_cdc_write_PSTR(PSTR("+"), 1);
 }
 
 void gdb_send_nack(void){
@@ -70,6 +71,13 @@ uint8_t gdb_send_add_data(const char * data, uint16_t len, uint8_t checksum){
     return checksum;
 }
 
+uint8_t gdb_send_add_data_PSTR(const char * data, uint16_t len, uint8_t checksum){
+    usb_cdc_write_PSTR(data, len);
+    while(len--) checksum += pgm_read_byte(data++);
+    return checksum;
+}
+
+
 void gdb_send_finalize(uint8_t checksum){
     uint16_t chksm = byte2hex(checksum & 0xFF);
     usb_cdc_write_PSTR(PSTR("#"), 1);
@@ -87,13 +95,19 @@ static void gdb_parse_command(const char * buf, uint16_t len){
             gdb_state_g.state = GDB_STATE_IDLE;
             gdb_send_ack();
             break;
+        case 'S':
+        case 's':
+            gdb_send_ack();
+            gdb_state_g.state = GDB_STATE_IDLE;
+            debug_wire_resume(DW_GO_CNTX_SS);
+            break;
         case 'q':
             gdb_cmd_query((char *) (buffer + 1), len - 1 );
             break;
         case 'v':
             gdb_cmd_v((char *) (buffer + 1), len - 1);
             break;
-        case 'g':
+        case 'g': //todo handle p/P
             gdb_cmd_read_registers();
             break;
         case 'm':
@@ -101,10 +115,16 @@ static void gdb_parse_command(const char * buf, uint16_t len){
             break;
         case 'k':
         case 'D':
-            gdb_cmd_end();
+            gdb_cmd_end(true);
         case 'H':
         case 'T':
             gdb_send_PSTR(PSTR("$OK#9a"), 6);
+            break;
+        case 'r':
+        case 'R':
+            gdb_cmd_end(false);
+            gdb_send_ack();
+            gdb_send_state();
             break;
         case '!':
         default:
@@ -149,13 +169,27 @@ void gdb_task(void){
             case '-':
                 panic(); //nack, should resend but too ram heavy for now. maybe I'll think out something...
             case 0x03:
+                gdb_state_g.state = GDB_STATE_SIGINT;
                 gdb_state_g.state = debug_wire_halt() ? GDB_STATE_SIGINT : GDB_STATE_SIGHUP;
                 gdb_send_state();
+                break;
             case '$':
                 gdb_handle_command();
+                Endpoint_SelectEndpoint(CDC_RX_EPADDR);
+                Endpoint_ClearOUT();
                 break;
             default:
                 break;
         }
     }
+}
+
+inline void on_dw_mcu_halt(void){
+    if(gdb_state_g.state != GDB_STATE_IDLE) return;
+    gdb_state_g.state = GDB_STATE_SIGTRAP;
+
+    uint8_t tmp = ack_enabled;
+    ack_enabled = 0;
+    gdb_send_state();
+    ack_enabled = tmp;
 }

@@ -20,22 +20,31 @@ void debug_wire_resume(uint8_t context) {
         dw_cmd_set(DW_CMD_REG_PC, &debug_wire_g.program_counter);
         dw_set_context(DW_GO_CNTX_SWBP ^ (debug_wire_g.run_timers << 5));
         dw_cmd_set(DW_CMD_REG_IR, &swbrkpt->opcode);
-        dw_cmd_go(1);
-        debug_wire_g.halted = 0;
+        if(context == DW_GO_CNTX_SS)
+            dw_cmd_ss(1);
+        else
+            dw_cmd_go(1);
         return;
     }
 
+    dw_cmd_get(DW_CMD_REG_PC);
     dw_cmd_set(DW_CMD_REG_PC, &debug_wire_g.program_counter);
+    dw_cmd_get(DW_CMD_REG_PC);
     dw_set_context(context ^ (debug_wire_g.run_timers << 5));
+    dw_cmd_get(DW_CMD_REG_PC);
     dw_cmd_set(DW_CMD_REG_PC, &debug_wire_g.program_counter); //WHY?
-    debug_wire_g.halted = 0;
-    dw_cmd_go(0);
+    dw_cmd_get(DW_CMD_REG_PC);
+    if(context == DW_GO_CNTX_SS)
+        dw_cmd_ss(0);
+    else
+        dw_cmd_go(0);
 }
 
 void debug_wire_device_reset(void) {
     if (!debug_wire_g.halted)
         dw_cmd_halt();
     dw_cmd_reset();
+    debug_wire_g.program_counter = 0;
     dw_cmd_set_multi(DW_CMD_REG_HWBP, 0xff, 0xff);
 }
 

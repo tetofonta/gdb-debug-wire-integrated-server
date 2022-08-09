@@ -8,6 +8,7 @@
 #include <dw/debug_wire.h>
 #include <dw/devices.h>
 #include <panic.h>
+#include <string.h>
 #include "avr_isa.h"
 
 debug_wire_t debug_wire_g;
@@ -72,6 +73,7 @@ uint8_t dw_cmd_halt(void){
     debug_wire_g.halted = 1; //set state as halted
     MUST_SUCCEED(dw_cmd_set_speed(DW_DIVISOR_128), 1); //sets the speed
     debug_wire_g.program_counter = dw_cmd_get(DW_CMD_REG_PC); //save the program counter
+    PORTD &= ~(1 << PIND4);
     return 1;
 }
 
@@ -149,6 +151,7 @@ void dw_cmd_reset(void){
  */
 void dw_cmd_go(uint8_t is_sw_brkpt){
     debug_wire_g.halted = 0;
+    PORTD |= (1 << PIND4);
     dw_cmd(is_sw_brkpt ? DW_CMD_GO_FROM_IR : DW_CMD_GO);
 }
 
@@ -166,8 +169,12 @@ inline void od_uart_irq_break(void){
         waiting_break = 0;
         return;
     }
-    debug_wire_g.program_counter = dw_cmd_get(DW_CMD_REG_PC); //save the program counter
+    uint16_t pc = dw_cmd_get(DW_CMD_REG_PC); //F0 hh ll -- get the PC. TAKE NOTE after a break this will return PC+1.
+    pc = BE(pc) - 1;
+    debug_wire_g.program_counter = BE(pc); //save the program counter
     debug_wire_g.halted = 1; //set status as halted
+    PORTD &= ~(1 << PIND4);
+    on_dw_mcu_halt();
     waiting_break = 0; //clear and return
 }
 
@@ -422,8 +429,8 @@ void dw_ll_flash_clear_page(uint16_t address){
  * @param address
  * @return the amount of words the buffer will contains.
  */
-uint8_t dw_ll_flash_write_page_begin(uint16_t address){
-    dw_ll_flash_clear_page(address);
+uint8_t dw_ll_flash_write_page_begin(void){
+    //dw_ll_flash_clear_page(address);
     dw_set_context(DW_GO_CNTX_FLASH_WRT & ~(1 << 5));
     _delay_ms(10);
     return debug_wire_g.device.flash_page_end;
@@ -571,4 +578,84 @@ void dw_ll_eeprom_write_byte(uint16_t address, uint8_t data){
  */
 void dw_ll_eeprom_write(const void * buffer, uint16_t address, uint16_t len){
     while(len--) dw_ll_eeprom_write_byte(address++, *((uint8_t *) buffer++));
+}
+
+//===========================================================================================================breakpoints
+void dw_ll_add_breakpoint(uint16_t word_address){
+    if(debug_wire_g.swbrkpt_n == DW_SW_BRKPT_SIZE) return;
+    for (int i = 0; i < debug_wire_g.swbrkpt_n; ++i)
+        if (debug_wire_g.swbrkpt[i].address == word_address){
+            debug_wire_g.swbrkpt[i].active = 1;
+            return;
+        }
+
+    dw_sw_brkpt_t  * bp = &debug_wire_g.swbrkpt[debug_wire_g.swbrkpt_n++];
+    bp->address = word_address;
+    bp->active = 1;
+    bp->stored = 0;
+}
+
+void dw_ll_remove_breakpoint(uint16_t word_address){
+    for (int i = 0; i < debug_wire_g.swbrkpt_n; ++i)
+        if (debug_wire_g.swbrkpt[i].address == word_address){
+            debug_wire_g.swbrkpt[i].active = 0;
+        }
+}
+
+void dw_ll_clear_breakpoints(void){
+    for (int i = 0; i < debug_wire_g.swbrkpt_n; ++i)
+        debug_wire_g.swbrkpt[i].active = 0;
+}
+
+static void dw_ll_internal_remove_bp(dw_sw_brkpt_t * bp, uint16_t * buffer, uint16_t buf_len){
+
+    bp->stored = 0;
+}
+
+static void dw_ll_internal_add_bp(dw_sw_brkpt_t * bp, uint16_t * buffer, uint16_t buf_len){
+    uint16_t remaining_words = dw_ll_flash_write_page_begin();
+    uint16_t break_opcode = BE(AVR_INSTR_BREAK());
+    uint16_t address = (((bp->address >> 1) / debug_wire_g.device.flash_page_end) * debug_wire_g.device.flash_page_end) << 1; //address in bytes of the beginning of the page
+    uint16_t orig_address = address;
+    uint16_t offset = (bp->address - address) >> 1; //offset to the begin of the page in words
+
+    while(remaining_words){
+        uint16_t words_to_read = (buf_len < remaining_words ? buf_len : remaining_words); //calculate how many words we can read
+        dw_ll_flash_read(address, words_to_read * 2, buffer); //read this part of the word
+
+        if(offset < words_to_read){ //if the breakpoint is placed inside this part of read page
+            remaining_words = dw_ll_flash_write_populate_buffer(buffer, offset, remaining_words); //write until we should write the breakpoint instruction
+            bp->opcode = *(buffer + offset); //read and save the opcode
+            remaining_words = dw_ll_flash_write_populate_buffer(&break_opcode, 1, remaining_words); //write break instead
+            remaining_words = dw_ll_flash_write_populate_buffer(buffer + offset + 1, words_to_read - offset - 1, remaining_words); //finish writing the buffer
+        } else {
+            remaining_words = dw_ll_flash_write_populate_buffer(buffer, words_to_read, remaining_words); //write all the buffer
+        }
+        address += words_to_read * 2;
+    }
+    _delay_ms(10);
+    dw_ll_flash_clear_page(orig_address);
+    _delay_ms(10);
+    dw_ll_flash_write_execute();
+    bp->stored = 1;
+}
+
+static void dw_ll_internal_update_bp_references(void){
+    uint8_t backshift = 0;
+    for (int i = 0; i < debug_wire_g.swbrkpt_n; ++i){
+        if(backshift)
+            memcpy(debug_wire_g.swbrkpt + i - backshift, debug_wire_g.swbrkpt + i, sizeof(dw_sw_brkpt_t));
+        if(!debug_wire_g.swbrkpt[i].active && !debug_wire_g.swbrkpt[i].stored) backshift++;
+    }
+    debug_wire_g.swbrkpt_n -= backshift;
+}
+
+void dw_ll_flush_breakpoints(uint8_t * buffer, uint16_t len){
+    for (int i = 0; i < debug_wire_g.swbrkpt_n; ++i){
+        if(debug_wire_g.swbrkpt[i].active && !debug_wire_g.swbrkpt[i].stored) dw_ll_internal_add_bp(&debug_wire_g.swbrkpt[i],
+                                                                                                    (uint16_t *) buffer, len / 2);
+        if(!debug_wire_g.swbrkpt[i].active && debug_wire_g.swbrkpt[i].stored) dw_ll_internal_remove_bp(&debug_wire_g.swbrkpt[i],
+                                                                                                       (uint16_t *) buffer, len / 2);
+    }
+    dw_ll_internal_update_bp_references();
 }

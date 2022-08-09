@@ -31,8 +31,8 @@ void gdb_cmd_read_registers(void){
     checksum = gdb_send_add_data((const char *) &tmp, 2, checksum);
 
     //pc
-    uint16_t pc_le = cur_state.pc << 8 | cur_state.pc >> 8;
-    tmp = byte2hex((pc_le << 1) & 0xff);
+    uint16_t pc_le = (cur_state.pc) << 8 | cur_state.pc >> 8;
+    tmp = byte2hex((--pc_le << 1) & 0xff);
     checksum = gdb_send_add_data((const char *) &tmp, 2, checksum);
     tmp = byte2hex(pc_le >> 7);
     checksum = gdb_send_add_data((const char *) &tmp, 2, checksum);

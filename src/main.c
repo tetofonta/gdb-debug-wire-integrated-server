@@ -16,9 +16,10 @@ int main(void) {
     usr_btn_setup();
     usr_btn_init(&rst_button, &PINB, 6);
 
-    DDRD |= (1 << PIND5); //tx led
-    DDRD |= (1 << PIND4); //rx led
-    PORTD ^= (1 << PIND4);
+    DDRD |= (1 << PIND5); //tx led -> usb connected
+    DDRD |= (1 << PIND4); //rx led -> halted
+    PORTD |= (1 << PIND5);
+    PORTD |= (1 << PIND4);
 
     DDRB |= (1 << PINB4) | (1 << PINB7);
     PORTB |= (1 << PINB4);

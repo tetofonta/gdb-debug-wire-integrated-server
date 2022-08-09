@@ -10,30 +10,6 @@
 #include "devices.h"
 #include <dw/debug_wire.h>
 
-#define DW_SW_BRKPT_SIZE 10
-
-typedef struct dw_sw_brkpt{
-    uint16_t address;
-    uint16_t opcode;
-
-    uint8_t active : 1;
-    uint8_t hwbp : 1;
-} dw_sw_brkpt_t;
-
-typedef struct debug_wire {
-    uint32_t target_frequency;
-    uint8_t cur_divisor;
-    uint16_t program_counter;
-
-    uint8_t halted : 1;
-    uint8_t run_timers : 1;
-    dw_device_definition_t device;
-
-    dw_sw_brkpt_t swbrkpt[DW_SW_BRKPT_SIZE];
-    uint8_t swbrkpt_n;
-} debug_wire_t;
-
-extern debug_wire_t debug_wire_g;
 #define DW_DIVISOR_128              0x83
 #define DW_DIVISOR_64               0x82
 #define DW_DIVISOR_32               0x81
@@ -115,7 +91,7 @@ void dw_ll_sram_write(uint16_t from, uint16_t len, void * buffer);
 void dw_ll_flash_read(uint16_t from, uint16_t len, void * buffer);
 void dw_ll_flash_clear_page(uint16_t address);
 
-uint8_t dw_ll_flash_write_page_begin(uint16_t address);
+uint8_t dw_ll_flash_write_page_begin(void);
 uint8_t dw_ll_flash_write_populate_buffer(const uint16_t * buffer, uint16_t len, uint16_t remaining);
 void dw_ll_flash_write_execute(void);
 

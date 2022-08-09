@@ -7,12 +7,13 @@
 
 #include <avr/io.h>
 
-#define GDB_STATE_IDLE          1 //ok
+#define GDB_STATE_IDLE          0 //ok
 #define GDB_STATE_SIGHUP        1 //device disconnected
 #define GDB_STATE_SIGINT        2 //interrupted by user
 #define GDB_STATE_SIGILL        3 //illegal instruction
 #define GDB_STATE_SIGTRAP       4 //stopped on a breakpoint
 #define GDB_STATE_SIGABRT       5 //fatal error
+#define GDB_STATE_DISCONNECTED  15
 
 struct gdb_state {
     uint8_t state: 4;
@@ -36,7 +37,7 @@ void gdb_send_nack(void);
 uint8_t gdb_send_begin(void);
 
 uint8_t gdb_send_add_data(const char *data, uint16_t len, uint8_t checksum);
-
+uint8_t gdb_send_add_data_PSTR(const char * data, uint16_t len, uint8_t checksum);
 void gdb_send_finalize(uint8_t checksum);
 
 #endif //ARDWINO_GDB_H
