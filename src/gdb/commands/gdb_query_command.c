@@ -5,10 +5,10 @@
 #include <gdb/utils.h>
 #include <dw/debug_wire.h>
 #include <avr/pgmspace.h>
+#include "usb/usb_cdc.h"
 
 void gdb_cmd_query(char *buffer, uint16_t len) {
     if (!memcmp_P(buffer, PSTR("Supported"), 9)) {
-
         gdb_send_PSTR(PSTR("$PacketSize=60;swbreak+;hwbreak+#35"), 35);
         if(gdb_state_g.state ==  GDB_STATE_SIGHUP){
             return;

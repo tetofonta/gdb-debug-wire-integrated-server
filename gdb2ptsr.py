@@ -5,7 +5,7 @@ def checksum(data):
     return hex(sum([ord(c) for c in data]))[-2:]
 
 
-if sys.argv[2] == 'notify':
+if len(sys.argv) > 2 and sys.argv[2] == 'notify':
     data = "O" + hexlify(sys.argv[1].encode()).decode()
 else:
     data = sys.argv[1]

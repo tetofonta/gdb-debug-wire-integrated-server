@@ -582,25 +582,28 @@ void dw_ll_eeprom_write(const void * buffer, uint16_t address, uint16_t len){
 }
 
 //===========================================================================================================breakpoints
-void dw_ll_add_breakpoint(uint16_t word_address){
-    if(debug_wire_g.swbrkpt_n == DW_SW_BRKPT_SIZE) return;
+uint8_t dw_ll_add_breakpoint(uint16_t word_address){
+    if(debug_wire_g.swbrkpt_n == DW_SW_BRKPT_SIZE) return 0;
     for (uint8_t i = 0; i < debug_wire_g.swbrkpt_n; ++i)
         if (debug_wire_g.swbrkpt[i].address == word_address){
             debug_wire_g.swbrkpt[i].active = 1;
-            return;
+            return 1;
         }
 
     dw_sw_brkpt_t  * bp = &debug_wire_g.swbrkpt[debug_wire_g.swbrkpt_n++];
     bp->address = word_address;
     bp->active = 1;
     bp->stored = 0;
+    return 1;
 }
 
-void dw_ll_remove_breakpoint(uint16_t word_address){
+uint8_t dw_ll_remove_breakpoint(uint16_t word_address){
     for (uint8_t i = 0; i < debug_wire_g.swbrkpt_n; ++i)
         if (debug_wire_g.swbrkpt[i].address == word_address){
             debug_wire_g.swbrkpt[i].active = 0;
+            return 1;
         }
+    return 0;
 }
 
 void dw_ll_clear_breakpoints(void){

@@ -50,6 +50,7 @@ uint8_t usb_cdc_read_byte(void){
     uint8_t r = Endpoint_Read_8();
     if(!Endpoint_IsReadWriteAllowed()){
         Endpoint_ClearOUT();
+        Endpoint_WaitUntilReady();
         USB_USBTask();
     }
     Endpoint_WaitUntilReady();

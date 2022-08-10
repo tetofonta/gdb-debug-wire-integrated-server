@@ -101,8 +101,8 @@ void dw_ll_eeprom_read(void * buffer, uint16_t address, uint16_t len);
 void dw_ll_eeprom_write_byte(uint16_t address, uint8_t data);
 void dw_ll_eeprom_write(const void * buffer, uint16_t address, uint16_t len);
 
-void dw_ll_add_breakpoint(uint16_t word_address);
-void dw_ll_remove_breakpoint(uint16_t word_address);
+uint8_t dw_ll_add_breakpoint(uint16_t word_address);
+uint8_t dw_ll_remove_breakpoint(uint16_t word_address);
 void dw_ll_clear_breakpoints(void);
 void dw_ll_flush_breakpoints(uint16_t * buffer, uint16_t len);
 
