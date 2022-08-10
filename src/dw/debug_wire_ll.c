@@ -10,6 +10,7 @@
 #include <panic.h>
 #include <string.h>
 #include "avr_isa.h"
+#include "leds.h"
 
 debug_wire_t debug_wire_g;
 
@@ -74,7 +75,7 @@ uint8_t dw_cmd_halt(void){
     debug_wire_g.halted = 1; //set state as halted
     MUST_SUCCEED(dw_cmd_set_speed(DW_DIVISOR_128), 1); //sets the speed
     debug_wire_g.program_counter = dw_cmd_get(DW_CMD_REG_PC); //save the program counter
-    PORTD &= ~(1 << PIND4);
+    DW_LED_ON();
     return 1;
 }
 
@@ -152,7 +153,7 @@ void dw_cmd_reset(void){
  */
 void dw_cmd_go(uint8_t is_sw_brkpt){
     debug_wire_g.halted = 0;
-    PORTD |= (1 << PIND4);
+    DW_LED_OFF();
     dw_cmd(is_sw_brkpt ? DW_CMD_GO_FROM_IR : DW_CMD_GO);
 }
 
@@ -174,7 +175,7 @@ inline void od_uart_irq_break(void){
     pc = BE(pc) - 1;
     debug_wire_g.program_counter = BE(pc); //save the program counter
     debug_wire_g.halted = 1; //set status as halted
-    PORTD &= ~(1 << PIND4);
+    DW_LED_ON();
     on_dw_mcu_halt();
     waiting_break = 0; //clear and return
 }
@@ -650,7 +651,6 @@ static uint8_t dw_ll_internal_write_breakpoints(uint16_t page_address, dw_sw_brk
     uint8_t written = 0;
 
     while(remaining_words){
-        PORTB ^= (1 << PORTB4);
         uint16_t words_to_read = (buf_size < remaining_words ? buf_size : remaining_words);
 
         dw_ll_registers_read(r30, r31, &z);
@@ -662,7 +662,6 @@ static uint8_t dw_ll_internal_write_breakpoints(uint16_t page_address, dw_sw_brk
             executed++;
             remaining_words = dw_ll_flash_write_populate_buffer(buffer + cur_buffer_wrt, cur_bp_offset - cur_buffer_wrt, remaining_words);
             if(bps->active && !bps->stored){
-                PORTB ^= (1 << PORTB7);
                 bps->stored = 1;
                 (bps++)->opcode  = *(buffer + cur_bp_offset);
                 remaining_words = dw_ll_flash_write_populate_buffer(&break_opcode, 1, remaining_words);

@@ -6,15 +6,19 @@
 #include <dw/debug_wire.h>
 #include <avr/pgmspace.h>
 #include "usb/usb_cdc.h"
+#include "leds.h"
 
 void gdb_cmd_query(char *buffer, uint16_t len) {
     if (!memcmp_P(buffer, PSTR("Supported"), 9)) {
         gdb_send_PSTR(PSTR("$PacketSize=3c;swbreak+;hwbreak+#65"), 35);
+
         if(gdb_state_g.state ==  GDB_STATE_SIGHUP){
             return;
         }
 
         //gdb is connected!
+        GDB_LED_ON();
+        gdb_state_g.state = GDB_STATE_IDLE;
         debug_wire_device_reset();
         gdb_state_g.state = GDB_STATE_SIGTRAP;
     } else if (buffer[1] == 'C') gdb_send_PSTR(PSTR("$QC01#f5"), 8);

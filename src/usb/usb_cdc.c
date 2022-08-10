@@ -6,6 +6,8 @@ CDC_LineEncoding_t LineEncoding = {.BaudRateBPS = 0,
         .DataBits    = 8
 };
 
+union cdc_buffer_u cdc_buffer;
+
 uint16_t usb_cdc_read(void *dest, size_t len) {
     /* Select the Serial Rx Endpoint */
     Endpoint_SelectEndpoint(CDC_RX_EPADDR);

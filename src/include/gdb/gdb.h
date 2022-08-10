@@ -20,7 +20,7 @@ struct gdb_state {
 };
 extern struct gdb_state gdb_state_g;
 
-void gdb_task();
+void gdb_task(void);
 
 void gdb_init(void);
 

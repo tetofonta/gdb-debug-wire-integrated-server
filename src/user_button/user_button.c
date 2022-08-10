@@ -2,12 +2,20 @@
 // Created by stefano on 03/08/22.
 //
 
+#include <stdbool.h>
 #include "user_button.h"
+#include "leds.h"
 
 static uint8_t usr_pshbtn_debounce_counter = 0;
 static uint8_t global_debounce = 0;
+extern volatile bool connection_evt;
 
 ISR(TIMER0_OVF_vect){
+    if(connection_evt) {
+        GDB_LED_OFF();
+        connection_evt = 0;
+    }
+
     if(usr_pshbtn_debounce_counter++ == 16) global_debounce = 0;
 }
 

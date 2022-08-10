@@ -1,10 +1,16 @@
 #include "usb/usb_cdc.h"
+#include "gdb/commands.h"
+#include "leds.h"
+
+volatile bool connection_evt = 1;
 
 void EVENT_USB_Device_Connect(void) {
-    PORTD &= ~(1 << PIND5);
+    GDB_LED_ON();
+    connection_evt = 1;
 }
+
 void EVENT_USB_Device_Disconnect(void) {
-    PORTD |= (1 << PIND5);
+//    gdb_cmd_end(1, cdc_buffer.as_word_buffer, USB_CDC_BUFFER_WORDS);
 }
 
 void EVENT_USB_Device_ConfigurationChanged(void) {
