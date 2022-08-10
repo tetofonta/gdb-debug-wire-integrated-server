@@ -12,6 +12,7 @@
 
 struct gdb_state gdb_state_g;
 uint8_t ack_enabled = 1;
+uint8_t is_cmd_running = 0;
 uint8_t buffer[64];
 
 void gdb_init(void){
@@ -115,11 +116,18 @@ static void gdb_parse_command(const char * buf, uint16_t len){
         case 'v':
             gdb_cmd_v((char *) (buffer + 1), len - 1);
             break;
-        case 'g': //todo handle p/P
+        case 'G':
+            gdb_cmd_write_registers(buffer, len);
+            break;
+        case 'g':
             gdb_cmd_read_registers();
             break;
         case 'm':
             gdb_cmd_read_memory(buffer + 1, len - 1);
+            break;
+        case 'z':
+        case 'Z':
+            gdb_cmd_breakpoint(buffer, len);
             break;
         case 'k':
         case 'D':
@@ -134,6 +142,9 @@ static void gdb_parse_command(const char * buf, uint16_t len){
             gdb_send_ack();
             gdb_send_state();
             break;
+        case 'M':
+        case 'X':
+
         case '!':
         default:
             gdb_send_empty();
@@ -151,6 +162,7 @@ static void gdb_handle_command(void){
         checksum += *(buffer + newlen);
 
     if(buffer[len - 3] == '#') {
+        is_cmd_running = 0;
         expected_hex = hex2nib(buffer[len - 2]) << 4 | hex2nib(buffer[len - 1]);
         if(expected_hex != checksum) usb_cdc_write_PSTR(PSTR("-"), 1);
         else gdb_parse_command(buffer, len);
@@ -159,9 +171,6 @@ static void gdb_handle_command(void){
 
     //todo check checksum for incoming flushed data...
     gdb_parse_command(buffer, len);
-    while(len != 0){
-        len = usb_cdc_read(buffer, 64);
-    }
 }
 
 void gdb_task(void){
@@ -170,19 +179,24 @@ void gdb_task(void){
 
     Endpoint_SelectEndpoint(CDC_RX_EPADDR);
     if(Endpoint_IsOUTReceived()){
-        uint8_t cmd_type = usb_cdc_read_byte();
-
+        uint8_t cmd_type;
+        usb_cdc_read(&cmd_type, 1);
         switch (cmd_type) {
             case '+':
                 break; //ack, just ignore it
             case '-':
-                panic(); //nack, should resend but too ram heavy for now. maybe I'll think out something...
+                if(!is_cmd_running) panic(); //nack, should resend but too ram heavy for now. maybe I'll think out something...
+                break;
             case 0x03:
                 gdb_state_g.state = GDB_STATE_SIGINT;
                 gdb_state_g.state = debug_wire_halt() ? GDB_STATE_SIGINT : GDB_STATE_SIGHUP;
                 gdb_send_state();
                 break;
+            case '#':
+                is_cmd_running = 0;
+                break;
             case '$':
+                is_cmd_running = 1;
                 gdb_handle_command();
                 Endpoint_SelectEndpoint(CDC_RX_EPADDR);
                 Endpoint_ClearOUT();

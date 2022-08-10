@@ -60,13 +60,13 @@ set(LUFA_SRC_TEMPERATURE ${LUFA_ROOT_PATH}/Drivers/Board/Temperature.c)
 set(LUFA_SRC_SERIAL ${LUFA_ROOT_PATH}/Drivers/Peripheral/${ARCH}/Serial_${ARCH}.c)
 set(LUFA_SRC_TWI ${LUFA_ROOT_PATH}/Drivers/Peripheral/${ARCH}/TWI_${ARCH}.c)
 
-if(${ARCH} EQUAL "UC3")
+if (${ARCH} EQUAL "UC3")
     set(LUFA_SRC_PLATFORM
             ${LUFA_ROOT_PATH}/Platform/UC3/Exception.S
             ${LUFA_ROOT_PATH}/Platform/UC3/InterruptManagement.c)
-else()
+else ()
     set(LUFA_SRC_PLATFORM "")
-endif()
+endif ()
 
 
 set(LUFA_SRC
@@ -115,9 +115,23 @@ add_executable(ardwino_elf
         src/include/dw/open_drain.h
         src/panic.c
         src/include/panic.h
-        src/dw/debug_wire.c src/user_button/user_button.c src/include/user_button.h
-        src/gdb/gdb.c src/include/gdb/gdb.h src/gdb/commands/gdb_query_command.c src/gdb/commands/gdb_v_command.c
-        src/include/dw/devices.h src/include/avr_isa.h src/include/dw/debug_wire_ll.h src/include/gdb/commands.h src/gdb/utils.c src/gdb/commands/gdb_command_read_registers.c src/gdb/commands/gdb_command_end.c src/gdb/commands/gdb_cmd_read_memory.c)
+        src/dw/debug_wire.c
+        src/user_button/user_button.c
+        src/include/user_button.h
+        src/gdb/gdb.c
+        src/include/gdb/gdb.h
+        src/gdb/commands/gdb_query_command.c
+        src/gdb/commands/gdb_v_command.c
+        src/include/dw/devices.h
+        src/include/avr_isa.h
+        src/include/dw/debug_wire_ll.h
+        src/include/gdb/commands.h
+        src/gdb/utils.c
+        src/gdb/commands/gdb_command_read_registers.c
+        src/gdb/commands/gdb_command_write_registers.c
+        src/gdb/commands/gdb_command_end.c
+        src/gdb/commands/gdb_cmd_read_memory.c
+        src/gdb/commands/gdb_cmd_breakpoint.c)
 target_link_libraries(ardwino_elf cdc dw_devices)
 
 add_custom_target(ardwino

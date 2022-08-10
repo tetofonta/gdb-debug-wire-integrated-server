@@ -17,3 +17,9 @@ uint8_t nib2hex(uint8_t nib){
 uint16_t byte2hex(uint8_t byte){
     return nib2hex(byte & 0x0F) << 8 | (nib2hex(byte >> 4)); //is little endian
 }
+
+char * parse_hex_until(char character, char * buffer, uint16_t * len, uint64_t * out){
+    while(*buffer != character && len--)
+        *out = (*out << 4) | hex2nib(*buffer++);
+    return buffer;
+}

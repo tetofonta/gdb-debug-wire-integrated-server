@@ -10,12 +10,10 @@
 
 void gdb_cmd_read_memory(char * buffer, uint16_t len){
     uint64_t address = 0;
-    uint16_t length = 0;
-    while(*buffer != ',')
-        address = (address << 4) | hex2nib(*buffer++);
-    buffer++;
-    while(*buffer != '#')
-        length = (length << 4) | hex2nib(*buffer++);
+    uint64_t length = 0;
+
+    buffer = parse_hex_until(',', buffer, &len, &address) + 1;
+    buffer = parse_hex_until('#', buffer, &len, &length);
 
     if(!debug_wire_g.halted || length > 64){
         gdb_send_PSTR(PSTR("$E01#a6"), 7);
@@ -32,8 +30,8 @@ void gdb_cmd_read_memory(char * buffer, uint16_t len){
         dw_env_close(DW_ENV_SRAM_RW);
     } else {
         dw_env_open(DW_ENV_REG_FLASG_READ);
+        //todo populate breakpoints...
         dw_ll_flash_read(address & 0xFFFF, length & 0xFFFF, buffer);
-        //todo hide breakpoints
         dw_env_close(DW_ENV_REG_FLASG_READ);
     }
 

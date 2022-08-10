@@ -10,9 +10,17 @@ uint16_t usb_cdc_read(void *dest, size_t len) {
     /* Select the Serial Rx Endpoint */
     Endpoint_SelectEndpoint(CDC_RX_EPADDR);
     if (Endpoint_IsOUTReceived()) {
-        size_t processed = 0;
-        while (Endpoint_Read_Stream_LE(dest, len, &processed) == ENDPOINT_RWSTREAM_IncompleteTransfer);
-        Endpoint_ClearOUT();
+        uint16_t processed = 0;
+        while (len) {
+            if (!(Endpoint_IsReadWriteAllowed())) {
+                Endpoint_ClearOUT();
+                USB_USBTask();
+                if(Endpoint_WaitUntilReady()) return processed;
+            } else {
+                *(uint8_t*)dest++ = Endpoint_Read_8();
+                len--; processed++;
+            }
+        }
         return processed;
     }
     return 0;
@@ -46,17 +54,12 @@ void usb_cdc_write_PSTR(const void * data, size_t len) {
 }
 
 uint8_t usb_cdc_read_byte(void){
-    Endpoint_SelectEndpoint(CDC_RX_EPADDR);
-    uint8_t r = Endpoint_Read_8();
-    if(!Endpoint_IsReadWriteAllowed()){
-        Endpoint_ClearOUT();
-        USB_USBTask();
-    }
-    Endpoint_WaitUntilReady();
-    return r;
+    uint8_t ret;
+    usb_cdc_read(&ret, 1);
+    return ret;
 }
 
-uint8_t usb_cdc_discard(void){
+void usb_cdc_discard(void){
     Endpoint_SelectEndpoint(CDC_RX_EPADDR);
     while(Endpoint_BytesInEndpoint()) Endpoint_ClearIN();
 }
