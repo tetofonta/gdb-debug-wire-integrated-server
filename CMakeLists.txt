@@ -132,7 +132,7 @@ add_executable(ardwino_elf
         src/gdb/commands/gdb_command_end.c
         src/gdb/commands/gdb_cmd_read_memory.c
         src/gdb/commands/gdb_cmd_breakpoint.c
-        src/include/gdb/utils.h)
+        src/include/gdb/utils.h src/gdb/commands/gdb_command_write_memory.c)
 target_link_libraries(ardwino_elf cdc dw_devices)
 
 add_custom_target(ardwino

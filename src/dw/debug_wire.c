@@ -27,13 +27,9 @@ void debug_wire_resume(uint8_t context) {
         return;
     }
 
-    dw_cmd_get(DW_CMD_REG_PC);
     dw_cmd_set(DW_CMD_REG_PC, &debug_wire_g.program_counter);
-    dw_cmd_get(DW_CMD_REG_PC);
     dw_set_context(context ^ (debug_wire_g.run_timers << 5));
-    dw_cmd_get(DW_CMD_REG_PC);
     dw_cmd_set(DW_CMD_REG_PC, &debug_wire_g.program_counter); //WHY?
-    dw_cmd_get(DW_CMD_REG_PC);
     if(context == DW_GO_CNTX_SS)
         dw_cmd_ss(0);
     else

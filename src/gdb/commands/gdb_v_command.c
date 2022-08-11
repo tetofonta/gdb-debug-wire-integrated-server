@@ -9,6 +9,7 @@
 void gdb_cmd_v(char * buffer, uint16_t len){
     if(!memcmp_P(buffer, PSTR("Kill"), 4)){
         gdb_cmd_end(1,(uint16_t *) buffer, 32);
+        gdb_send_PSTR(PSTR("$OK#9a"), 6);
     }
     gdb_send_empty();
 }

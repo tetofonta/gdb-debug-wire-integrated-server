@@ -641,7 +641,7 @@ static void dw_ll_internal_update_bp_references(void){
 }
 
 static uint8_t dw_ll_internal_write_breakpoints(uint16_t page_address, dw_sw_brkpt_t * bps, uint16_t bps_size, uint16_t * buffer, uint16_t buf_size){
-    uint16_t break_opcode = BE(AVR_INSTR_BREAK());
+    uint16_t break_opcode = AVR_INSTR_BREAK(); //little-endian in flash
     uint16_t byte_address = page_address * 2;
     uint16_t read = 0;
     uint16_t remaining_words = dw_ll_flash_write_page_begin(byte_address);

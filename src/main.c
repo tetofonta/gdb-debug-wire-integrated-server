@@ -26,10 +26,10 @@ int main(void) {
 
     usb_cdc_init();
     sei();
-
-    gdb_init();
     GDB_LED_OFF();
     DW_LED_OFF();
+
+    gdb_init();
 
     for (;;) {
         usr_btn_task(&rst_button);
