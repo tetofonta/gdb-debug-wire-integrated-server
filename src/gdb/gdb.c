@@ -238,6 +238,10 @@ void gdb_task(void) {
 }
 
 inline void on_dw_mcu_halt(void) {
+    if(gdb_state_g.state == GDB_STATE_DISCONNECTED || gdb_state_g.state == GDB_STATE_SIGABRT){
+        debug_wire_resume(DW_GO_CNTX_CONTINUE);
+        return;
+    }
     if (gdb_state_g.state != GDB_STATE_IDLE) return;
 
     gdb_state_g.state = GDB_STATE_SIGTRAP;

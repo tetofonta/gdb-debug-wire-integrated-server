@@ -14,7 +14,7 @@
 
 debug_wire_t debug_wire_g;
 
-static volatile uint8_t waiting_break, ignore_break;
+static volatile uint8_t waiting_break, ignore_break, expect_break;
 //=========================================================================================================base commands
 
 /**
@@ -61,6 +61,8 @@ uint8_t dw_init(uint32_t target_freq) {
 uint8_t dw_cmd_halt(void){
     od_uart_clear(); //clear current uart rx
     dw_init(debug_wire_g.target_frequency);
+
+    expect_break = 1;
     od_uart_break(); //send break as for protocol
 
     //vi sono due tipi di break:
@@ -143,6 +145,7 @@ void dw_cmd_send_multiple_consts(uint8_t command, uint16_t n, ...){
 void dw_cmd_reset(void){
     od_uart_clear();
     waiting_break = 1;
+    expect_break = 1;
     dw_cmd(DW_CMD_RESET);
     while(waiting_break);
 }
@@ -176,7 +179,8 @@ inline void od_uart_irq_break(void){
     debug_wire_g.program_counter = BE(pc); //save the program counter
     debug_wire_g.halted = 1; //set status as halted
     DW_LED_ON();
-    on_dw_mcu_halt();
+    if(!expect_break) on_dw_mcu_halt();
+    expect_break = 0;
     waiting_break = 0; //clear and return
 }
 
