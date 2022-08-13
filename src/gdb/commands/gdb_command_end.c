@@ -4,6 +4,7 @@
 #include <gdb/gdb.h>
 #include <avr/pgmspace.h>
 #include <dw/debug_wire_ll.h>
+#include <stdbool.h>
 #include "leds.h"
 
 void gdb_cmd_end(uint8_t restart, uint16_t * buffer, uint16_t len){
@@ -17,7 +18,7 @@ void gdb_cmd_end(uint8_t restart, uint16_t * buffer, uint16_t len){
     gdb_state_g.state = GDB_STATE_DISCONNECTED;
 
     if(restart) {
-        debug_wire_resume(DW_GO_CNTX_CONTINUE);
+        debug_wire_resume(DW_GO_CNTX_CONTINUE, false);
         gdb_state_g.state = GDB_STATE_DISCONNECTED;
     }
 

@@ -10,7 +10,7 @@
 
 void gdb_cmd_query(char *buffer, uint16_t len) {
     if (!memcmp_P(buffer, PSTR("Supported"), 9)) {
-        gdb_send_PSTR(PSTR("$PacketSize=3c;swbreak+;hwbreak+#65"), 35);
+        gdb_send_PSTR(PSTR("$PacketSize=3c;swbreak+#1b"), 26);
 
         if(gdb_state_g.state ==  GDB_STATE_SIGHUP){
             return;

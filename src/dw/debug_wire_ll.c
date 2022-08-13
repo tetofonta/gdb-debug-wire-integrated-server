@@ -11,6 +11,7 @@
 #include <string.h>
 #include "avr_isa.h"
 #include "leds.h"
+#include "usb/usb_cdc.h"
 
 debug_wire_t debug_wire_g;
 
@@ -500,7 +501,7 @@ void dw_ll_flash_write_execute(void){
 
     dw_ll_exec(BE(AVR_INSTR_OUT(debug_wire_g.device.reg_spmcsr, r28)), 0);
     dw_ll_exec(BE(AVR_INSTR_SPM()), 1);
-    _delay_ms(10);
+    _delay_ms(50);
     dw_ll_enable_rww();
 }
 
@@ -588,12 +589,13 @@ void dw_ll_eeprom_write(const void * buffer, uint16_t address, uint16_t len){
 
 //===========================================================================================================breakpoints
 uint8_t dw_ll_add_breakpoint(uint16_t word_address){
-    if(debug_wire_g.swbrkpt_n == DW_SW_BRKPT_SIZE) return 0;
     for (uint8_t i = 0; i < debug_wire_g.swbrkpt_n; ++i)
         if (debug_wire_g.swbrkpt[i].address == word_address){
             debug_wire_g.swbrkpt[i].active = 1;
             return 1;
         }
+
+    if(debug_wire_g.swbrkpt_n == DW_SW_BRKPT_SIZE) return 0;
 
     dw_sw_brkpt_t  * bp = &debug_wire_g.swbrkpt[debug_wire_g.swbrkpt_n++];
     bp->address = word_address;
@@ -641,7 +643,7 @@ static void dw_ll_internal_update_bp_references(void){
         }
         memcpy(debug_wire_g.swbrkpt + j + 1, &tmp, sizeof(dw_sw_brkpt_t));
     }
-    while(!debug_wire_g.swbrkpt[debug_wire_g.swbrkpt_n - 1].active && !debug_wire_g.swbrkpt[debug_wire_g.swbrkpt_n - 1].stored) debug_wire_g.swbrkpt_n--;
+    while(!debug_wire_g.swbrkpt[debug_wire_g.swbrkpt_n - 1].active && !debug_wire_g.swbrkpt[debug_wire_g.swbrkpt_n - 1].stored && debug_wire_g.swbrkpt_n > 0) debug_wire_g.swbrkpt_n--;
 }
 
 static uint8_t dw_ll_internal_write_breakpoints(uint16_t page_address, dw_sw_brkpt_t * bps, uint16_t bps_size, uint16_t * buffer, uint16_t buf_size){
@@ -689,9 +691,9 @@ static uint8_t dw_ll_internal_write_breakpoints(uint16_t page_address, dw_sw_brk
     }
 
     if(written){
-        _delay_ms(10);
+        _delay_ms(50);
         dw_ll_flash_clear_page(byte_address);
-        _delay_ms(10);
+        _delay_ms(50);
         dw_ll_flash_write_execute();
     }
 

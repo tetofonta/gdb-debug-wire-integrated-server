@@ -1,5 +1,6 @@
 import os
 import threading
+from binascii import hexlify
 
 from serial import Serial
 import socket
@@ -10,28 +11,26 @@ stop = False
 sock = None
 ser = None
 
+last = True
 
-def thread_from_dev():
+
+def thread(dir_str, read_fn, send_fn, last_v):
+    global last
+    line = False
     try:
         while not stop:
-            data = ser.read(1024)
+            data = read_fn(1024)
             if len(data) > 0:
-                print("->", data, ":", len(data))
-                sock.send(data)
+                if last != last_v:
+                    last = last_v
+                    print(f"\n{dir_str} ", end='')
+                try:
+                    print(data.decode(), end='')
+                except:
+                    print(f"[{hexlify(data).decode()}]", end='')
+                send_fn(data)
     except Exception as e:
         print("-> EXITED", e)
-        stop_session()
-
-
-def thread_to_dev():
-    try:
-        while not stop:
-            data = sock.recv(1024)
-            if len(data) > 0:
-                print("<-", data, ":", len(data))
-                ser.write(data)
-    except Exception as e:
-        print("<- EXITED", e)
         stop_session()
 
 
@@ -61,8 +60,8 @@ if __name__ == '__main__':
             server.listen(1)
             sock, addr = server.accept()
             ser = Serial('/dev/ttyACM0', 250000, timeout=0)
-            f = threading.Thread(target=thread_from_dev)
-            t = threading.Thread(target=thread_to_dev)
+            f = threading.Thread(target=thread, args=('->', lambda x: ser.read(x), lambda d: sock.send(d), True))
+            t = threading.Thread(target=thread, args=('<-', lambda x: sock.recv(x), lambda d: ser.write(d), False))
             f.start()
             t.start()
             threads.extend([t])

@@ -5,22 +5,28 @@
 #include <dw/debug_wire.h>
 #include "panic.h"
 #include "avr_isa.h"
+#include "usb/usb_cdc.h"
 
 static dw_sw_brkpt_t *_dw_is_swprkpt(void) {
-    for (uint8_t i = 0; i < debug_wire_g.swbrkpt_n; ++i)
-        if (debug_wire_g.swbrkpt[i].address == debug_wire_g.program_counter) return &debug_wire_g.swbrkpt[i];
+    for (uint8_t i = 0; i < debug_wire_g.swbrkpt_n; ++i){
+        if (debug_wire_g.swbrkpt[i].address == BE(debug_wire_g.program_counter)) {
+            return &debug_wire_g.swbrkpt[i];
+        }
+    }
     return NULL;
 }
 
-void debug_wire_resume(uint8_t context) {
+void debug_wire_resume(uint8_t context, uint8_t ss) {
     if (!debug_wire_g.halted) return;
 
     dw_sw_brkpt_t *swbrkpt = _dw_is_swprkpt();
     if (swbrkpt != NULL) {
         dw_cmd_set(DW_CMD_REG_PC, &debug_wire_g.program_counter);
         dw_set_context(DW_GO_CNTX_SWBP ^ (debug_wire_g.run_timers << 5));
-        dw_cmd_set(DW_CMD_REG_IR, &swbrkpt->opcode);
-        if(context == DW_GO_CNTX_SS)
+
+        uint16_t opcode = BE(swbrkpt->opcode);
+        dw_cmd_set(DW_CMD_REG_IR, &opcode);
+        if(ss)
             dw_cmd_ss(1);
         else
             dw_cmd_go(1);
@@ -29,8 +35,8 @@ void debug_wire_resume(uint8_t context) {
 
     dw_cmd_set(DW_CMD_REG_PC, &debug_wire_g.program_counter);
     dw_set_context(context ^ (debug_wire_g.run_timers << 5));
-    dw_cmd_set(DW_CMD_REG_PC, &debug_wire_g.program_counter); //WHY?
-    if(context == DW_GO_CNTX_SS)
+    dw_cmd_set(DW_CMD_REG_PC, &debug_wire_g.program_counter);
+    if(ss)
         dw_cmd_ss(0);
     else
         dw_cmd_go(0);

@@ -1,0 +1,16 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "gdb",
+            "request": "attach",
+            "name": "Attach to gdbserver",
+            "executable": "${workspaceFolder}/build/bin/avrtest-elf",
+            "target": "/tmp/ttyV0",
+            "remote": true,
+            "cwd": "${workspaceFolder}",
+            "gdbpath": "/usr/bin/avr-gdb",
+            "autorun": []
+        }
+    ]
+}

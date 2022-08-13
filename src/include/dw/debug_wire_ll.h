@@ -63,7 +63,7 @@ uint8_t dw_cmd_set_speed(uint8_t divisor);
 #define dw_cmd_start_mem_cycle()        dw_cmd(DW_CMD_START_SRAM_CYCLE)
 #define dw_cmd_start_mem_cycle_ss()     dw_cmd(DW_CMD_START_SRAM_CYCLE_SS)
 #define dw_cmd_execute_loaded()         dw_cmd(DW_CMD_EXECUTE_LOADED_INSTR)
-#define dw_cmd_ss(swbkpt)               (dw_cmd((swbkpt) ? DW_CMD_EXECUTE_LOADED_INSTR : DW_CMD_SS))
+#define dw_cmd_ss(swbkpt)               (dw_cmd((swbkpt) ? DW_CMD_EXECUTE_LOADED_INSTR_LNG : DW_CMD_SS))
 void dw_cmd_go(uint8_t is_sw_brkpt);
 
 //contexts

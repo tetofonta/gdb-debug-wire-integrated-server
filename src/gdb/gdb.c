@@ -23,7 +23,7 @@ void gdb_init(void) {
 //        _delay_ms(100);
 //        panic();
         debug_wire_device_reset();
-        debug_wire_resume(DW_GO_CNTX_CONTINUE);
+        debug_wire_resume(DW_GO_CNTX_CONTINUE, false);
         gdb_state_g.state = GDB_STATE_DISCONNECTED;
         return;
     }
@@ -50,7 +50,10 @@ void gdb_send(const char *data, uint16_t len) {
 }
 
 void gdb_send_ack(void) {
-    if (ack_enabled) usb_cdc_write_PSTR(PSTR("+"), 1);
+    if (ack_enabled) {
+        GDB_LED_ON();
+        usb_cdc_write_PSTR(PSTR("+"), 1);
+    }
 }
 
 void gdb_send_nack(void) {
@@ -100,7 +103,7 @@ static void gdb_parse_command(const char *buf, uint16_t len) {
             dw_ll_flush_breakpoints(cdc_buffer.as_word_buffer, USB_CDC_BUFFER_WORDS);
             dw_env_close(DW_GO_CNTX_FLASH_WRT);
 
-            debug_wire_resume(DW_GO_CNTX_HWBP);
+            debug_wire_resume(DW_GO_CNTX_HWBP, false);
             gdb_state_g.state = GDB_STATE_IDLE;
             break;
         case 'S':
@@ -110,7 +113,7 @@ static void gdb_parse_command(const char *buf, uint16_t len) {
             dw_env_close(DW_GO_CNTX_FLASH_WRT);
 
             gdb_state_g.state = GDB_STATE_IDLE;
-            debug_wire_resume(DW_GO_CNTX_SS);
+            debug_wire_resume(DW_GO_CNTX_SS, true);
             break;
         case 'q':
             gdb_cmd_query((char *) (cdc_buffer.as_byte_buffer + 1), len - 1);
@@ -155,7 +158,7 @@ static void gdb_parse_command(const char *buf, uint16_t len) {
 static void gdb_handle_command(void) {
     uint8_t checksum = 0;
     uint8_t expected_hex = 0;
-
+    GDB_LED_OFF();
     uint16_t len = usb_cdc_read(cdc_buffer.as_byte_buffer, USB_CDC_BUFFER_SIZE);
     uint16_t newlen = len;
     if (cdc_buffer.as_byte_buffer[len - 3] == '#') newlen -= 3;
@@ -204,7 +207,7 @@ void gdb_task(void) {
                 case '$':
                     is_cmd_running = 1;
                     gdb_handle_command();
-                    if(!Endpoint_BytesInEndpoint()){
+                    if(!Endpoint_IsReadWriteAllowed()){
                         Endpoint_SelectEndpoint(CDC_RX_EPADDR);
                         Endpoint_ClearOUT();
                     }
@@ -238,10 +241,6 @@ void gdb_task(void) {
 }
 
 inline void on_dw_mcu_halt(void) {
-    if(gdb_state_g.state == GDB_STATE_DISCONNECTED || gdb_state_g.state == GDB_STATE_SIGABRT){
-        debug_wire_resume(DW_GO_CNTX_CONTINUE);
-        return;
-    }
     if (gdb_state_g.state != GDB_STATE_IDLE) return;
 
     gdb_state_g.state = GDB_STATE_SIGTRAP;

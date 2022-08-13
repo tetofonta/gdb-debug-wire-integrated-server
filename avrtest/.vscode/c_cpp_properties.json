@@ -1,0 +1,28 @@
+{
+    "configurations": [
+        {
+            "name": "atmega328p",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/usr/lib/gcc/x86_64-pc-linux-gnu/12.1.1/include",
+                "/usr/local/include",
+                "/usr/lib/gcc/x86_64-pc-linux-gnu/12.1.1/include-fixed",
+                "/usr/include"
+            ],
+            "defines": [
+                "__GNUC__=5",
+                "__GNUC_MINOR__=4",
+                "__ATmega328p__",
+                "__AVR_ATmega328p__",
+                "__AVR_DEV_LIB_NAME__=m328",
+                "F_CPU=16000000"
+            ],
+            "compilerPath": "/usr/bin/avr-gcc",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "gcc-x86",
+            "configurationProvider": "ms-vscode.cmake-tools"
+        }
+    ],
+    "version": 4
+}
