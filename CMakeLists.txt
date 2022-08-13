@@ -52,7 +52,7 @@ set(LUFA_SRC_USBCLASS_HOST
         ${LUFA_ROOT_PATH}/Drivers/USB/Class/Host/RNDISClassHost.c
         ${LUFA_ROOT_PATH}/Drivers/USB/Class/Host/StillImageClassHost.c
         )
-set(LUFA_SRC_USB ${LUFA_SRC_USB_COMMON} ${LUFA_SRC_USB_HOST} ${LUFA_SRC_USB_DEVICE} src/usb/usb_cdc.c avrtest/main.c)
+set(LUFA_SRC_USB ${LUFA_SRC_USB_COMMON} ${LUFA_SRC_USB_DEVICE})
 list(SORT LUFA_SRC_USB)
 
 set(LUFA_SRC_USBCLASS ${LUFA_SRC_USBCLASS_DEVICE} ${LUFA_SRC_USBCLASS_HOST})
@@ -100,40 +100,32 @@ set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -fno-exceptions -fno-threadsafe-statics")
 set(CMAKE_ASM_FLAGS "${CMAKE_C_FLAGS} -x assembler-with-cpp")
 set(CMAKE_LINK_LIBRARY_FLAG "-lm ${USE_LTO} -Wl,--cref -Wl,--gc-sections -Wl,--relax -mmcu=${MCU} -Oz")
 
-add_library(cdc STATIC ${LUFA_SRC_USB})
+add_library(lufa STATIC ${LUFA_SRC_USB})
+add_library(cdc STATIC src/usb/usb_cdc.c src/usb/Descriptors.c)
+target_link_libraries(cdc lufa)
 
 add_library(dw_devices STATIC src/dw/devices.c)
-
-add_executable(ardwino_elf
-        src/usb/Descriptors.c
-        src/main.c
-        src/usb/usb_events.c
-        src/usb/usb_cdc.c
-        src/dw/debug_wire_ll.c
-        src/include/dw/debug_wire.h
-        src/dw/phisical/open_drain_serial.c
-        src/include/dw/open_drain.h
-        src/panic.c
-        src/include/panic.h
-        src/dw/debug_wire.c
-        src/user_button/user_button.c
-        src/include/user_button.h
-        src/gdb/gdb.c
-        src/include/gdb/gdb.h
-        src/gdb/commands/gdb_query_command.c
-        src/gdb/commands/gdb_v_command.c
-        src/include/dw/devices.h
-        src/include/avr_isa.h
-        src/include/dw/debug_wire_ll.h
-        src/include/gdb/commands.h
-        src/gdb/utils.c
-        src/gdb/commands/gdb_command_read_registers.c
-        src/gdb/commands/gdb_command_write_registers.c
-        src/gdb/commands/gdb_command_end.c
+add_library(gdb_commands STATIC
+        src/gdb/commands/gdb_cmd_query.c
+        src/gdb/commands/gdb_cmd_v.c
+        src/gdb/commands/gdb_cmd_read_registers.c
+        src/gdb/commands/gdb_cmd_write_registers.c
+        src/gdb/commands/gdb_cmd_end.c
         src/gdb/commands/gdb_cmd_read_memory.c
         src/gdb/commands/gdb_cmd_breakpoint.c
-        src/include/gdb/utils.h src/gdb/commands/gdb_command_write_memory.c src/stk500/stk500.c src/include/stk500/stk500.h src/stk500/isp.c src/stk500/utils.c)
-target_link_libraries(ardwino_elf cdc dw_devices)
+        src/gdb/commands/gdb_cmd_write_memory.c)
+add_library(gdb STATIC src/gdb/gdb.c src/gdb/utils.c)
+target_link_libraries(gdb gdb_commands)
+add_library(stk500 STATIC src/stk500/stk500.c src/stk500/isp.c src/stk500/utils.c)
+add_executable(ardwino_elf
+        src/main.c
+        src/usb/usb_events.c
+        src/dw/debug_wire_ll.c
+        src/dw/phisical/open_drain_serial.c
+        src/panic.c
+        src/dw/debug_wire.c
+        src/user_button/user_button.c)
+target_link_libraries(ardwino_elf lufa cdc dw_devices gdb stk500)
 
 add_custom_target(ardwino
         COMMAND avr-objdump -d \"${CMAKE_BINARY_DIR}/ardwino_elf\" > \"${CMAKE_BINARY_DIR}/ardwino-asm.txt\";
