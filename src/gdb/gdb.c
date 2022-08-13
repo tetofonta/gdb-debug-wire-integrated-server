@@ -19,17 +19,17 @@ void gdb_init(void) {
     _delay_ms(100);
 
     if (dw_init(2 * 8000000)) {//todo get frequency from eeprom
-//        dw_cmd(DW_CMD_DISABLE);
-//        _delay_ms(100);
-//        panic();
         debug_wire_device_reset();
         debug_wire_resume(DW_GO_CNTX_CONTINUE, false);
         gdb_state_g.state = GDB_STATE_DISCONNECTED;
         return;
     }
-
     gdb_state_g.state = GDB_STATE_SIGHUP;
-    panic();
+}
+
+void gdb_deinit(void){
+    dw_ll_deinit();
+    gdb_state_g.state = GDB_STATE_DISCONNECTED;
 }
 
 static void gdb_send_state(void) {
@@ -80,7 +80,6 @@ uint8_t gdb_send_add_data_PSTR(const char *data, uint16_t len, uint8_t checksum)
     while (len--) checksum += pgm_read_byte(data++);
     return checksum;
 }
-
 
 void gdb_send_finalize(uint8_t checksum) {
     uint16_t chksm = byte2hex(checksum & 0xFF);
@@ -183,9 +182,6 @@ static void gdb_handle_command(void) {
 }
 
 void gdb_task(void) {
-    if (USB_DeviceState != DEVICE_STATE_Configured)
-        return;
-
     Endpoint_SelectEndpoint(CDC_RX_EPADDR);
     if (Endpoint_IsOUTReceived()) {
         uint8_t cmd_type;

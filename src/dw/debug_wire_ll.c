@@ -51,6 +51,12 @@ uint8_t dw_init(uint32_t target_freq) {
     return 1;
 }
 
+void dw_ll_deinit(void){
+    od_uart_clear();
+    od_uart_deinit();
+    debug_wire_g.device.signature = 0;
+}
+
 /**
  * send a break and waits for target response until timeout (100ms).
  * if not answered, fails

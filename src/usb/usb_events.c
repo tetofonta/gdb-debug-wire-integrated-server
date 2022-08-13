@@ -1,8 +1,10 @@
 #include "usb/usb_cdc.h"
 #include "gdb/commands.h"
 #include "leds.h"
+#include "stk500/stk500.h"
 
 volatile bool connection_evt = 1;
+extern uint8_t init;
 
 void EVENT_USB_Device_Connect(void) {
     GDB_LED_ON();
@@ -10,6 +12,8 @@ void EVENT_USB_Device_Connect(void) {
 }
 
 void EVENT_USB_Device_Disconnect(void) {
+    stk500_deinit();
+    init = 0;
 //    gdb_cmd_end(1, cdc_buffer.as_word_buffer, USB_CDC_BUFFER_WORDS);
 }
 

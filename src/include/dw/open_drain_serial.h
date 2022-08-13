@@ -31,6 +31,7 @@ extern uint8_t uart_rx_buffer[OD_UART_RX_BUFFER_SIZE];
 
 uint8_t od_uart_status(void);
 void od_uart_init(uint32_t baud_rate);
+void od_uart_deinit(void);
 void od_uart_tx_byte(uint8_t data);
 void od_uart_clear(void);
 void od_uart_break(void);

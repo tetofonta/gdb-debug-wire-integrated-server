@@ -8,7 +8,7 @@ volatile unsigned char i = 0;
 
 void toggle(uint8_t i){
     PORTB &= ~(1<<PINB5);
-    if(i&1)
+    if(! (i&1))
         PORTB |= (1 << PINB5);
 }
 

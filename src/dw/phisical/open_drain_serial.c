@@ -101,6 +101,13 @@ void od_uart_init(uint32_t baud_rate){
     FE_IRQ_ENABLE(); //clear irqs and enable rx
 }
 
+void od_uart_deinit(void){
+    TIMER_IRQ_DISABLE();
+    FE_IRQ_DISABLE();
+    TCCR1B = (1 << WGM12); //stop the timer
+    OD_HIGH(D, 7);
+}
+
 /**
  * @return returns the flags.
  */

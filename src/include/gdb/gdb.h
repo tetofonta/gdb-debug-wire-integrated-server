@@ -23,6 +23,7 @@ extern struct gdb_state gdb_state_g;
 void gdb_task(void);
 
 void gdb_init(void);
+void gdb_deinit(void);
 
 void gdb_send(const char *data, uint16_t len);
 

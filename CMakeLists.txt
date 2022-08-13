@@ -52,7 +52,7 @@ set(LUFA_SRC_USBCLASS_HOST
         ${LUFA_ROOT_PATH}/Drivers/USB/Class/Host/RNDISClassHost.c
         ${LUFA_ROOT_PATH}/Drivers/USB/Class/Host/StillImageClassHost.c
         )
-set(LUFA_SRC_USB ${LUFA_SRC_USB_COMMON} ${LUFA_SRC_USB_HOST} ${LUFA_SRC_USB_DEVICE} src/usb/usb_cdc.c avrtest/main.c src/include/leds.h)
+set(LUFA_SRC_USB ${LUFA_SRC_USB_COMMON} ${LUFA_SRC_USB_HOST} ${LUFA_SRC_USB_DEVICE} src/usb/usb_cdc.c avrtest/main.c)
 list(SORT LUFA_SRC_USB)
 
 set(LUFA_SRC_USBCLASS ${LUFA_SRC_USBCLASS_DEVICE} ${LUFA_SRC_USBCLASS_HOST})
@@ -132,7 +132,7 @@ add_executable(ardwino_elf
         src/gdb/commands/gdb_command_end.c
         src/gdb/commands/gdb_cmd_read_memory.c
         src/gdb/commands/gdb_cmd_breakpoint.c
-        src/include/gdb/utils.h src/gdb/commands/gdb_command_write_memory.c)
+        src/include/gdb/utils.h src/gdb/commands/gdb_command_write_memory.c src/stk500/stk500.c src/include/stk500/stk500.h src/stk500/isp.c src/stk500/utils.c)
 target_link_libraries(ardwino_elf cdc dw_devices)
 
 add_custom_target(ardwino

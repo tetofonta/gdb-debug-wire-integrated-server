@@ -48,6 +48,7 @@ extern struct dw_state cur_state;
 
 uint8_t debug_wire_halt(void);
 uint8_t dw_init(uint32_t target_freq);
+void dw_ll_deinit(void);
 void debug_wire_device_reset(void);
 void debug_wire_resume(uint8_t context, uint8_t ss);
 
