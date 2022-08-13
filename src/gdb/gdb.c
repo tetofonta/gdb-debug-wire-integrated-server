@@ -203,36 +203,15 @@ void gdb_task(void) {
                 case '$':
                     is_cmd_running = 1;
                     gdb_handle_command();
-                    if(!Endpoint_IsReadWriteAllowed()){
-                        Endpoint_SelectEndpoint(CDC_RX_EPADDR);
-                        Endpoint_ClearOUT();
-                    }
                     break;
                 default:
                     break;
             }
         }
-//        Endpoint_ClearOUT();
-//        switch (cmd_type) {
-//            case '+':
-//                dw_ll_flash_read(0, 64, cdc_buffer.as_byte_buffer);
-//                usb_cdc_write(cdc_buffer.as_byte_buffer, 64);
-//                dw_ll_flash_read(64, 64, cdc_buffer.as_byte_buffer);
-//                usb_cdc_write(cdc_buffer.as_byte_buffer, 64);
-//                dw_ll_flash_read(128, 64, cdc_buffer.as_byte_buffer);
-//                usb_cdc_write(cdc_buffer.as_byte_buffer, 64);
-//                dw_ll_flash_read(192, 64, cdc_buffer.as_byte_buffer);
-//                usb_cdc_write(cdc_buffer.as_byte_buffer, 64);
-//                break;
-//            case '-':
-//                memcpy_P(cdc_buffer.as_byte_buffer, PSTR("Z0,80,2#30"), 10);
-//                gdb_cmd_breakpoint(cdc_buffer.as_byte_buffer, 10);
-//                usb_cdc_write(debug_wire_g.swbrkpt, debug_wire_g.swbrkpt_n * sizeof(dw_sw_brkpt_t));
-//                break;
-//            case '*':
-//                dw_ll_flush_breakpoints(cdc_buffer.as_word_buffer, 32);
-//                break;
-//        }
+        Endpoint_SelectEndpoint(CDC_RX_EPADDR);
+        if(!Endpoint_IsReadWriteAllowed()){
+            Endpoint_ClearOUT();
+        }
     }
 }
 
