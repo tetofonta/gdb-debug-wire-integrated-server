@@ -2,6 +2,9 @@
 // Created by stefano on 06/08/22.
 //
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #ifndef ARDWINO_AVR_ISA_H
 #define ARDWINO_AVR_ISA_H
 
@@ -58,5 +61,6 @@
 #define adiw_reg_Y                               2
 #define adiw_reg_Z                               3
 
+bool illegal_opcode(uint16_t opcode);
 
 #endif //ARDWINO_AVR_ISA_H

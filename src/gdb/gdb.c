@@ -10,6 +10,7 @@
 #include "panic.h"
 #include "gdb/utils.h"
 #include "leds.h"
+#include "avr_isa.h"
 
 struct gdb_state gdb_state_g;
 uint8_t ack_enabled = 1;
@@ -217,10 +218,6 @@ void gdb_task(void) {
 
 inline void on_dw_mcu_halt(void) {
     if (gdb_state_g.state != GDB_STATE_IDLE) return;
-
     gdb_state_g.state = GDB_STATE_SIGTRAP;
-    uint8_t tmp = ack_enabled;
-    ack_enabled = 0;
     gdb_send_state();
-    ack_enabled = tmp;
 }

@@ -10,9 +10,9 @@
 #define GDB_STATE_IDLE          0 //ok
 #define GDB_STATE_SIGHUP        1 //device disconnected
 #define GDB_STATE_SIGINT        2 //interrupted by user
-#define GDB_STATE_SIGILL        3 //illegal instruction
-#define GDB_STATE_SIGTRAP       4 //stopped on a breakpoint
-#define GDB_STATE_SIGABRT       5 //fatal error
+#define GDB_STATE_SIGILL        4 //illegal instruction
+#define GDB_STATE_SIGTRAP       5 //stopped on a breakpoint
+#define GDB_STATE_SIGABRT       6 //fatal error
 #define GDB_STATE_DISCONNECTED  15
 
 struct gdb_state {

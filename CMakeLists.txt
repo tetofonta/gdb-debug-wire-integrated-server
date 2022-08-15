@@ -124,7 +124,7 @@ add_executable(ardwino_elf
         src/dw/phisical/open_drain_serial.c
         src/panic.c
         src/dw/debug_wire.c
-        src/user_button/user_button.c)
+        src/user_button/user_button.c src/avr.c)
 target_link_libraries(ardwino_elf lufa cdc dw_devices gdb stk500)
 
 add_custom_target(ardwino

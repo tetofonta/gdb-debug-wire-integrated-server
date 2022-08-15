@@ -50,8 +50,8 @@ void gdb_cmd_write_registers(char * buffer, uint16_t len){
             else if (written == 35) aux = val >> 1;
             else if (written == 36) {
                 aux |= val << 7;
-                aux += 1;
-                cur_state.pc = BE(aux);
+                cur_state.pc = BE((aux+1));
+                debug_wire_g.program_counter = BE(aux);
             }
             written ++;
         }
