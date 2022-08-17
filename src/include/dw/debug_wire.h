@@ -64,6 +64,6 @@ void debug_wire_resume(uint8_t context, uint8_t ss);
 void dw_env_open(uint8_t env_type);
 void dw_env_close(uint8_t env_type);
 
-extern inline void on_dw_mcu_halt(void);
+extern void on_dw_mcu_halt(void);
 
 #endif //ARDWINO_DEBUG_WIRE_H

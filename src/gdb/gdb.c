@@ -217,7 +217,9 @@ void gdb_task(void) {
         dw_ll_flash_read(BE(debug_wire_g.program_counter) * 2, 2, &instr);
         dw_env_close(DW_ENV_FLASH_READ);
 
-        gdb_state_g.state = illegal_opcode(BE(instr)) ? GDB_STATE_SIGILL : GDB_STATE_SIGTRAP; //sigill ognio tanto alla cazzo?
+        if(instr == AVR_INSTR_BREAK()) debug_wire_g.program_counter = BE((BE(debug_wire_g.program_counter) + 1));
+
+        gdb_state_g.state = illegal_opcode(BE(instr)) ? GDB_STATE_SIGILL : GDB_STATE_SIGTRAP;
         _delay_ms(100);
         gdb_send_state();
         halt_happened = 0;
@@ -257,7 +259,7 @@ void gdb_task(void) {
     }
 }
 
-inline void on_dw_mcu_halt(void) {
+void on_dw_mcu_halt(void) {
     if (gdb_state_g.state != GDB_STATE_IDLE) return;
     halt_happened = 1;
 }

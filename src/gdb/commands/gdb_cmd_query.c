@@ -8,6 +8,7 @@
 #include "usb/usb_cdc.h"
 #include "leds.h"
 #include "dw/debug_wire_ll.h"
+#include "gdb/rtt.h"
 
 void gdb_cmd_query(char *buffer, uint16_t len) {
     if (!memcmp_P(buffer, PSTR("Supported"), 9)) {
@@ -33,13 +34,9 @@ void gdb_cmd_query(char *buffer, uint16_t len) {
         } else if (!memcmp_P(buffer + 5, PSTR("7274"), 4)) { //rt - t
             dw_env_open(DW_ENV_SRAM_RW);
             if(!memcmp_P(buffer + 5 + 4, PSTR("64"), 2)){ //rtt ]d - isable
-                uint8_t out = 0;
-                dw_ll_sram_write(0x107, 1, &out); //todo srambase
-                gdb_rtt_enable = 0;
+                rtt_set_state(0);
             } else {
-                uint8_t out = 2;
-                dw_ll_sram_write(0x107, 1, &out); //todo srambase
-                gdb_rtt_enable = 1;
+                rtt_set_state(2);
             }
             dw_env_close(DW_ENV_SRAM_RW);
             gdb_send_PSTR(PSTR("$OK#9a"), 6);

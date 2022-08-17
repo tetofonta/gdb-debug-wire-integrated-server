@@ -4,23 +4,12 @@
 
 #include <util/delay.h>
 #include "stk500/stk500.h"
-#include "leds.h"
 #include "usb/usb_cdc.h"
+#include "gdb/gdb.h"
 
 parameter_t param;
 static uint16_t write_address;
 static bool pmode = false;
-
-void stk500_init(void){
-    DW_LED_ON();
-    GDB_LED_ON();
-}
-
-void stk500_deinit(void){
-    spi_deinit();
-    DW_LED_OFF();
-    GDB_LED_OFF();
-}
 
 void empty_reply(void) {
     if (CRC_EOP == usb_cdc_read_byte()) {
@@ -146,6 +135,7 @@ void read_signature(void){
     usb_cdc_write_PSTR(STK_OK, 1);
 }
 
+extern uint8_t mode;
 void stk500_task(void){
     if (Endpoint_IsOUTReceived()) {
         uint8_t cmd = usb_cdc_read_byte();
@@ -209,6 +199,8 @@ void stk500_task(void){
             case 'Q':
                 exit_pgm_mode();
                 empty_reply();
+                mode = 0;
+                gdb_init();
                 break;
 
             case 0x75: //STK_READ_SIGN 'u'
@@ -224,11 +216,10 @@ void stk500_task(void){
                 else
                     usb_cdc_write_PSTR(STK_NOSYNC, 1);
         }
-    }
-
-    Endpoint_SelectEndpoint(CDC_RX_EPADDR);
-    if(!Endpoint_IsReadWriteAllowed()){
-        Endpoint_ClearOUT();
+        Endpoint_SelectEndpoint(CDC_RX_EPADDR);
+        if(!Endpoint_IsReadWriteAllowed()){
+            Endpoint_ClearOUT();
+        }
     }
 }
 

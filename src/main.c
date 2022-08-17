@@ -13,7 +13,7 @@
 #include "dw/debug_wire_ll.h"
 
 static user_button_state_t rst_button;
-uint8_t init = 0;
+uint8_t mode = 0;
 
 int main(void) {
     usr_btn_setup();
@@ -31,31 +31,20 @@ int main(void) {
     GDB_LED_OFF();
     DW_LED_OFF();
 
+#ifdef ISP_PROGRAMMER
+    stk500_init();
+#else
     gdb_init();
+#endif
 
     for (;;) {
         usr_btn_task(&rst_button);
-        if (USB_DeviceState == DEVICE_STATE_Configured) {
-            if (!init) gdb_task();
-            else gdb_task();
-
-            if (LineEncoding.BaudRateBPS == 1200 && !init) {
-                if (gdb_state_g.state != GDB_STATE_SIGHUP) { //dw was successfully connected
-                    if (debug_wire_halt())
-                        dw_cmd(DW_CMD_DISABLE); //disable dw until power cycle
-                }
-                gdb_deinit();
-                _delay_ms(100);
-                stk500_init();
-                init = 1;
-            } else if (LineEncoding.BaudRateBPS != 1200 && init) {
-                stk500_deinit();
-                _delay_ms(100);
-                gdb_init();
-                init = 0;
-            }
-        }
-
+        if (USB_DeviceState == DEVICE_STATE_Configured)
+#ifdef ISP_PROGRAMMER
+            stk500_task();
+#else
+            gdb_task();
+#endif
         USB_USBTask();
     }
 }

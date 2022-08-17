@@ -40,9 +40,6 @@ typedef struct param {
 extern parameter_t param;
 
 void stk500_task(void);
-void stk500_init(void);
-void stk500_deinit(void);
-
 void reset_target(bool reset);
 void enter_pgm_mode(void);
 void exit_pgm_mode(void);

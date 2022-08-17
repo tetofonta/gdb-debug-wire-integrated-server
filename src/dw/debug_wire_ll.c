@@ -651,15 +651,23 @@ static void dw_ll_internal_update_bp_references(void){
     while(!debug_wire_g.swbrkpt[debug_wire_g.swbrkpt_n - 1].active && !debug_wire_g.swbrkpt[debug_wire_g.swbrkpt_n - 1].stored && debug_wire_g.swbrkpt_n > 0) debug_wire_g.swbrkpt_n--;
 }
 
+uint16_t break_opcode = AVR_INSTR_BREAK(); //little-endian in flash
+uint16_t byte_address;
+uint16_t read;
+uint16_t z;
+uint16_t cur_bp_offset;
+uint8_t executed;
+uint8_t written;
+
 static uint8_t dw_ll_internal_write_breakpoints(uint16_t page_address, dw_sw_brkpt_t * bps, uint16_t bps_size, uint16_t * buffer, uint16_t buf_size){
-    uint16_t break_opcode = AVR_INSTR_BREAK(); //little-endian in flash
-    uint16_t byte_address = page_address * 2;
-    uint16_t read = 0;
+
+    byte_address = page_address * 2;
+    read = 0;
     uint16_t remaining_words = dw_ll_flash_write_page_begin(byte_address);
-    uint16_t z;
-    uint16_t cur_bp_offset = bps->address - page_address;
-    uint8_t executed = 0;
-    uint8_t written = 0;
+    cur_bp_offset = bps->address - page_address;
+    executed = 0;
+    written = 0;
+
 
     while(remaining_words){
         uint16_t words_to_read = (buf_size < remaining_words ? buf_size : remaining_words);
