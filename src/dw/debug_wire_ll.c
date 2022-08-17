@@ -168,7 +168,6 @@ void dw_cmd_go(uint8_t is_sw_brkpt){
 }
 
 //==================================================================================================================irqs
-inline void od_uart_irq_rx(uint8_t data){} //nothing
 inline void od_uart_irq_break(void){
     od_uart_blank(1); //blank for one frame
     od_uart_clear(); //clear uart

@@ -13,8 +13,11 @@
 #include "avr_isa.h"
 
 struct gdb_state gdb_state_g;
+uint8_t gdb_rtt_enable;
+
 uint8_t ack_enabled = 1;
 uint8_t is_cmd_running = 0;
+uint8_t halt_happened = 0;
 
 void gdb_init(void) {
     _delay_ms(100);
@@ -183,6 +186,48 @@ static void gdb_handle_command(void) {
 }
 
 void gdb_task(void) {
+
+    if(halt_happened){
+
+        if(gdb_rtt_enable){
+            dw_env_open(DW_ENV_SRAM_RW);
+            uint8_t flags;
+            dw_ll_sram_read(0x107, 1, &flags); //todo sramaddr
+
+            if(flags & 1){
+                dw_ll_sram_read(0x108, flags >> 2, cdc_buffer.as_byte_buffer);
+                flags &= ~1;
+                dw_ll_sram_write(0x107, 1, &flags);
+                flags >>= 2;
+
+                uint8_t checksum = gdb_send_begin();
+                uint8_t * buf = cdc_buffer.as_byte_buffer;
+                uint16_t data;
+                checksum = gdb_send_add_data_PSTR(PSTR("O"), 1, checksum);
+                while(flags--){
+                    data = byte2hex(*buf++);
+                    checksum = gdb_send_add_data(&data, 2, checksum);
+                }
+                gdb_send_finalize(checksum);
+            }
+
+            dw_env_close(DW_ENV_SRAM_RW);
+            debug_wire_resume(DW_GO_CNTX_HWBP, false);
+            return;
+        }
+
+        dw_env_open(DW_ENV_FLASH_READ);
+        uint16_t instr;
+        dw_ll_flash_read(BE(debug_wire_g.program_counter) * 2, 2, &instr);
+        dw_env_close(DW_ENV_FLASH_READ);
+
+        gdb_state_g.state = illegal_opcode(BE(instr)) ? GDB_STATE_SIGILL : GDB_STATE_SIGTRAP; //sigill ognio tanto alla cazzo?
+        _delay_ms(100);
+        gdb_send_state();
+        halt_happened = 0;
+        return;
+    }
+
     Endpoint_SelectEndpoint(CDC_RX_EPADDR);
     if (Endpoint_IsOUTReceived()) {
         uint8_t cmd_type;
@@ -218,6 +263,5 @@ void gdb_task(void) {
 
 inline void on_dw_mcu_halt(void) {
     if (gdb_state_g.state != GDB_STATE_IDLE) return;
-    gdb_state_g.state = GDB_STATE_SIGTRAP;
-    gdb_send_state();
+    halt_happened = 1;
 }

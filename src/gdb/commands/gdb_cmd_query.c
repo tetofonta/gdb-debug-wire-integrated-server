@@ -7,6 +7,7 @@
 #include <avr/pgmspace.h>
 #include "usb/usb_cdc.h"
 #include "leds.h"
+#include "dw/debug_wire_ll.h"
 
 void gdb_cmd_query(char *buffer, uint16_t len) {
     if (!memcmp_P(buffer, PSTR("Supported"), 9)) {
@@ -26,9 +27,22 @@ void gdb_cmd_query(char *buffer, uint16_t len) {
     else if (!memcmp_P(buffer, PSTR("sThr"), 4)) gdb_send_PSTR(PSTR("$l#6c"), 5); //qsThreadInfo
     else if (!memcmp_P(buffer, PSTR("Rcmd,"), 5)){
         //monitor command
-        if (!memcmp_P(buffer + 5, PSTR("72"), 2)){ //R - eset
-            gdb_send_PSTR(PSTR("$OK#9a"), 6);
+        if (!memcmp_P(buffer + 5, PSTR("7265"), 4)){ //re - set
             debug_wire_device_reset();
+            gdb_send_PSTR(PSTR("$OK#9a"), 6);
+        } else if (!memcmp_P(buffer + 5, PSTR("7274"), 4)) { //rt - t
+            dw_env_open(DW_ENV_SRAM_RW);
+            if(!memcmp_P(buffer + 5 + 4, PSTR("64"), 2)){ //rtt ]d - isable
+                uint8_t out = 0;
+                dw_ll_sram_write(0x107, 1, &out); //todo srambase
+                gdb_rtt_enable = 0;
+            } else {
+                uint8_t out = 2;
+                dw_ll_sram_write(0x107, 1, &out); //todo srambase
+                gdb_rtt_enable = 1;
+            }
+            dw_env_close(DW_ENV_SRAM_RW);
+            gdb_send_PSTR(PSTR("$OK#9a"), 6);
         }
     }
     else gdb_send_empty();

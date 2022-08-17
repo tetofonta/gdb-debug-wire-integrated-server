@@ -31,9 +31,9 @@ void gdb_cmd_read_memory(char * buffer, uint16_t len){
         dw_ll_sram_read(address & 0xFFFF, length & 0xFFFF, buffer);
         dw_env_close(DW_ENV_SRAM_RW);
     } else {
-        dw_env_open(DW_ENV_REG_FLASG_READ);
+        dw_env_open(DW_ENV_FLASH_READ);
         dw_ll_flash_read(address & 0xFFFF, length & 0xFFFF, buffer);
-        dw_env_close(DW_ENV_REG_FLASG_READ);
+        dw_env_close(DW_ENV_FLASH_READ);
 
         for (uint8_t i = 0; i < debug_wire_g.swbrkpt_n; ++i) {
             if(!debug_wire_g.swbrkpt[i].stored) continue;

@@ -87,6 +87,27 @@ static void write_flash(char * data_buffer, uint16_t len, char * real_buffer, ui
     }
 }
 
+static void write_sram(char * data_buffer, uint16_t len, char * real_buffer, uint16_t real_buf_len, uint16_t data_length, uint16_t address){
+    dw_env_open(DW_ENV_SRAM_RW);
+
+    uint8_t byte;
+    while (data_length){
+        if(len < 2){
+            memcpy(real_buffer, data_buffer, len);
+            len = usb_cdc_read(real_buffer + len, real_buf_len - len) + len;
+            data_buffer = real_buffer;
+        }
+
+        byte = (hex2nib(*data_buffer) << 4) | (hex2nib(*(data_buffer + 1)));
+        len -= 2;
+        data_buffer += 2;
+        data_length -= 1;
+        usb_cdc_write(&address, 2);
+        dw_ll_sram_write(address++, 1, &byte); //todo optimize
+    }
+    dw_env_close(DW_ENV_SRAM_RW);
+}
+
 void gdb_cmd_write_memory(char * buffer, uint16_t len){
     char * buf = buffer;
     uint16_t buf_len = len;
@@ -101,6 +122,11 @@ void gdb_cmd_write_memory(char * buffer, uint16_t len){
         if(address < 0x800000){
             write_flash(buffer, len, buf, buf_len, length, address >> 1);
             gdb_send_PSTR(PSTR("$OK#9a"), 6);
+        } else if (address < 0x810000) {
+            write_sram(buffer, len, buf, buf_len, length, address);
+            gdb_send_PSTR(PSTR("$OK#9a"), 6);
+        } else {
+            gdb_send_PSTR(PSTR("$E01#a6"), 6);
         }
     } else {
         gdb_send_empty(); //binary not yet implemented

@@ -44,7 +44,9 @@ uint8_t od_uart_recv_byte_timeout(uint16_t * timeout_ms);
 void od_uart_wait_until(uint16_t to_read);
 #define od_uart_discard(n) od_uart_recv(NULL, n)
 
-extern inline void od_uart_irq_rx(uint8_t data);
+inline void od_uart_irq_rx(uint8_t data){}
 extern inline void od_uart_irq_break(void);
+inline void od_uart_after_irq_rx(uint8_t data){}
+extern inline void od_uart_after_irq_break(void);
 
 #endif

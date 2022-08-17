@@ -55,7 +55,7 @@ void debug_wire_resume(uint8_t context, uint8_t ss);
 
 #define DW_ENV_REG_EXEC                 0
 #define DW_ENV_REG_IO                   1
-#define DW_ENV_REG_FLASG_READ           2
+#define DW_ENV_FLASH_READ           2
 #define DW_ENV_SRAM_RW                  2
 #define DW_ENV_FLASH_CLR_PAGE           3
 #define DW_ENV_EEPROM_RW                4

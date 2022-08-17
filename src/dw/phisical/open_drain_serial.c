@@ -299,6 +299,10 @@ __attribute__((optimize("-Ofast"))) ISR(TIMER1_COMPA_vect){
             uart_flags = OD_UART_FLAG_AVAIL_MASK; //set rx avail flag
             TIMER_IRQ_DISABLE();//disable timer, nothing to do until tx or rx irq
             TIMER_IRQ_CLEAR();
+//            FE_IRQ_ENABLE();
+//            FE_IRQ_CLEAR();
+//            sei();
+
             if(value & (1 << PIND7)) //if the stop bit is high
                 od_uart_irq_rx(uart_data); //fire irq
             else if(!uart_data) //if data is zero and stopbit is zero, it is a break. fire break irq

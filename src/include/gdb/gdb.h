@@ -19,6 +19,7 @@ struct gdb_state {
     uint8_t state: 4;
 };
 extern struct gdb_state gdb_state_g;
+extern uint8_t gdb_rtt_enable;
 
 void gdb_task(void);
 
