@@ -11,10 +11,9 @@
 #include "gdb/utils.h"
 #include "leds.h"
 #include "avr_isa.h"
+#include "gdb/rtt.h"
 
 struct gdb_state gdb_state_g;
-uint8_t gdb_rtt_enable;
-
 uint8_t ack_enabled = 1;
 uint8_t is_cmd_running = 0;
 uint8_t halt_happened = 0;
@@ -185,32 +184,31 @@ static void gdb_handle_command(void) {
     Endpoint_SelectEndpoint(CDC_RX_EPADDR);
 }
 
+static void gdb_message(const char * buf, const char * init, uint8_t len, uint8_t len_init){
+    uint8_t checksum = gdb_send_begin();
+    uint16_t data;
+    checksum = gdb_send_add_data_PSTR(init, len_init, checksum);
+    while(len--){
+        data = byte2hex(*buf++);
+        checksum = gdb_send_add_data((const char *) &data, 2, checksum);
+    }
+    checksum = gdb_send_add_data_PSTR(PSTR("0a"), 2, checksum);
+    gdb_send_finalize(checksum);
+}
+
 void gdb_task(void) {
 
     if(halt_happened){
         if(gdb_rtt_enable){
             dw_env_open(DW_ENV_SRAM_RW);
-            uint8_t flags;
-            dw_ll_sram_read(0x107, 1, &flags); //todo sramaddr
-            if(flags & 1){
-                flags >>= 2;
-                dw_ll_sram_read(0x108, flags, cdc_buffer.as_byte_buffer);
-                uint8_t checksum = gdb_send_begin();
-                uint8_t * buf = cdc_buffer.as_byte_buffer;
-                uint16_t data;
-                checksum = gdb_send_add_data_PSTR(PSTR("O7274743a20"), 11, checksum);
-                while(flags--){
-                    data = byte2hex(*buf++);
-                    checksum = gdb_send_add_data(&data, 2, checksum);
-                }
-                checksum = gdb_send_add_data_PSTR(PSTR("0a"), 2, checksum);
-                gdb_send_finalize(checksum);
-            }
-
+            uint8_t len = rtt_get_last_message(cdc_buffer.as_byte_buffer);
+            if(len > 0) gdb_message((const char *) cdc_buffer.as_byte_buffer, PSTR("O7274743a20"), len, 11);
             dw_env_close(DW_ENV_SRAM_RW);
+
             debug_wire_g.program_counter = BE((BE(debug_wire_g.program_counter) + 1));
             debug_wire_resume(DW_GO_CNTX_HWBP, false);
             halt_happened = 0;
+
             return;
         }
 

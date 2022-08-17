@@ -8,6 +8,7 @@
 #include <string.h>
 #include "panic.h"
 #include "usb/usb_cdc.h"
+#include "gdb/rtt.h"
 
 
 void gdb_cmd_read_memory(char * buffer, uint16_t len){
@@ -22,11 +23,11 @@ void gdb_cmd_read_memory(char * buffer, uint16_t len){
     }
 
     uint16_t checksum = 0, tmp;
-    if(address > 0x810000){
+    if(address >= 0x810000){
         dw_env_open(DW_ENV_EEPROM_RW);
         dw_ll_eeprom_read(buffer, address & 0xFFFF, length & 0xFFFF);
         dw_env_close(DW_ENV_EEPROM_RW);
-    } else if (address > 0x800000){
+    } else if (address >= 0x800000){
         dw_env_open(DW_ENV_SRAM_RW);
         dw_ll_sram_read(address & 0xFFFF, length & 0xFFFF, buffer);
         dw_env_close(DW_ENV_SRAM_RW);

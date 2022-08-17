@@ -102,10 +102,30 @@ static void write_sram(char * data_buffer, uint16_t len, char * real_buffer, uin
         len -= 2;
         data_buffer += 2;
         data_length -= 1;
-        usb_cdc_write(&address, 2);
         dw_ll_sram_write(address++, 1, &byte); //todo optimize
     }
     dw_env_close(DW_ENV_SRAM_RW);
+}
+
+
+static void write_eeprom(char * data_buffer, uint16_t len, char * real_buffer, uint16_t real_buf_len, uint16_t data_length, uint16_t address){
+    dw_env_open(DW_ENV_EEPROM_RW);
+
+    uint8_t byte;
+    while (data_length){
+        if(len < 2){
+            memcpy(real_buffer, data_buffer, len);
+            len = usb_cdc_read(real_buffer + len, real_buf_len - len) + len;
+            data_buffer = real_buffer;
+        }
+
+        byte = (hex2nib(*data_buffer) << 4) | (hex2nib(*(data_buffer + 1)));
+        len -= 2;
+        data_buffer += 2;
+        data_length -= 1;
+        dw_ll_eeprom_write_byte(address++, byte);
+    }
+    dw_env_close(DW_ENV_EEPROM_RW);
 }
 
 void gdb_cmd_write_memory(char * buffer, uint16_t len){
@@ -126,8 +146,9 @@ void gdb_cmd_write_memory(char * buffer, uint16_t len){
             write_sram(buffer, len, buf, buf_len, length, address);
             gdb_send_PSTR(PSTR("$OK#9a"), 6);
         } else {
-            gdb_send_PSTR(PSTR("$E01#a6"), 6);
-        }
+            write_eeprom(buffer, len, buf, buf_len, length, address);
+            gdb_send_PSTR(PSTR("$OK#9a"), 6);
+        } //todo checks on memory size. return e01
     } else {
         gdb_send_empty(); //binary not yet implemented
     }
