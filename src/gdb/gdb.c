@@ -188,31 +188,29 @@ static void gdb_handle_command(void) {
 void gdb_task(void) {
 
     if(halt_happened){
-
         if(gdb_rtt_enable){
             dw_env_open(DW_ENV_SRAM_RW);
             uint8_t flags;
             dw_ll_sram_read(0x107, 1, &flags); //todo sramaddr
-
             if(flags & 1){
-                dw_ll_sram_read(0x108, flags >> 2, cdc_buffer.as_byte_buffer);
-                flags &= ~1;
-                dw_ll_sram_write(0x107, 1, &flags);
                 flags >>= 2;
-
+                dw_ll_sram_read(0x108, flags, cdc_buffer.as_byte_buffer);
                 uint8_t checksum = gdb_send_begin();
                 uint8_t * buf = cdc_buffer.as_byte_buffer;
                 uint16_t data;
-                checksum = gdb_send_add_data_PSTR(PSTR("O"), 1, checksum);
+                checksum = gdb_send_add_data_PSTR(PSTR("O7274743a20"), 11, checksum);
                 while(flags--){
                     data = byte2hex(*buf++);
                     checksum = gdb_send_add_data(&data, 2, checksum);
                 }
+                checksum = gdb_send_add_data_PSTR(PSTR("0a"), 2, checksum);
                 gdb_send_finalize(checksum);
             }
 
             dw_env_close(DW_ENV_SRAM_RW);
+            debug_wire_g.program_counter = BE((BE(debug_wire_g.program_counter) + 1));
             debug_wire_resume(DW_GO_CNTX_HWBP, false);
+            halt_happened = 0;
             return;
         }
 
