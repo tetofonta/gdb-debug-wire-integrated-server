@@ -9,7 +9,7 @@
 #include "gdb/gdb.h"
 #include "dw/debug_wire.h"
 #include "leds.h"
-#include "stk500/stk500.h"
+#include "isp/isp.h"
 #include "dw/debug_wire_ll.h"
 
 static user_button_state_t rst_button;
@@ -31,20 +31,28 @@ int main(void) {
     GDB_LED_OFF();
     DW_LED_OFF();
 
-#ifdef ISP_PROGRAMMER
-    stk500_init();
-#else
     gdb_init();
-#endif
 
     for (;;) {
         usr_btn_task(&rst_button);
         if (USB_DeviceState == DEVICE_STATE_Configured)
-#ifdef ISP_PROGRAMMER
-            stk500_task();
-#else
-            gdb_task();
-#endif
+            if(LineEncoding.BaudRateBPS != 1200){
+                if(mode){
+                    spi_deinit();
+                    gdb_init();
+                    mode = 0;
+                }
+                gdb_task();
+            } else {
+                if(!mode){
+                    gdb_deinit();
+                    spi_init();
+                    mode = 1;
+                }
+                isp_task();
+            }
+
+
         USB_USBTask();
     }
 }

@@ -116,7 +116,7 @@ add_library(gdb_commands STATIC
         src/gdb/commands/gdb_cmd_write_memory.c)
 add_library(gdb STATIC src/gdb/gdb.c src/gdb/utils.c src/gdb/rtt.c)
 target_link_libraries(gdb gdb_commands)
-add_library(stk500 STATIC src/stk500/stk500.c src/stk500/isp.c src/stk500/utils.c)
+add_library(stk500 STATIC src/stk500/isp_pgm.c src/stk500/isp.c src/stk500/utils.c)
 add_executable(ardwino_elf
         src/main.c
         src/usb/usb_events.c

@@ -1,7 +1,7 @@
 #include "usb/usb_cdc.h"
 #include "gdb/commands.h"
 #include "leds.h"
-#include "stk500/stk500.h"
+#include "isp/isp.h"
 
 volatile bool connection_evt = 1;
 extern uint8_t mode;

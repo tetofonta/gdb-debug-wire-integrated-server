@@ -2,8 +2,8 @@
 // Created by stefano on 13/08/22.
 //
 
-#ifndef ARDWINO_STK500_H
-#define ARDWINO_STK500_H
+#ifndef ARDWINO_ISP_H
+#define ARDWINO_ISP_H
 
 #include <avr/io.h>
 #include <stdbool.h>
@@ -39,16 +39,11 @@ typedef struct param {
 } __attribute__((packed)) parameter_t;
 extern parameter_t param;
 
-void stk500_task(void);
+void isp_task(void);
 void reset_target(bool reset);
-void enter_pgm_mode(void);
-void exit_pgm_mode(void);
-bool isp_read_flash(uint16_t address, uint16_t length);
-void isp_write_flash(uint16_t address, uint16_t length);
 
 void spi_init(void);
 void spi_deinit(void);
 uint8_t spi_transfer(uint8_t byte);
-uint8_t spi_transaction(uint8_t a, uint8_t b, uint8_t c, uint8_t d);
 
-#endif //ARDWINO_STK500_H
+#endif //ARDWINO_ISP_H
