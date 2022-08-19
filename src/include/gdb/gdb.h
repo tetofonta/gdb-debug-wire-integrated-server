@@ -16,6 +16,7 @@
 #define GDB_STATE_DISCONNECTED  15
 
 struct gdb_state {
+    uint8_t last_context;
     uint8_t state: 4;
 };
 extern struct gdb_state gdb_state_g;

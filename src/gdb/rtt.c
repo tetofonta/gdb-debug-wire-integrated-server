@@ -32,5 +32,7 @@ uint8_t rtt_get_last_message(uint8_t * dest){
     struct rtt_data flags = rtt_get_flags();
     if(!flags.available) return 0;
     dw_ll_sram_read(debug_wire_g.device.sram_base + 1, flags.size, dest);
+    uint8_t out = 2;
+    dw_ll_sram_write(debug_wire_g.device.sram_base, 1, &out);
     return flags.size;
 }

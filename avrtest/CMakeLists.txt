@@ -4,9 +4,15 @@ project(avrtest C CXX ASM)
 set(F_CPU 16000000)
 set(MCU atmega328p)
 
-set(OPTIMIZATION g)
+set(CMAKE_BUILD_TYPE Debug)
 set(ADDITIONAL_OPTIMIZATIONS "-flto -fdata-sections -mrelax -fpack-struct -fshort-enums -fno-inline-small-functions -fno-strict-aliasing -funsigned-char -funsigned-bitfields -ffunction-sections")
 set(WARNINGS "-Wall -Wstrict-prototypes -Wno-array-bounds ")
 include(cmake/env.cmake)
 
-avrtarget(avrtest main.c)
+include_directories(./includes)
+
+add_library(rtt STATIC src/rtt/rtt.c)
+target_link_options(rtt PUBLIC -Wdiscarded-qualifiers)
+
+avrtarget(avrtest src/main.c)
+target_link_libraries(avrtest-elf rtt)

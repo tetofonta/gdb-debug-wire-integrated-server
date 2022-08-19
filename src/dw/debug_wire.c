@@ -16,7 +16,7 @@ static dw_sw_brkpt_t *_dw_is_swprkpt(void) {
     return NULL;
 }
 
-void debug_wire_resume(uint8_t context, uint8_t ss) {
+void debug_wire_resume(uint8_t context) {
     if (!debug_wire_g.halted) return;
 
     dw_sw_brkpt_t *swbrkpt = _dw_is_swprkpt();
@@ -26,17 +26,20 @@ void debug_wire_resume(uint8_t context, uint8_t ss) {
 
         uint16_t opcode = BE(swbrkpt->opcode);
         dw_cmd_set(DW_CMD_REG_IR, &opcode);
-        if(ss)
+        if(context == DW_GO_CNTX_SS)
             dw_cmd_ss(1);
         else
             dw_cmd_go(1);
         return;
     }
 
+    if(debug_wire_g.last_opcode == AVR_INSTR_BREAK())
+        debug_wire_g.program_counter = BE((1 + BE(debug_wire_g.program_counter)));
+
     dw_cmd_set(DW_CMD_REG_PC, &debug_wire_g.program_counter);
     dw_set_context(context ^ (debug_wire_g.run_timers << 5));
     dw_cmd_set(DW_CMD_REG_PC, &debug_wire_g.program_counter);
-    if(ss)
+    if(context == DW_GO_CNTX_SS)
         dw_cmd_ss(0);
     else
         dw_cmd_go(0);
@@ -80,7 +83,6 @@ void dw_env_open(uint8_t env_type){
 
     cur_state.reg0 = dw_ll_register_read(r0);
     if(env_type == 1) return;
-    env_type--;
 
     cur_state.reg1 = dw_ll_register_read(r1);
 }
@@ -112,6 +114,5 @@ void dw_env_close(uint8_t env_type){
     if(env_type == 1){
         dw_cmd_set(DW_CMD_REG_PC, &cur_state.pc);
         dw_cmd_set(DW_CMD_REG_HWBP, &cur_state.hwbp);
-        env_type--;
     }
 }

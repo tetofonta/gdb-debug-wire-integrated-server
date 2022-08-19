@@ -25,6 +25,7 @@ typedef struct debug_wire {
     uint32_t target_frequency;
     uint8_t cur_divisor;
     uint16_t program_counter;
+    uint16_t last_opcode;
 
     uint8_t halted : 1;
     uint8_t run_timers : 1;
@@ -50,7 +51,7 @@ uint8_t debug_wire_halt(void);
 uint8_t dw_init(uint32_t target_freq);
 void dw_ll_deinit(void);
 void debug_wire_device_reset(void);
-void debug_wire_resume(uint8_t context, uint8_t ss);
+void debug_wire_resume(uint8_t context);
 
 
 #define DW_ENV_REG_EXEC                 0

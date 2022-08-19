@@ -23,7 +23,8 @@ void gdb_init(void) {
 
     if (dw_init(2 * 8000000)) {//todo get frequency from eeprom
         debug_wire_device_reset();
-        debug_wire_resume(DW_GO_CNTX_CONTINUE, false);
+        rtt_set_state(0);
+        debug_wire_resume(DW_GO_CNTX_CONTINUE);
         gdb_state_g.state = GDB_STATE_DISCONNECTED;
         return;
     }
@@ -101,21 +102,23 @@ static void gdb_parse_command(const char *buf, uint16_t len) {
             break;
         case 'C':
         case 'c':
-            dw_env_open(DW_GO_CNTX_FLASH_WRT);
+            dw_env_open(DW_ENV_FLASH_WRITE);
             dw_ll_flush_breakpoints(cdc_buffer.as_word_buffer, USB_CDC_BUFFER_WORDS);
-            dw_env_close(DW_GO_CNTX_FLASH_WRT);
+            dw_env_close(DW_ENV_FLASH_WRITE);
 
-            debug_wire_resume(DW_GO_CNTX_HWBP, false);
+            gdb_state_g.last_context = DW_GO_CNTX_HWBP;
+            debug_wire_resume(DW_GO_CNTX_HWBP);
             gdb_state_g.state = GDB_STATE_IDLE;
             break;
         case 'S':
         case 's':
-            dw_env_open(DW_GO_CNTX_FLASH_WRT);
+            dw_env_open(DW_ENV_FLASH_WRITE);
             dw_ll_flush_breakpoints(cdc_buffer.as_word_buffer, USB_CDC_BUFFER_WORDS);
-            dw_env_close(DW_GO_CNTX_FLASH_WRT);
+            dw_env_close(DW_ENV_FLASH_WRITE);
 
             gdb_state_g.state = GDB_STATE_IDLE;
-            debug_wire_resume(DW_GO_CNTX_SS, true);
+            gdb_state_g.last_context = DW_GO_CNTX_SS;
+            debug_wire_resume(DW_GO_CNTX_SS);
             break;
         case 'q':
             gdb_cmd_query((char *) (cdc_buffer.as_byte_buffer + 1), len - 1);
@@ -199,28 +202,27 @@ static void gdb_message(const char * buf, const char * init, uint8_t len, uint8_
 void gdb_task(void) {
 
     if(halt_happened){
+
+        dw_env_open(DW_ENV_FLASH_READ);
+        dw_ll_flash_read(BE(debug_wire_g.program_counter) * 2, 2, &debug_wire_g.last_opcode);
+        dw_env_close(DW_ENV_FLASH_READ);
+
         if(gdb_rtt_enable){
             dw_env_open(DW_ENV_SRAM_RW);
             uint8_t len = rtt_get_last_message(cdc_buffer.as_byte_buffer);
-            if(len > 0) gdb_message((const char *) cdc_buffer.as_byte_buffer, PSTR("O7274743a20"), len, 11);
             dw_env_close(DW_ENV_SRAM_RW);
 
-            debug_wire_g.program_counter = BE((BE(debug_wire_g.program_counter) + 1));
-            debug_wire_resume(DW_GO_CNTX_HWBP, false);
-            halt_happened = 0;
-
-            return;
+            if(len > 0) {
+                gdb_message((const char *) cdc_buffer.as_byte_buffer, PSTR("O7274743a20"), len, 11);
+                if(gdb_state_g.last_context == DW_GO_CNTX_CONTINUE || gdb_state_g.last_context == DW_GO_CNTX_HWBP) {
+                    debug_wire_resume(gdb_state_g.last_context);
+                    halt_happened = 0;
+                    return;
+                }
+            }
         }
 
-        dw_env_open(DW_ENV_FLASH_READ);
-        uint16_t instr;
-        dw_ll_flash_read(BE(debug_wire_g.program_counter) * 2, 2, &instr);
-        dw_env_close(DW_ENV_FLASH_READ);
-
-        if(instr == AVR_INSTR_BREAK()) debug_wire_g.program_counter = BE((BE(debug_wire_g.program_counter) + 1));
-
-        gdb_state_g.state = illegal_opcode(BE(instr)) ? GDB_STATE_SIGILL : GDB_STATE_SIGTRAP;
-        _delay_ms(100);
+        gdb_state_g.state = illegal_opcode(BE(debug_wire_g.last_opcode)) ? GDB_STATE_SIGILL : GDB_STATE_SIGTRAP;
         gdb_send_state();
         halt_happened = 0;
         return;

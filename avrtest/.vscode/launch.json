@@ -6,11 +6,11 @@
             "request": "attach",
             "name": "Attach to gdbserver",
             "executable": "${workspaceFolder}/build/bin/avrtest-elf",
-            "target": "/dev/ttyACM0",
+            "target": "/tmp/ttyV0",
             "remote": true,
             "cwd": "${workspaceFolder}",
             "gdbpath": "/usr/bin/avr-gdb",
-            "autorun": []
+            "autorun": ["monitor rtt enable"]
         }
     ]
 }

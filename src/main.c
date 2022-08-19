@@ -51,8 +51,6 @@ int main(void) {
                 }
                 isp_task();
             }
-
-
         USB_USBTask();
     }
 }
@@ -60,6 +58,6 @@ int main(void) {
 void usr_btn_event(user_button_state_t *btn) {
     if (USB_DeviceState != DEVICE_STATE_Configured || LineEncoding.BaudRateBPS != 1200) {
         debug_wire_device_reset();
-        debug_wire_resume(DW_GO_CNTX_CONTINUE, false);
+        debug_wire_resume(DW_GO_CNTX_CONTINUE);
     }
 }
