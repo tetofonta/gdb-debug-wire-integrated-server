@@ -21,12 +21,12 @@ debugging capabilities of the target firmware.
 The chip mentioned above is commonly used as a simple usb to serial converter, delegating
 the target flashing operations to the bootloader the target comes pre-flashed with.
 
-This can cause minor problems in case the target flash gets corrupted and programmer
-will be needed for recovering the chip.
+This can cause minor problems in case the target flash gets corrupted. In those cases a 
+programmer is needed for recovering the chip.
 
 The fact that a full-blown ATMega16u2 is used for a simple task like this 
 --Probably for cost purposes because yes, An FT232 costs more than an MCU-- means
-that we can exploit the power of the MCU for doing other _stuff_ by maintaining the 
+that we can exploit the power of the MCU for other purposes by maintaining the 
 hardware similar.
 
 With some modifications of the board that will be explained in [Hardware modifications](#hardware-modifications)
@@ -76,7 +76,7 @@ Specifically the connections are the following:
 | 13      | PD7          | Target ~RST/dW with Pull up 10k |                                   |
 | 13      | PD7          | ISP - Reset                     | Used for isp programming a target |
 
-When started the firmware will try to halt, reset and restart the target MCU.
+When started, the firmware will try to halt, reset and restart the target MCU.
 After this operation, avr-gcc can be used to connect to the server through the virtual
 serial exposed by the usb endpoint and enter the debug session. (see [Working with avr-gdb](#working-with-avr-gdb))
 
@@ -85,7 +85,7 @@ _Note: Final flushing occurs when a non memory related command is issued after t
 memory write. Be sure to detach after flashing._
 
 The only exception to the workflow occurs when the serial connection is made with a 
-(virtual) baud rate of 1200 baud. (Virtual baud rate is what the control structure is set;
+(virtual) baud rate of 1200 baud. (Virtual baud rate is what the control structure is set to;
 on usb CDC devices communication happens at max usb speed)
 
 In this case the firmware will behave as a serial to SPI converter, by disabling the debug
@@ -93,7 +93,7 @@ wire activities and pins and gdb activities for writing on the SPI bus with targ
 reset line constantly low. (some avr have reset active high, those are not compatible)
 
 Every character sent from the serial communication will be sent on the SPI bus and any response 
-received will be replied. An avrdude programmer will be written in the future.
+received will be replied to. An avrdude programmer will be written in the future.
 
 The optional external reset button causes the MCU to perform a target reset and execution 
 continue directly without the needing of a gdb session running.
@@ -135,7 +135,7 @@ existing debug wire connection, making other physical channels available for use
 ### Modifying an existing board
 
 Because of pinout compatibility, this firmware can be flashed on an Arduino(c) board
-(UNO or alike, Uno is the only board this has been tested.)
+(UNO or alike, Uno is the only board this has been tested on.)
 
 #### Firmware upload
 The ATMega16u2 comes with a USB bootloader flashed.
@@ -144,10 +144,10 @@ The ATMega16u2 comes with a USB bootloader flashed.
 for a detailed guide.
 
 In order to enable the bootloader we need to plug in the usb cable and, after usb enumeration,
-reset the MCU by shorting the pins 5 and 6 of the nearby `ICSP` connector [As described in the datasheet sec. 23.6.3](https://ww1.microchip.com/downloads/en/DeviceDoc/doc7799.pdf).
+reset the MCU by short circuiting the pins 5 and 6 of the nearby `ICSP` connector [As described in the datasheet sec. 23.6.3](https://ww1.microchip.com/downloads/en/DeviceDoc/doc7799.pdf).
 
 After a successive enumeration the device will be recognised as usb device `03EB:2FEF Atmel Corp. atmega16u2 DFU bootloader`
-(_Note for linux users: In order to correctly use the programming software you'll need to update your udev rules accordingly._)
+(_Note for linux users: In order to correctly use the programming software you'll need to update your udev rules accordingly or use sudo (**BAD** person)._)
 
 Now we are ready for flashing:
  - Install the programming software (listed below) 
@@ -164,13 +164,13 @@ Now we are ready for flashing:
      ```
 
 **NOTE**: After modifiying the board (Step 3), the bootloader will not automatically trigger anymore.
-In order to access the bootloader short the cut track at step 3.
+In order to access the bootloader short-circuit the cut track at step 3 with something pointy across pushed into the cut.
 
 #### Hardware modifications
 
 In order for the firmware to work, some modifications are needed:
 (References are made from the official Arduino Uno R3 Schematics [available online](https://www.arduino.cc/en/uploads/Main/Arduino_Uno_Rev3-schematic.pdf))
- 1) Remove and short `C5`
+ 1) Remove and short-circuit `C5`
  2) Cut the trace connecting `RESET` button to the target reset pin.
  3) Cut the trace connecting to `RN2D`
  4) Add a jumper wire from the `RESET` pushbutton to pin 2 (PB6) of `JP2`
@@ -264,12 +264,12 @@ todo
 
 ### Compiling
 
-For compilation some software is required:
+Some software is required in order to compile:
  - avr-libc
  - avr-gcc
  - avr-binutils
  - cmake
- - avr-gdb (for using the server (: )
+ - avr-gdb (to use the server (: )
 
 In order to use the host software, you'll need to install python and pip,
 then you can install all the dependencies with `pip install -r host_software/requirements.txt` 
