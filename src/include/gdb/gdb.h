@@ -42,5 +42,6 @@ uint8_t gdb_send_begin(void);
 uint8_t gdb_send_add_data(const char *data, uint16_t len, uint8_t checksum);
 uint8_t gdb_send_add_data_PSTR(const char * data, uint16_t len, uint8_t checksum);
 void gdb_send_finalize(uint8_t checksum);
+void gdb_message(const char * buf, const char * init, uint8_t len, uint8_t len_init);
 
 #endif //ARDWINO_GDB_H

@@ -187,7 +187,7 @@ static void gdb_handle_command(void) {
     Endpoint_SelectEndpoint(CDC_RX_EPADDR);
 }
 
-static void gdb_message(const char * buf, const char * init, uint8_t len, uint8_t len_init){
+void gdb_message(const char * buf, const char * init, uint8_t len, uint8_t len_init){
     uint8_t checksum = gdb_send_begin();
     uint16_t data;
     checksum = gdb_send_add_data_PSTR(init, len_init, checksum);

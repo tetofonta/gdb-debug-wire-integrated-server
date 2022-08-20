@@ -12,6 +12,8 @@
 #include "avr_isa.h"
 #include "leds.h"
 #include "usb/usb_cdc.h"
+#include "gdb/gdb.h"
+#include "gdb/utils.h"
 
 debug_wire_t debug_wire_g;
 
@@ -635,8 +637,10 @@ static inline uint8_t is_bp_addr_gt(dw_sw_brkpt_t * a, dw_sw_brkpt_t * b){
 }
 
 static void dw_ll_internal_update_bp_references(void){
-    if(debug_wire_g.swbrkpt_n < 2) return;
-
+    if(debug_wire_g.swbrkpt_n < 2) {
+        if(!debug_wire_g.swbrkpt[0].active) debug_wire_g.swbrkpt_n = 0;
+        return;
+    }
     //performs an insertion sort
     dw_sw_brkpt_t tmp;
     for (int16_t i = 1; i < debug_wire_g.swbrkpt_n; ++i) {
@@ -648,6 +652,7 @@ static void dw_ll_internal_update_bp_references(void){
         }
         memcpy(debug_wire_g.swbrkpt + j + 1, &tmp, sizeof(dw_sw_brkpt_t));
     }
+
     while(!debug_wire_g.swbrkpt[debug_wire_g.swbrkpt_n - 1].active && !debug_wire_g.swbrkpt[debug_wire_g.swbrkpt_n - 1].stored && debug_wire_g.swbrkpt_n > 0) debug_wire_g.swbrkpt_n--;
 }
 
@@ -680,17 +685,22 @@ static uint8_t dw_ll_internal_write_breakpoints(uint16_t page_address, dw_sw_brk
         while (cur_bp_offset < words_to_read){
             executed++;
             remaining_words = dw_ll_flash_write_populate_buffer(buffer + cur_buffer_wrt, cur_bp_offset - cur_buffer_wrt, remaining_words);
+
             if(bps->active && !bps->stored){
+                uint32_t ad = byte2hex(bps->address & 0xFF) |  (uint32_t) byte2hex(bps->address >> 8) << 16;
+                gdb_message((const char *) &ad, PSTR("O57524f5445"), 4, 11);
                 bps->stored = 1;
                 (bps++)->opcode  = *(buffer + cur_bp_offset);
                 remaining_words = dw_ll_flash_write_populate_buffer(&break_opcode, 1, remaining_words);
                 written++;
             } else if(!bps->active && bps->stored) {
+                uint32_t ad = byte2hex(bps->address & 0xFF) |  (uint32_t) byte2hex(bps->address >> 8) << 16;
+                gdb_message((const char *) &ad, PSTR("O524f4d4f56"), 4, 11);
                 bps->stored = 0;
                 remaining_words = dw_ll_flash_write_populate_buffer(&(bps++)->opcode, 1, remaining_words);
                 written++;
             } else {
-                remaining_words = dw_ll_flash_write_populate_buffer(&(bps++)->opcode, 1, remaining_words);
+                remaining_words = dw_ll_flash_write_populate_buffer(buffer + cur_bp_offset, 1, remaining_words);
             }
 
             cur_buffer_wrt = cur_bp_offset + 1;
@@ -715,6 +725,7 @@ static uint8_t dw_ll_internal_write_breakpoints(uint16_t page_address, dw_sw_brk
 
 void dw_ll_flush_breakpoints(uint16_t * buffer, uint16_t len){
     dw_ll_internal_update_bp_references();
+
     uint8_t bp_len = 0;
     while(bp_len < debug_wire_g.swbrkpt_n){
         uint16_t page_address = ((((debug_wire_g.swbrkpt + bp_len)->address) / debug_wire_g.device.flash_page_end) * debug_wire_g.device.flash_page_end);
