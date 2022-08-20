@@ -56,6 +56,11 @@ void gdb_cmd_query(char *buffer, uint16_t len) {
             else debug_wire_g.run_timers = 1;
             gdb_send_PSTR(PSTR("$OK#9a"), 6);
         } //t - imers (d - isable/ enable)
+        else if (!memcmp_P(buffer + 5, PSTR("73"), 2)){
+            uint32_t signature = byte2hex(debug_wire_g.device.signature & 0xFF) | (uint32_t) byte2hex(debug_wire_g.device.signature >> 8) << 16;
+            gdb_message((const char *) &signature, PSTR("O"), 4, 1);
+            gdb_send_PSTR(PSTR("$OK#9a"), 6);
+        } //s - ignature (d - isable/ enable)
         else
             gdb_send_empty();
 
