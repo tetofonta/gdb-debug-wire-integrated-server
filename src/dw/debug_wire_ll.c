@@ -687,15 +687,11 @@ static uint8_t dw_ll_internal_write_breakpoints(uint16_t page_address, dw_sw_brk
             remaining_words = dw_ll_flash_write_populate_buffer(buffer + cur_buffer_wrt, cur_bp_offset - cur_buffer_wrt, remaining_words);
 
             if(bps->active && !bps->stored){
-                uint32_t ad = byte2hex(bps->address & 0xFF) |  (uint32_t) byte2hex(bps->address >> 8) << 16;
-                gdb_message((const char *) &ad, PSTR("O57524f5445"), 4, 11);
                 bps->stored = 1;
                 (bps++)->opcode  = *(buffer + cur_bp_offset);
                 remaining_words = dw_ll_flash_write_populate_buffer(&break_opcode, 1, remaining_words);
                 written++;
             } else if(!bps->active && bps->stored) {
-                uint32_t ad = byte2hex(bps->address & 0xFF) |  (uint32_t) byte2hex(bps->address >> 8) << 16;
-                gdb_message((const char *) &ad, PSTR("O524f4d4f56"), 4, 11);
                 bps->stored = 0;
                 remaining_words = dw_ll_flash_write_populate_buffer(&(bps++)->opcode, 1, remaining_words);
                 written++;
