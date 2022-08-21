@@ -117,7 +117,7 @@ add_library(gdb_commands STATIC
 add_library(gdb STATIC src/gdb/gdb.c src/gdb/utils.c src/gdb/rtt.c src/gdb/consts.c)
 target_link_libraries(gdb gdb_commands)
 add_library(stk500 STATIC src/stk500/isp_pgm.c src/stk500/isp.c src/stk500/utils.c)
-add_executable(ardwino_elf
+add_executable(integrated_server_elf
         src/main.c
         src/usb/usb_events.c
         src/dw/debug_wire_ll.c
@@ -125,13 +125,13 @@ add_executable(ardwino_elf
         src/panic.c
         src/dw/debug_wire.c
         src/user_button/user_button.c src/avr.c)
-target_link_libraries(ardwino_elf lufa cdc dw_devices gdb stk500)
+target_link_libraries(integrated_server_elf lufa cdc dw_devices gdb stk500)
 
-add_custom_target(ardwino
-        COMMAND avr-objdump -d \"${CMAKE_BINARY_DIR}/ardwino_elf\" > \"${CMAKE_BINARY_DIR}/ardwino-asm.txt\";
-        COMMAND avr-objcopy -O ihex -R .eeprom -R .fuse -R .lock -R .signature \"${CMAKE_BINARY_DIR}/ardwino_elf\" \"${CMAKE_BINARY_DIR}/ardwino.flash.hex\";
-        COMMAND avr-size --mcu="${MCU}" -C \"${CMAKE_BINARY_DIR}/ardwino_elf\";
-        DEPENDS ardwino_elf
+add_custom_target(integrated_server
+        COMMAND avr-objdump -d \"${CMAKE_BINARY_DIR}/integrated_server_elf\" > \"${CMAKE_BINARY_DIR}/integrated-server-asm.txt\";
+        COMMAND avr-objcopy -O ihex -R .eeprom -R .fuse -R .lock -R .signature \"${CMAKE_BINARY_DIR}/integrated_server_elf\" \"${CMAKE_BINARY_DIR}/integrated_server.flash.hex\";
+        COMMAND avr-size --mcu="${MCU}" -C \"${CMAKE_BINARY_DIR}/integrated_server_elf\";
+        DEPENDS integrated_server_elf
         )
 
-add_custom_target(upload COMMAND avrdude -c ft232r -p ${MCU} -U \"flash:w:${CMAKE_BINARY_DIR}/ardwino.flash.hex\" USES_TERMINAL DEPENDS ardwino)
+add_custom_target(upload COMMAND avrdude -c ft232r -p ${MCU} -U \"flash:w:${CMAKE_BINARY_DIR}/integrated_server.flash.hex\" USES_TERMINAL DEPENDS integrated_server)

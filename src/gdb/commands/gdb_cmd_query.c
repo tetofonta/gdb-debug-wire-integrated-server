@@ -23,8 +23,10 @@ void gdb_cmd_query(char *buffer, uint16_t len) {
         GDB_LED_ON();
         gdb_state_g.state = GDB_STATE_IDLE;
         debug_wire_device_reset();
+        dw_env_open(DW_ENV_SRAM_RW);
         gdb_rtt_enable = 0;
         rtt_set_state(0);
+        dw_env_close(DW_ENV_SRAM_RW);
         gdb_state_g.state = GDB_STATE_SIGTRAP;
     }
     else if (buffer[1] == 'C')

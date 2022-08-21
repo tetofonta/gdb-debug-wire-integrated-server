@@ -1,5 +1,13 @@
-# Ardwino
-## DebugWire enabling Arduino board modification
+# GDB DebugWire Integrated Server for AVR family
+## DebugWire gdb server for ATMega16u2/ATMega32u2
+
+This firmware poses as an integrated gdb server capable of running of a microcontroller such as 
+an ATMega16u2 using the DebugWire Protocol, a low level debugging protocol implemented by
+the low-cost AVR family devices.
+
+As a second objective, this firmware is pinout and functionality compatible with Arduino UNO, 
+Leonardo(?) and Arduino Nano(?) in order to be easy to upgrade an existing board without
+the needs of an external programmer.
 
 ### Table of contents
 - [What this is](#what-this-is)
@@ -159,7 +167,7 @@ Now we are ready for flashing:
    - **Linux/MacOS**:
      ```bash
      $ dfu-programmer atmega16u2 erase
-     $ dfu-programmer atmega16u2 flash <ardwino.hex>
+     $ dfu-programmer atmega16u2 flash <integrated_server.flash.hex>
      $ dfu-programmer atmega16u2 reset
      ```
 
@@ -306,6 +314,6 @@ then you can install all the dependencies with `pip install -r host_software/req
 
 Go to the repository directory and do the following:
  - execute `cmake -DCMAKE_BUILD_TYPE=Debug -S . -B build`
- - execute `cmake --build ./build --target ardwino`
+ - execute `cmake --build ./build --target integrated_server`
 
-The flash hex file will be available at `./build/ardwino.flash.bin`
+The flash hex file will be available at `./build/integrated_server.flash.bin`
