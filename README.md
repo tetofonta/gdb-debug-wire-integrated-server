@@ -18,7 +18,7 @@
 This project is a firmware modification for the ATMega16u2 used on most of the  
 Arduino(c) Uno - Nano - Leonardo and clones on the market in order to add 
 debugging capabilities of the target firmware.
-The chip mentioned above is commonly used as a simple usb to serial converter, delegating
+The aforementioned chip is commonly used as a simple usb to serial converter, delegating
 the target flashing operations to the bootloader the target comes pre-flashed with.
 
 This can cause minor problems in case the target flash gets corrupted. In those cases a 
@@ -182,12 +182,17 @@ In order for the firmware to work, some modifications are needed:
 
 ### Software tools
 
-todo
+There are two python helper scripts for easy of use of the device:
+ - `flash.py`: It allows to flash and verify binary or hex files to the target memories (flash or eeprom)
+ - `set_frequency.py`: Sets the Debug Wire expected frequency in case of the debugging of a different target
+
+See helps (-h) for additional info and script usage.
+All the dependencies are listed in the file `requirements.txt`
 
 ### Working with avr-gdb
 
 The integrated GDB server implements all the common commands for debugging.
-particularly it consents to:
+particularly it allows to:
  - Read and write registers
  - Read and write memory: Addresses are the same as used in avr-libc as specified in the table below.
 
@@ -244,6 +249,14 @@ This causes the reset line to behave like a normal reset for a successive ISP pr
 Syntax: `(gdb) monitor t[imers] (e[nable] | d[isable])`
 
 This command sets if the timers should run during single stepping and instruction execution.
+
+##### monitor reset
+Syntax: `(gdb) monitor frequency <hex frequency / 1000>`
+
+This command sets the expected Debug Wire frequency and reinitialize the gdb server.
+_NOTE: if the Debug Wire connection fails, the server will report E05 for any command which needs
+the target to be halted. GDB won't allow any monitor command if the initialization fails, so
+a small script is required to be able to set the right frequency [see Software Tools](#software-tools)_
 
 #### Breakpoint management
 
