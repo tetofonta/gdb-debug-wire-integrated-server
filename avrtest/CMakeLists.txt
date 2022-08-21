@@ -14,5 +14,5 @@ include_directories(./includes)
 add_library(rtt STATIC src/rtt/rtt.c)
 target_link_options(rtt PUBLIC -Wdiscarded-qualifiers)
 
-avrtarget(avrtest src/main.c)
+avrtarget(avrtest /dev/ttyACM0 src/main.c)
 target_link_libraries(avrtest-elf rtt)

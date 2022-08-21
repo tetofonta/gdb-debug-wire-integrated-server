@@ -86,3 +86,4 @@ if __name__ == '__main__':
             write_file(args.eeprom_file, 0x810000, packet_size, not args.noverify, ser)
 
         gdb_write(ser, b'D')
+        print("ok")

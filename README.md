@@ -273,7 +273,24 @@ A script is written to help in this procedure.
 ### Integrating with IDEs
 #### VSCode
 
-todo
+In this repository, under the `avrtest` directory, there's a fully functional C project for Visual Studio Code.
+The project uses avr-gcc and avr-libc for compilation with Cmake as build system.
+
+That being so a few plugins are required for compilation:
+ - **C/C++ Extension Pack** for C language support and intellisense (`ext install ms-vscode.cpptools-extension-pack`)
+ - **CodeLLDB** For debugging the target (`ext install vadimcn.vscode-lldb`)
+
+all the files contained in the directory `avrtest/.vscode` are all configurations.
+ - The file `c_cpp_properites.json` contains all the required configurations for intellisense.
+    The final user should edit this file with the appropriate values for all the fields. (This file is made for a linux distribution, thus includes and binary paths begin with /)
+ - The file `launch.json` contains the informations for starting a debug session. Edit the serial port (`target`) as yor system needs.
+ - The file `settings.json` contains file type association and is automatically generated.
+
+Cmake will expose four targets:
+ - `rtt`: this is the static library for enabling the [Real Time Terminal Support](#real-time-terminal-support).
+ - `avrtest-elf`: this is the compiled executable
+ - `avrtest-bin`: this is the target which generates all the binary files for uploading and shows the size
+ - `avrtest-upload`: this target uploads the flesh data to the mcu using the script `flash.py`
 
 ### Compiling
 
