@@ -52,7 +52,7 @@ set(LUFA_SRC_USBCLASS_HOST
         ${LUFA_ROOT_PATH}/Drivers/USB/Class/Host/RNDISClassHost.c
         ${LUFA_ROOT_PATH}/Drivers/USB/Class/Host/StillImageClassHost.c
         )
-set(LUFA_SRC_USB ${LUFA_SRC_USB_COMMON} ${LUFA_SRC_USB_DEVICE} src/include/gdb/rtt.h)
+set(LUFA_SRC_USB ${LUFA_SRC_USB_COMMON} ${LUFA_SRC_USB_DEVICE} src/include/gdb/rtt.h src/include/gdb/pstr.h)
 list(SORT LUFA_SRC_USB)
 
 set(LUFA_SRC_USBCLASS ${LUFA_SRC_USBCLASS_DEVICE} ${LUFA_SRC_USBCLASS_HOST})
@@ -114,7 +114,7 @@ add_library(gdb_commands STATIC
         src/gdb/commands/gdb_cmd_read_memory.c
         src/gdb/commands/gdb_cmd_breakpoint.c
         src/gdb/commands/gdb_cmd_write_memory.c)
-add_library(gdb STATIC src/gdb/gdb.c src/gdb/utils.c src/gdb/rtt.c)
+add_library(gdb STATIC src/gdb/gdb.c src/gdb/utils.c src/gdb/rtt.c src/gdb/consts.c)
 target_link_libraries(gdb gdb_commands)
 add_library(stk500 STATIC src/stk500/isp_pgm.c src/stk500/isp.c src/stk500/utils.c)
 add_executable(ardwino_elf

@@ -9,8 +9,11 @@
 #include "panic.h"
 #include "usb/usb_cdc.h"
 #include "avr_isa.h"
+#include "gdb/pstr.h"
 
 void gdb_cmd_write_registers(char * buffer, uint16_t len){
+
+    if(!debug_wire_g.halted) return gdb_send_PSTR(GDB_ERR_05, 7);
 
     uint16_t buf_len = len;
     char * buf = buffer;
@@ -57,5 +60,5 @@ void gdb_cmd_write_registers(char * buffer, uint16_t len){
         }
     }
     dw_env_close(DW_ENV_SRAM_RW);
-    gdb_send_PSTR(PSTR("$OK#9a"), 6);
+    gdb_send_PSTR(GDB_REP_OK, 6);
 }

@@ -12,22 +12,24 @@
 #include "leds.h"
 #include "avr_isa.h"
 #include "gdb/rtt.h"
+#include "gdb/pstr.h"
 
 struct gdb_state gdb_state_g;
 uint8_t ack_enabled = 1;
 uint8_t is_cmd_running = 0;
 uint8_t halt_happened = 0;
 
-void gdb_init(void) {
+void gdb_init(uint16_t freq) {
     _delay_ms(100);
 
-    if (dw_init(2 * 8000000)) {//todo get frequency from eeprom
+    if (dw_init((uint32_t) freq * 1000)) {
         debug_wire_device_reset();
         rtt_set_state(0);
         debug_wire_resume(DW_GO_CNTX_CONTINUE);
         gdb_state_g.state = GDB_STATE_DISCONNECTED;
         return;
     }
+
     gdb_state_g.state = GDB_STATE_SIGHUP;
 }
 
@@ -56,20 +58,20 @@ void gdb_send(const char *data, uint16_t len) {
 void gdb_send_ack(void) {
     if (ack_enabled) {
         GDB_LED_ON();
-        usb_cdc_write_PSTR(PSTR("+"), 1);
+        usb_cdc_write_PSTR(GDB_PKT_ANSW_ACK, 1);
     }
 }
 
 void gdb_send_nack(void) {
-    usb_cdc_write_PSTR(PSTR("-"), 1);
+    usb_cdc_write_PSTR(GDB_PKT_ANSW_NACK, 1);
 }
 
 void gdb_send_empty(void) {
-    usb_cdc_write_PSTR(PSTR("$#00"), 4);
+    usb_cdc_write_PSTR(GDB_PKT_ANSW_EMPTY, 4);
 }
 
 uint8_t gdb_send_begin(void) {
-    usb_cdc_write_PSTR(PSTR("$"), 1);
+    usb_cdc_write_PSTR(GDB_PKT_ANSW_EMPTY, 1);
     return 0;
 }
 
@@ -87,7 +89,7 @@ uint8_t gdb_send_add_data_PSTR(const char *data, uint16_t len, uint8_t checksum)
 
 void gdb_send_finalize(uint8_t checksum) {
     uint16_t chksm = byte2hex(checksum & 0xFF);
-    usb_cdc_write_PSTR(PSTR("#"), 1);
+    usb_cdc_write_PSTR(GDB_PKT_ANSW_EMPTY + 1, 1);
     usb_cdc_write(&chksm, 2);
 }
 
@@ -144,7 +146,7 @@ static void gdb_parse_command(const char *buf, uint16_t len) {
             gdb_cmd_end(true, cdc_buffer.as_word_buffer, USB_CDC_BUFFER_WORDS);
         case 'H':
         case 'T':
-            gdb_send_PSTR(PSTR("$OK#9a"), 6);
+            gdb_send_PSTR(GDB_REP_OK, 6);
             break;
         case 'r':
         case 'R':
@@ -173,7 +175,7 @@ static void gdb_handle_command(void) {
     if (cdc_buffer.as_byte_buffer[len - 3] == '#') {
         is_cmd_running = 0;
         expected_hex = hex2nib(cdc_buffer.as_byte_buffer[len - 2]) << 4 | hex2nib(cdc_buffer.as_byte_buffer[len - 1]);
-        if (expected_hex != checksum) usb_cdc_write_PSTR(PSTR("-"), 1);
+        if (expected_hex != checksum) usb_cdc_write_PSTR(GDB_PKT_ANSW_NACK, 1);
         else {
             gdb_send_ack();
             gdb_parse_command((char *) cdc_buffer.as_byte_buffer, len);
@@ -195,7 +197,7 @@ void gdb_message(const char * buf, const char * init, uint8_t len, uint8_t len_i
         data = byte2hex(*buf++);
         checksum = gdb_send_add_data((const char *) &data, 2, checksum);
     }
-    checksum = gdb_send_add_data_PSTR(PSTR("0a"), 2, checksum);
+    checksum = gdb_send_add_data_PSTR(GDB_PKT_ANSW_LF, 2, checksum);
     gdb_send_finalize(checksum);
 }
 
@@ -213,7 +215,7 @@ void gdb_task(void) {
             dw_env_close(DW_ENV_SRAM_RW);
 
             if(len > 0) {
-                gdb_message((const char *) cdc_buffer.as_byte_buffer, PSTR("O7274743a20"), len, 11);
+                gdb_message((const char *) cdc_buffer.as_byte_buffer, GDB_PKT_ANSW_RTT, len, 11);
                 if(gdb_state_g.last_context == DW_GO_CNTX_CONTINUE || gdb_state_g.last_context == DW_GO_CNTX_HWBP) {
                     debug_wire_resume(gdb_state_g.last_context);
                     halt_happened = 0;

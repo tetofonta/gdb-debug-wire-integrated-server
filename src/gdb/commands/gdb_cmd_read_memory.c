@@ -9,17 +9,20 @@
 #include "panic.h"
 #include "usb/usb_cdc.h"
 #include "gdb/rtt.h"
+#include "gdb/pstr.h"
 
 
 void gdb_cmd_read_memory(char * buffer, uint16_t len){
     uint64_t address = 0;
     uint64_t length = 0;
 
+    if(!debug_wire_g.halted) return gdb_send_PSTR(GDB_ERR_05, 7);
+
     buffer = parse_hex_until(',', buffer, &len, &address) + 1;
     buffer = parse_hex_until('#', buffer, &len, &length);
 
     if(!debug_wire_g.halted || length > 64){
-        gdb_send_PSTR(PSTR("$E01#a6"), 7);
+        gdb_send_PSTR(GDB_ERR_01, 7);
     }
 
     uint16_t checksum = 0, tmp;
@@ -48,7 +51,7 @@ void gdb_cmd_read_memory(char * buffer, uint16_t len){
     gdb_send_begin();
     while (length--) {
         tmp = byte2hex(*buffer++);
-        checksum = gdb_send_add_data(&tmp, 2, checksum);
+        checksum = gdb_send_add_data((const char *) &tmp, 2, checksum);
     }
     gdb_send_finalize(checksum);
 }

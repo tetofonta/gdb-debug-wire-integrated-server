@@ -6,9 +6,11 @@
 #include <dw/debug_wire.h>
 #include <dw/debug_wire_ll.h>
 #include "panic.h"
+#include "gdb/pstr.h"
 
 void gdb_cmd_read_registers(void){
-    if(!debug_wire_g.halted) panic();
+    if(!debug_wire_g.halted) return gdb_send_PSTR(GDB_ERR_05, 7);
+
     dw_env_open(DW_ENV_SRAM_RW);
 
     uint16_t tmp;

@@ -31,7 +31,7 @@ int main(void) {
     GDB_LED_OFF();
     DW_LED_OFF();
 
-    gdb_init();
+    gdb_init(16000);
 
     for (;;) {
         usr_btn_task(&rst_button);
@@ -39,7 +39,7 @@ int main(void) {
             if(LineEncoding.BaudRateBPS != 1200){
                 if(mode){
                     spi_deinit();
-                    gdb_init();
+                    gdb_init(16000);
                     mode = 0;
                 }
                 gdb_task();

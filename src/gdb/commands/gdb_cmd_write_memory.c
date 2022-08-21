@@ -8,6 +8,7 @@
 #include <dw/debug_wire_ll.h>
 #include <string.h>
 #include "usb/usb_cdc.h"
+#include "gdb/pstr.h"
 
 bool is_flash_write_in_progress = 0;
 static uint16_t remaining = 0;
@@ -132,6 +133,8 @@ void gdb_cmd_write_memory(char * buffer, uint16_t len){
     char * buf = buffer;
     uint16_t buf_len = len;
 
+    if(!debug_wire_g.halted) return gdb_send_PSTR(GDB_ERR_05, 7);
+
     char format = *buffer++; len--; //M<addr>,<len>:<data>#<checksum>
     uint64_t address = 0;
     uint64_t length = 0;
@@ -141,13 +144,13 @@ void gdb_cmd_write_memory(char * buffer, uint16_t len){
     if(format == 'M'){
         if(address < 0x800000){
             write_flash(buffer, len, buf, buf_len, length, address >> 1);
-            gdb_send_PSTR(PSTR("$OK#9a"), 6);
+            gdb_send_PSTR(GDB_REP_OK, 6);
         } else if (address < 0x810000) {
             write_sram(buffer, len, buf, buf_len, length, address);
-            gdb_send_PSTR(PSTR("$OK#9a"), 6);
+            gdb_send_PSTR(GDB_REP_OK, 6);
         } else {
             write_eeprom(buffer, len, buf, buf_len, length, address);
-            gdb_send_PSTR(PSTR("$OK#9a"), 6);
+            gdb_send_PSTR(GDB_REP_OK, 6);
         } //todo checks on memory size. return e01
     } else {
         gdb_send_empty(); //binary not yet implemented

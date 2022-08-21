@@ -10,6 +10,8 @@
 
 void gdb_cmd_end(uint8_t restart, uint16_t * buffer, uint16_t len){
 
+    if(!debug_wire_g.halted) return;
+
     dw_ll_clear_breakpoints();
     dw_env_open(DW_ENV_FLASH_WRITE);
     dw_ll_flush_breakpoints((uint16_t *) buffer, len);

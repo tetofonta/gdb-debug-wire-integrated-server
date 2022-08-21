@@ -5,6 +5,7 @@ from binascii import hexlify, unhexlify
 from tqdm import tqdm
 from serial import Serial
 import intelhex
+from _gdb_utils import gdb_write, recv_gdb, get_supported_packet_size
 
 parser = argparse.ArgumentParser(prog=sys.argv[0], description='Flash files to the target using gdb server')
 parser.add_argument('--flash', dest='flash_file', help='flash file to be written')
@@ -18,33 +19,6 @@ SIGNATURES = {
     'm328p': "950f",
     'atmega328p': "950f"
 }
-
-
-def recv_gdb(ser: Serial):
-    buf = b''
-    a = ser.read(1)
-    while a != b'$':
-        a = ser.read(1)
-    while len(buf) == 0 or buf[len(buf) - 1] != ord(b'#'):
-        buf += ser.read(1)
-    buf = buf[:-1]
-    if int(ser.read(2), 16) != sum(buf) & 0xFF:
-        raise Exception()
-    return buf
-
-
-def gdb_write(ser: Serial, message: bytes):
-    checksum = "{:02x}".format(sum(message) & 0xFF).encode()
-    ser.write(b'+$' + message + b'#' + checksum)
-
-
-def get_supported_packet_size(resp):
-    ps = 32
-    resp = resp.split(b';')
-    for r in resp:
-        if r.startswith(b'PacketSize'):
-            ps = int(r.split(b'=')[1], 16)
-    return ps
 
 
 def write_file(file: str, address: int, packet_size: int, verify: bool, ser: Serial):

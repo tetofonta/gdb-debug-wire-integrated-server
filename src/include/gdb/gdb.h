@@ -24,7 +24,7 @@ extern uint8_t gdb_rtt_enable;
 
 void gdb_task(void);
 
-void gdb_init(void);
+void gdb_init(uint16_t freq);
 void gdb_deinit(void);
 
 void gdb_send(const char *data, uint16_t len);
