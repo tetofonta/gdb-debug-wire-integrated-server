@@ -47,7 +47,7 @@ void debug_wire_resume(uint8_t context) {
 
 void debug_wire_device_reset(void) {
     if (!debug_wire_g.halted)
-        dw_cmd_halt();
+        if(!dw_cmd_halt()) return;
     dw_cmd_reset();
     debug_wire_g.program_counter = 0;
     dw_cmd_set_multi(DW_CMD_REG_HWBP, 0xff, 0xff);
