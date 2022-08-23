@@ -64,10 +64,6 @@ void isp_task(void){
         }
 
         usb_cdc_write(&answ, 1);
-        Endpoint_SelectEndpoint(CDC_RX_EPADDR);
-        if(!Endpoint_IsReadWriteAllowed()){
-            Endpoint_ClearOUT();
-        }
     }
 }
 

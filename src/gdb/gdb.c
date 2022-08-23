@@ -262,10 +262,6 @@ void gdb_task(void) {
                     break;
             }
         }
-        Endpoint_SelectEndpoint(CDC_RX_EPADDR);
-        if(!Endpoint_IsReadWriteAllowed()){
-            Endpoint_ClearOUT();
-        }
     }
 }
 

@@ -53,8 +53,13 @@ __attribute__((noreturn)) int main(void) {
         else if (LineEncoding.BaudRateBPS != 1200 && task == isp_task)
             mode_gdb();
 
-        if (USB_DeviceState == DEVICE_STATE_Configured)
+        if (USB_DeviceState == DEVICE_STATE_Configured){
             task();
+            Endpoint_SelectEndpoint(CDC_RX_EPADDR);
+            if(!Endpoint_IsReadWriteAllowed()){
+                Endpoint_ClearOUT();
+            }
+        }
 
         USB_USBTask();
     }
