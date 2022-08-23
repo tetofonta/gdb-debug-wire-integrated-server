@@ -40,7 +40,8 @@ typedef struct param {
 extern parameter_t param;
 
 void isp_task(void);
-void reset_target(bool reset);
+void isp_deinit(void);
+void isp_init(void);
 
 void spi_init(void);
 void spi_deinit(void);

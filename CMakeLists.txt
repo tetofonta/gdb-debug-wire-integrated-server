@@ -5,7 +5,7 @@ set(MCU atmega16u2)
 set(ARCH AVR8)
 set(F_CPU 16000000)
 set(F_USB 16000000)
-set(OPTIMIZATION s)
+set(OPTIMIZATION z)
 
 set(CMAKE_C_FLAGS "")
 
@@ -95,7 +95,7 @@ set(CMAKE_ASM_COMPILER avr-gcc)
 set(CMAKE_CXX_COMPILER avr-g++)
 set(USE_LTO "-flto")
 
-set(CMAKE_C_FLAGS "-pipe ${USE_LTO} -fdata-sections -mrelax -g${DEBUG_FORMAT} -Wno-array-bounds -fpack-struct -mmcu=${MCU} -fshort-enums -fno-inline-small-functions -g${DEBUG_LEVEL} -Wall -fno-strict-aliasing -funsigned-char -funsigned-bitfields -ffunction-sections -O${OPTIMIZATION} -Wstrict-prototypes")
+set(CMAKE_C_FLAGS "-pipe ${USE_LTO} -fdata-sections -mrelax -g${DEBUG_FORMAT} -Wno-array-bounds -fno-jump-tables -fpack-struct -mmcu=${MCU} -fshort-enums -fno-inline-small-functions -g${DEBUG_LEVEL} -Wall -fno-strict-aliasing -funsigned-char -funsigned-bitfields -ffunction-sections -O${OPTIMIZATION} -Wstrict-prototypes")
 set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -fno-exceptions -fno-threadsafe-statics")
 set(CMAKE_ASM_FLAGS "${CMAKE_C_FLAGS} -x assembler-with-cpp")
 set(CMAKE_LINK_LIBRARY_FLAG "-lm ${USE_LTO} -Wl,--cref -Wl,--gc-sections -Wl,--relax -mmcu=${MCU} -Oz")

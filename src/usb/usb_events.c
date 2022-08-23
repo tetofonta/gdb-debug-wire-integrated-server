@@ -2,17 +2,16 @@
 #include "gdb/commands.h"
 #include "leds.h"
 #include "isp/isp.h"
+#include "gdb/gdb.h"
 
 volatile bool connection_evt = 1;
-extern uint8_t mode;
 
 void EVENT_USB_Device_Connect(void) {
     GDB_LED_ON();
-    connection_evt = 1;
 }
 
 void EVENT_USB_Device_Disconnect(void) {
-
+    LineEncoding.BaudRateBPS = 0;
 }
 
 void EVENT_USB_Device_ConfigurationChanged(void) {
@@ -21,7 +20,7 @@ void EVENT_USB_Device_ConfigurationChanged(void) {
     ConfigSuccess &= Endpoint_ConfigureEndpoint(CDC_TX_EPADDR, EP_TYPE_BULK, CDC_TXRX_EPSIZE, 1);
     ConfigSuccess &= Endpoint_ConfigureEndpoint(CDC_RX_EPADDR, EP_TYPE_BULK, CDC_TXRX_EPSIZE, 1);
     LineEncoding.BaudRateBPS = 0;
-
+    if(ConfigSuccess) GDB_LED_OFF();
 }
 void EVENT_USB_Device_ControlRequest(void) {
     /* Process CDC specific control requests */
@@ -50,11 +49,6 @@ void EVENT_USB_Device_ControlRequest(void) {
             if (USB_ControlRequest.bmRequestType == (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE)) {
                 Endpoint_ClearSETUP();
                 Endpoint_ClearStatusStage();
-
-                /* NOTE: Here you can read in the line state mask from the host, to get the current state of the output handshake
-                         lines. The mask is read in from the wValue parameter in USB_ControlRequest, and can be masked against the
-                         CONTROL_LINE_OUT_* masks to determine the RTS and DTR line states using the following code:
-                */
             }
 
             break;

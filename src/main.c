@@ -13,9 +13,21 @@
 #include "dw/debug_wire_ll.h"
 
 static user_button_state_t rst_button;
-uint8_t mode = 0;
+static void (*task)(void) = gdb_task;
 
-int main(void) {
+static void mode_gdb(void){
+    isp_deinit();
+    gdb_init(0);
+    task = gdb_task;
+}
+
+static void mode_isp(void){
+    gdb_deinit();
+    isp_init();
+    task = isp_task;
+}
+
+__attribute__((noreturn)) int main(void) {
     usr_btn_setup();
     usr_btn_init(&rst_button, &PINB, 6);
 
@@ -35,22 +47,15 @@ int main(void) {
 
     for (;;) {
         usr_btn_task(&rst_button);
+
+        if(LineEncoding.BaudRateBPS == 1200 && task == gdb_task)
+            mode_isp();
+        else if (LineEncoding.BaudRateBPS != 1200 && task == isp_task)
+            mode_gdb();
+
         if (USB_DeviceState == DEVICE_STATE_Configured)
-            if(LineEncoding.BaudRateBPS != 1200){
-                if(mode){
-                    spi_deinit();
-                    gdb_init(16000);
-                    mode = 0;
-                }
-                gdb_task();
-            } else {
-                if(!mode){
-                    gdb_deinit();
-                    spi_init();
-                    mode = 1;
-                }
-                isp_task();
-            }
+            task();
+
         USB_USBTask();
     }
 }

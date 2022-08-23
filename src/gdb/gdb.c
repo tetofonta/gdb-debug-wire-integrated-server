@@ -15,11 +15,13 @@
 #include "gdb/pstr.h"
 
 struct gdb_state gdb_state_g;
-uint8_t ack_enabled = 1;
-uint8_t is_cmd_running = 0;
-uint8_t halt_happened = 0;
+static uint8_t ack_enabled = 1;
+static uint8_t is_cmd_running = 0;
+static uint8_t halt_happened = 0;
+static uint16_t last_used_freq;
 
 void gdb_init(uint16_t freq) {
+    if(freq == 0) freq = last_used_freq;
     _delay_ms(100);
 
     if (dw_init((uint32_t) freq * 1000)) {
@@ -27,6 +29,7 @@ void gdb_init(uint16_t freq) {
         rtt_set_state(0);
         debug_wire_resume(DW_GO_CNTX_CONTINUE);
         gdb_state_g.state = GDB_STATE_DISCONNECTED;
+        last_used_freq = freq;
         return;
     }
 
@@ -108,9 +111,9 @@ static void gdb_parse_command(const char *buf, uint16_t len) {
             dw_ll_flush_breakpoints(cdc_buffer.as_word_buffer, USB_CDC_BUFFER_WORDS);
             dw_env_close(DW_ENV_FLASH_WRITE);
 
+            gdb_state_g.state = GDB_STATE_IDLE;
             gdb_state_g.last_context = DW_GO_CNTX_HWBP;
             debug_wire_resume(DW_GO_CNTX_HWBP);
-            gdb_state_g.state = GDB_STATE_IDLE;
             break;
         case 'S':
         case 's':
@@ -204,7 +207,10 @@ void gdb_message(const char * buf, const char * init, uint8_t len, uint8_t len_i
 void gdb_task(void) {
 
     if(halt_happened){
-
+        if (gdb_state_g.state != GDB_STATE_IDLE) {
+            halt_happened = 0;
+            return;
+        }
         dw_env_open(DW_ENV_FLASH_READ);
         dw_ll_flash_read(BE(debug_wire_g.program_counter) * 2, 2, &debug_wire_g.last_opcode);
         dw_env_close(DW_ENV_FLASH_READ);
@@ -264,6 +270,5 @@ void gdb_task(void) {
 }
 
 void on_dw_mcu_halt(void) {
-    if (gdb_state_g.state != GDB_STATE_IDLE) return;
     halt_happened = 1;
 }
