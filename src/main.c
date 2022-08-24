@@ -15,7 +15,7 @@
 static user_button_state_t rst_button;
 static void (*task)(void) = gdb_task;
 
-static void mode_gdb(void){
+void mode_gdb(void){
     isp_deinit();
     gdb_init(0);
     task = gdb_task;
@@ -55,10 +55,6 @@ __attribute__((noreturn)) int main(void) {
 
         if (USB_DeviceState == DEVICE_STATE_Configured){
             task();
-            Endpoint_SelectEndpoint(CDC_RX_EPADDR);
-            if(!Endpoint_IsReadWriteAllowed()){
-                Endpoint_ClearOUT();
-            }
         }
 
         USB_USBTask();

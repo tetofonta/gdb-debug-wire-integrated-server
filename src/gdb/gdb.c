@@ -257,6 +257,10 @@ void gdb_task(void) {
                 case '$':
                     is_cmd_running = 1;
                     gdb_handle_command();
+                    Endpoint_SelectEndpoint(CDC_RX_EPADDR);
+                    if(!Endpoint_IsReadWriteAllowed()){
+                        Endpoint_ClearOUT();
+                    }
                     break;
                 default:
                     break;

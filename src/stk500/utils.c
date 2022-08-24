@@ -4,6 +4,7 @@
 #include "isp/isp.h"
 
 void spi_init(void) {
+    PORTB &= ~(1 << PINB1);
     DDRB |= (1 << PINB2) | (1 << PINB1) | (1 << PINB0);
     SPCR = (1 << SPE) | (1 << MSTR) | (1 << SPR0) | (1 << SPR1);
 }

@@ -317,3 +317,9 @@ Go to the repository directory and do the following:
  - execute `cmake --build ./build --target integrated_server`
 
 The flash hex file will be available at `./build/integrated_server.flash.bin`
+
+
+### TODO: how to set dw fuse and use isp mode.
+
+- Need to power cycle after isp mode
+- need to use pyscript for things

@@ -39,7 +39,7 @@ add_compile_definitions(BUILD_TYPE=${CMAKE_BUILD_TYPE})
 
 function(avrtarget targetName port)
     add_executable("${targetName}-elf" ${ARGN})
-    target_link_options("${targetName}-elf" PUBLIC -Wl,--verbose -Xlinker -Map=${CMAKE_BINARY_DIR}/${targetName}.map -T ${CMAKE_SOURCE_DIR}/cmake/linker/${MCU}.ld)
+    target_link_options("${targetName}-elf" PUBLIC -Xlinker -Map=${CMAKE_BINARY_DIR}/${targetName}.map -T ${CMAKE_SOURCE_DIR}/cmake/linker/${MCU}.ld)
     add_custom_target(
         "${targetName}-bin" 
         COMMAND ${CMAKE_OBJCOPY} -O ihex -R .eeprom -R .fuse -R .lock -R .signature '${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${targetName}-elf' '${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${targetName}.hex';
