@@ -188,6 +188,39 @@ In order for the firmware to work, some modifications are needed:
 ![Step3](hw/step3.png "Cut RN2D")
 ![Step4](hw/step4.png "Place Jumper Wire to PB6")
 
+#### Setting debug fuses
+
+Using avrdude compiled with the patch in this repo ([see Compiling avrdude](#compiling-avrdude))
+connect pins 1, 3, 4 of the ATMega16u2 ICSP header to pins 1, 3, 4 of the target ICSP header
+with some jumper cables.
+
+Connect the board to your computer, check whether is seen as a USB CDC device and run:
+```bash
+avrdude -p m328p -c avrisp_ser_to_spi -P /dev/ttyACM0 -b 1200 -U lfuse:r:-:h -U hfuse:r:-:h -U efuse:r:-:h -U lock:r:-:h
+```
+
+To see what fuses are set. You can set custom fuses as you want (you can use [this site](https://eleccelerator.com/fusecalc/fusecalc.php?chip=atmega328p) for 
+an easier configuration) but this is an operation that can brick your target device. Do it at your own risk.
+
+Then perform a chip erase in order to clear lock bits:
+```bash
+avrdude -p m328p -c avrisp_ser_to_spi -P /dev/ttyACM0 -b 1200 -e
+```
+
+We are now ready to set the DWEN fuse in order to enable debugging.
+```bash
+avrdude -p m328p -c avrisp_ser_to_spi -U lfuse:w:0xff:m -U hfuse:w:0x99:m -U efuse:w:0xff:m
+```
+
+Now we are ready. disconnect your board and reconnect it. we can now program the board with
+```bash
+avrdude -p m328p -c gdbsrv -U flash:w:<your hex file>:h
+```
+and we can now debug the board with
+```bash
+avr-gdb <your compiled elf file> -ex "target extended remote <serial port>"
+```
+
 ### Software tools
 
 #### Custom python scripts
@@ -214,7 +247,7 @@ is available to compile the tool with two custom programmers:
     signatures from DebugWire and ISP differ, the signature verification is forced and will always
     result successful.
 
-##### Compiling avrdude.
+##### Compiling avrdude
 
 ```bash
 $ git clone https://github.com/avrdudes/avrdude
@@ -347,9 +380,3 @@ Go to the repository directory and do the following:
  - execute `cmake --build ./build --target integrated_server`
 
 The flash hex file will be available at `./build/integrated_server.flash.bin`
-
-
-### TODO: how to set dw fuse and use isp mode.
-
-- Need to power cycle after isp mode
-- need to use pyscript for things
