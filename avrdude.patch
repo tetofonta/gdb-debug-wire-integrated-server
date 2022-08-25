@@ -1,0 +1,659 @@
+diff --git a/src/avrisp_raw_serial_to_spi.c b/src/avrisp_raw_serial_to_spi.c
+new file mode 100644
+index 0000000..cfdbfe5
+--- /dev/null
++++ b/src/avrisp_raw_serial_to_spi.c
+@@ -0,0 +1,300 @@
++//
++// Created by stefano on 24/08/22.
++//
++
++#include "ac_cfg.h"
++
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <errno.h>
++#include <sys/time.h>
++#include <unistd.h>
++#include <stdint.h>
++#include "avrdude.h"
++#include "libavrdude.h"
++#include "bitbang.h"
++
++#define AVRISP_SERIAL_SPI_CMD_RST_HIGH 0x03
++#define AVRISP_SERIAL_SPI_CMD_RST_LOW 0x02
++#define AVRISP_SERIAL_SPI_CMD_END 0xFF
++#define AVRISP_SERIAL_SPI_CMD_LED_ON 0x04
++#define AVRISP_SERIAL_SPI_CMD_LED_OFF 0x05
++#define AVRISP_SERIAL_SPI_ESC 0x1B
++
++static unsigned char avr_serial_spi_command(const struct programmer_t *pgm, unsigned char cmd) {
++    serial_send(&pgm->fd, &cmd, 1);
++    usleep(1000);
++//    avrdude_message(MSG_DEBUG, "%02x ", cmd);
++    unsigned char answ;
++    serial_recv(&pgm->fd, &answ, 1);
++//    avrdude_message(MSG_DEBUG, cmd == AVRISP_SERIAL_SPI_ESC ? "(%02x)\n" : "%02x\n", answ);
++    return answ;
++}
++
++static unsigned char avr_serial_spi_tx(const struct programmer_t *pgm, unsigned char cmd) {
++    if (
++                    cmd == AVRISP_SERIAL_SPI_CMD_RST_HIGH ||
++                    cmd == AVRISP_SERIAL_SPI_CMD_RST_LOW ||
++                    cmd == AVRISP_SERIAL_SPI_CMD_END ||
++                    cmd == AVRISP_SERIAL_SPI_CMD_LED_ON ||
++                    cmd == AVRISP_SERIAL_SPI_CMD_LED_OFF ||
++                    cmd == AVRISP_SERIAL_SPI_ESC
++            )
++        avr_serial_spi_command(pgm, AVRISP_SERIAL_SPI_ESC);
++
++    return avr_serial_spi_command(pgm, cmd);
++}
++
++int avrisp_serial_spi_open(struct programmer_t *pgm, const char *port) {
++    union pinfo pinfo;
++    strcpy(pgm->port, port);
++    pinfo.serialinfo.baud = pgm->baudrate ? pgm->baudrate : 1200;
++    pinfo.serialinfo.cflags = SERIAL_8N1;
++    if (serial_open(port, pinfo, &pgm->fd) == -1) {
++        return -1;
++    }
++    return 0;
++}
++
++void avrisp_serial_spi_close(struct programmer_t *pgm) {
++//    serial_close(&pgm->fd);
++}
++
++void avrisp_serial_spi_enable(PROGRAMMER *pgm, const AVRPART *p) {}
++
++void avrisp_serial_spi_disable(const PROGRAMMER *pgm) {
++    avr_serial_spi_command(pgm, AVRISP_SERIAL_SPI_CMD_RST_HIGH);
++}
++
++void avrisp_serial_spi_powerup(const struct programmer_t *pgm) {}
++
++void avrisp_serial_spi_powerdown(const struct programmer_t *pgm) {}
++
++int avrisp_serial_spi_initialize(const PROGRAMMER *pgm, const AVRPART *p) {
++    if (p->flags & AVRPART_HAS_TPI) {
++        avrdude_message(MSG_INFO, "TPI not supported\n");
++        return -1;
++    }
++    pgm->setpin(pgm, PIN_AVR_RESET, 1);
++    usleep(100000);
++    pgm->setpin(pgm, PIN_AVR_RESET, 0);
++    usleep(100000);
++    return bitbang_initialize(pgm, p);
++}
++
++void avrisp_serial_spi_display(const PROGRAMMER *pgm, const char *p) {
++    avrdude_message(MSG_INFO, "avrisp_serial_spi_display\n");
++}
++
++int avrisp_serial_spi_cmd(const struct programmer_t *pgm, const unsigned char *cmd, unsigned char *res) {
++    avrdude_message(MSG_DEBUG, "<-    %02x %02x %02x %02x\n", cmd[0], cmd[1], cmd[2], cmd[3]);
++    for (int i = 0; i < 4; i++) {
++        if(res != NULL)
++            res[i] = avr_serial_spi_tx(pgm, cmd[i]);
++        else
++            avr_serial_spi_tx(pgm, cmd[i]);
++    }
++    avrdude_message(MSG_DEBUG, "-> %02x %02x %02x %02x\n", res[0], res[1], res[2], res[3]);
++    return 0;
++}
++
++unsigned int current_page(const AVRMEM * mem, unsigned int here) {
++    if (mem->page_size == 32) {
++        return here & 0xFFFFFFF0;
++    }
++    if (mem->page_size == 64) {
++        return here & 0xFFFFFFE0;
++    }
++    if (mem->page_size == 128) {
++        return here & 0xFFFFFFC0;
++    }
++    if (mem->page_size == 256) {
++        return here & 0xFFFFFF80;
++    }
++    return here;
++}
++
++static void commit(const struct programmer_t *pgm, const AVRMEM *m, unsigned int page){
++    unsigned char cmd[8];
++    memset(cmd, 0, 4);
++    avr_set_bits(m->op[AVR_OP_WRITEPAGE], cmd);
++    avr_set_addr(m->op[AVR_OP_WRITEPAGE], cmd, page);
++    pgm->cmd(pgm, cmd, cmd+4);
++    usleep(100000);
++}
++
++static void flash_cmd(const struct programmer_t *pgm, const AVRMEM *m, unsigned int opcode, unsigned int addr, unsigned char data){
++    unsigned char cmd[8];
++    memset(cmd, 0, 4);
++    avr_set_bits(m->op[opcode], cmd);
++    avr_set_addr(m->op[opcode], cmd, addr/2);
++    avr_set_input(m->op[opcode], cmd, data);
++    pgm->cmd(pgm, cmd, cmd+4);
++}
++
++static unsigned char flash_cmd_read(const struct programmer_t *pgm, const AVRMEM *m, unsigned int opcode, unsigned int addr){
++    unsigned char res[4];
++    unsigned char cmd[4];
++    memset(cmd, 0, 4);
++    avr_set_bits(m->op[opcode], cmd);
++    avr_set_addr(m->op[opcode], cmd, addr/2);
++    pgm->cmd(pgm, cmd, res);
++    return res[3];
++}
++
++static int avrisp_serial_spi_paged_write_flash(const struct programmer_t *pgm, const AVRPART *p, const AVRMEM *m,
++                                               unsigned int page_size, unsigned int addr, unsigned int n_bytes) {
++    if(m->op[AVR_OP_LOADPAGE_LO] == NULL || m->op[AVR_OP_LOADPAGE_HI] == NULL) {
++        avrdude_message(MSG_INFO, "AVR_OP_LOADPAGE_HI/LO command not defined for %s\n", p->desc);
++        return -1;
++    }
++
++    int x = 0;
++    unsigned int page = current_page(m, addr/2);
++    while(x < n_bytes){
++        if(page != current_page(m, addr/2)){
++            commit(pgm, m, page);
++            page = current_page(m, addr/2);
++        }
++        flash_cmd(pgm, m, AVR_OP_LOADPAGE_LO, addr, m->buf[addr]);
++        flash_cmd(pgm, m, AVR_OP_LOADPAGE_HI, addr, m->buf[addr+1]);
++        addr+=2;
++        x += 2;
++    }
++    commit(pgm, m, page);
++    return 0;
++}
++
++static int avrisp_serial_spi_paged_write_eeprom(const struct programmer_t *pgm, const AVRPART *p, const AVRMEM *m,
++                                                 unsigned int page_size, unsigned int baseaddr, unsigned int n_bytes) {
++    if(m->op[AVR_OP_WRITE] == NULL) {
++        avrdude_message(MSG_INFO, "AVR_OP_WRITE command not defined for %s\n", p->desc);
++        return -1;
++    }
++    unsigned char cmd[4];
++    while(n_bytes--){
++        memset(cmd, 0, 4);
++        avr_set_bits(m->op[AVR_OP_WRITE], cmd);
++        avr_set_addr(m->op[AVR_OP_WRITE], cmd, baseaddr);
++        avr_set_input(m->op[AVR_OP_WRITE], cmd, m->buf[baseaddr++]);
++        pgm->cmd(pgm, cmd, cmd);
++        usleep(45000);
++    }
++    return 0;
++}
++
++
++int
++avrisp_serial_spi_paged_write(const struct programmer_t *pgm, const AVRPART *p, const AVRMEM *m, unsigned int page_size,
++                              unsigned int addr, unsigned int n_bytes) {
++    if (!n_bytes)
++        return 0;
++
++    if (strcmp(m->desc, "flash") == 0)
++        return avrisp_serial_spi_paged_write_flash(pgm, p, m, page_size, addr, n_bytes);
++
++    if (strcmp(m->desc, "eeprom") == 0)
++        return avrisp_serial_spi_paged_write_eeprom(pgm, p, m, page_size, addr, n_bytes);
++
++    return -2;
++}
++
++static int avrisp_serial_spi_paged_load_flash(const struct programmer_t *pgm, const AVRPART *p, const AVRMEM *m,
++                                               unsigned int page_size, unsigned int addr, unsigned int n_bytes) {
++    if(m->op[AVR_OP_READ_LO] == NULL || m->op[AVR_OP_READ_HI] == NULL) {
++        avrdude_message(MSG_INFO, "AVR_OP_READ_HI/LO command not defined for %s\n", p->desc);
++        return -1;
++    }
++
++    unsigned int x = 0;
++    while(x < n_bytes) {
++        m->buf[addr] = flash_cmd_read(pgm, m, AVR_OP_READ_LO, addr);
++        addr++;
++        m->buf[addr] = flash_cmd_read(pgm, m, AVR_OP_READ_HI, addr - 1);
++        addr++;
++        x += 2;
++    }
++}
++
++static int avrisp_serial_spi_paged_load_eeprom(const struct programmer_t *pgm, const AVRPART *p, const AVRMEM *m,
++                                                unsigned int page_size, unsigned int addr, unsigned int n_bytes) {
++    if(m->op[AVR_OP_READ] == NULL) {
++        avrdude_message(MSG_INFO, "AVR_OP_READ command not defined for %s\n", p->desc);
++        return -1;
++    }
++    unsigned char cmd[8];
++    while(n_bytes--){
++        memset(cmd, 0, 8);
++        avr_set_bits(m->op[AVR_OP_READ], cmd);
++        avr_set_addr(m->op[AVR_OP_READ], cmd, addr);
++        pgm->cmd(pgm, cmd, cmd+4);
++        m->buf[addr++] = cmd[7];
++    }
++    return 0;
++}
++
++int
++avrisp_serial_spi_paged_load(const struct programmer_t *pgm, const AVRPART *p, const AVRMEM *m, unsigned int page_size,
++                             unsigned int addr, unsigned int n_bytes) {
++    if(!n_bytes)
++        return 0;
++
++    if(strcmp(m->desc, "flash") == 0)
++        return avrisp_serial_spi_paged_load_flash(pgm, p, m, page_size, addr, n_bytes);
++
++    if(strcmp(m->desc, "eeprom") == 0)
++        return avrisp_serial_spi_paged_load_eeprom(pgm, p, m, page_size, addr, n_bytes);
++
++    return -2;
++}
++
++int avrisp_serial_spi_setpin(const struct programmer_t *pgm, int pinfunc, int value) {
++    if (pinfunc != PIN_AVR_RESET) return 0;
++    if (value) avr_serial_spi_command(pgm, AVRISP_SERIAL_SPI_CMD_RST_HIGH);
++    else avr_serial_spi_command(pgm, AVRISP_SERIAL_SPI_CMD_RST_LOW);
++    return 0;
++}
++
++int avrisp_serial_spi_highpulsepin(const struct programmer_t *pgm, int pinfunc) {
++    if (pinfunc != PIN_AVR_RESET) return 0;
++    avr_serial_spi_command(pgm, AVRISP_SERIAL_SPI_CMD_RST_HIGH);
++    usleep(20000);
++    avr_serial_spi_command(pgm, AVRISP_SERIAL_SPI_CMD_RST_LOW);
++    return 0;
++}
++
++int avrisp_serial_spi_pgm_led(const struct programmer_t *pgm, int value) {
++    avr_serial_spi_command(pgm, 0x04 | (~value & 1));
++}
++
++int avrisp_serial_spi_foo_led(const struct programmer_t *pgm, int value) {}
++
++const char avrisp_serial_spi_desc[] = "AvrISP serial to spi raw adapter";
++
++void avrisp_serial_spi_initpgm(PROGRAMMER *pgm) {
++    strcpy(pgm->type, "avrisp_ser_to_spi");
++
++    pgm->initialize = avrisp_serial_spi_initialize;
++    pgm->display = avrisp_serial_spi_display;
++    pgm->enable = avrisp_serial_spi_enable;
++    pgm->disable = avrisp_serial_spi_disable;
++    pgm->program_enable = bitbang_program_enable;
++    pgm->chip_erase = bitbang_chip_erase;
++    pgm->cmd = avrisp_serial_spi_cmd;
++    pgm->open = avrisp_serial_spi_open;
++    pgm->close = avrisp_serial_spi_close;
++    pgm->read_byte = avr_read_byte_default;
++    pgm->write_byte = avr_write_byte_default;
++    pgm->paged_write = avrisp_serial_spi_paged_write;
++    pgm->paged_load = avrisp_serial_spi_paged_load;
++    pgm->powerup = avrisp_serial_spi_powerup;
++    pgm->powerdown = avrisp_serial_spi_powerdown;
++
++    pgm->setpin = avrisp_serial_spi_setpin;
++    pgm->highpulsepin = avrisp_serial_spi_highpulsepin;
++    pgm->pgm_led = avrisp_serial_spi_pgm_led;
++    pgm->err_led = avrisp_serial_spi_foo_led;
++    pgm->rdy_led = avrisp_serial_spi_foo_led;
++    pgm->vfy_led = avrisp_serial_spi_foo_led;
++}
+\ No newline at end of file
+diff --git a/src/avrisp_raw_serial_to_spi.h b/src/avrisp_raw_serial_to_spi.h
+new file mode 100644
+index 0000000..43abae9
+--- /dev/null
++++ b/src/avrisp_raw_serial_to_spi.h
+@@ -0,0 +1,11 @@
++//
++// Created by stefano on 24/08/22.
++//
++
++#ifndef ARDWINO_AVRISP_RAW_SERIAL_TO_SPI_H
++#define ARDWINO_AVRISP_RAW_SERIAL_TO_SPI_H
++
++extern const char avrisp_serial_spi_desc[];
++void avrisp_serial_spi_initpgm(PROGRAMMER *pgm);
++
++#endif //ARDWINO_AVRISP_RAW_SERIAL_TO_SPI_H
+diff --git a/src/gdb_server_programmer.c b/src/gdb_server_programmer.c
+new file mode 100644
+index 0000000..415ea3f
+--- /dev/null
++++ b/src/gdb_server_programmer.c
+@@ -0,0 +1,251 @@
++//
++// Created by stefano on 24/08/22.
++//
++
++#include "ac_cfg.h"
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <errno.h>
++#include <sys/time.h>
++#include <unistd.h>
++#include <stdint.h>
++#include "avrdude.h"
++#include "libavrdude.h"
++char buf[1024];
++int packet_size_g = 256;
++
++static void gdb_wrt(const struct programmer_t * pgm, const char * msg){
++    unsigned char checksum = 0;
++    char checksum_hex[3];
++    int l = 0;
++    serial_send(&pgm->fd, (unsigned char *) "+$", 2);
++    while(*(msg + l) != 0){
++        checksum += *(msg + l);
++        serial_send(&pgm->fd, (unsigned char *) (msg + l), 1);
++        usleep(100);
++        l++;
++    }
++    serial_send(&pgm->fd, (unsigned char *) "#", 1);
++    snprintf(checksum_hex, 3, "%02x", checksum);
++    serial_send(&pgm->fd, (unsigned char *) checksum_hex, 2);
++    avrdude_message(MSG_DEBUG, "$%s#%s\n", msg, checksum_hex);
++}
++static int gdb_recv(const struct programmer_t * pgm, char * dest, int len){
++    char l = 0;
++    unsigned char checksum = 0;
++    do{
++        serial_recv(&pgm->fd, (unsigned char *) dest, 1);
++    } while (*dest != '$');
++    while(len > 0 && ( l == 0 || *(dest + l - 1) != '#')) {
++        serial_recv(&pgm->fd, (unsigned char *) (dest + l), 1);
++        checksum += *(dest + l);
++        len--; l++;
++    }
++    *(dest + l - 1) = 0;
++    checksum -= '#';
++
++    char checksum_hex[6];
++    serial_recv(&pgm->fd, (unsigned char *) checksum_hex, 2);
++    snprintf(checksum_hex+3, 3, "%02x", checksum);
++    checksum_hex[2] = 0;
++    avrdude_message(MSG_DEBUG, "%s (%s / %s)\n", dest, checksum_hex, checksum_hex+3);
++    return strncmp(checksum_hex, checksum_hex+3, 3);
++}
++static unsigned char hex2nib(char hex){
++    if(hex >= '0' && hex <= '9') return hex - '0';
++    return hex - 'a' + 10;
++}
++static char nib2hex(unsigned char nib){
++    if(nib < 10) return nib + '0';
++    return nib - 10 + 'a';
++}
++static long parse_hex_until(char * data, char until, int * len){
++    long ret = 0;
++    while(*data != until && *data != 0) {
++        ret = ret << 4 | hex2nib(*data++);
++        if(len != NULL) *(len)++;
++    }
++    return ret;
++}
++static int parse_monitor_answer(char * data, int len){
++    char *wrt = data;
++    char * rd = data;
++    int l = 0;
++    if(*rd != 'O') return 0;
++    rd++; len--;
++    while(len > 0){
++        if(*rd == 0) break;
++        *(wrt++) = hex2nib(*rd) << 4 | hex2nib(*(rd+1));
++        rd += 2;
++        len -= 2;
++        l++;
++    }
++    if(l < len) data[l] = 0;
++    else data[len - 1] = 0;
++    return l;
++}
++static void write_hex_buffer(char * dest, const unsigned char * src, int len, int terminate){
++    while(len--){
++        *(dest++) = nib2hex(((*src) >> 4) & 0x0F);
++        *(dest++) = nib2hex((*src++) & 0x0F);
++    }
++    if(terminate) *dest = 0;
++}
++static void read_hex_buffer(unsigned char * dest, const char * src, int len, int terminate){
++    while(len){
++        *(dest++) = hex2nib(*src) << 4 | hex2nib(*(src+1));
++        src += 2; len -= 2;
++    }
++    if(terminate) *dest = 0;
++}
++
++int gdbsrv_open(struct programmer_t *pgm, const char *port) {
++    union pinfo pinfo;
++    strcpy(pgm->port, port);
++    pinfo.serialinfo.baud = pgm->baudrate ? pgm->baudrate : 115200;
++    pinfo.serialinfo.cflags = SERIAL_8N1;
++    if (serial_open(port, pinfo, &pgm->fd) == -1) {
++        return -1;
++    }
++    return 0;
++}
++void gdbsrv_close(struct programmer_t *pgm) {
++    serial_close(&pgm->fd);
++}
++
++void gdbsrv_display (const struct programmer_t *pgm, const char *p){
++    avrdude_message(MSG_INFO, "display\n");
++}
++
++void gdbsrv_enable (struct programmer_t *pgm, const AVRPART *p){}
++void gdbsrv_disable (const struct programmer_t *pgm){
++    gdb_wrt(pgm, "qRcmd,7265"); //reset
++    if(gdb_recv(pgm, buf, 1024)) return -1;
++    if(strncmp(buf, "OK", 2)) return -2;
++
++    gdb_wrt(pgm, "C");
++}
++
++int gdbsrv_initialize (const struct programmer_t *pgm, const AVRPART *p){
++    gdb_wrt(pgm, "qSupported");
++    if(gdb_recv(pgm, buf, 1024)) return -1;
++
++    //check if PacketSize is present
++    char * resp = buf;
++    while (1){
++        if(!strncmp(resp, "PacketSize=", 11)){
++            packet_size_g = parse_hex_until(resp + 11, ';', NULL);
++            if(packet_size_g > 500) packet_size_g = 500;
++            break;
++        }
++        while(*resp != ';')
++            if(*resp == 0) break;
++            else resp++;
++        if(*resp == 0) break;
++        resp++;
++    }
++
++    gdb_wrt(pgm, "?");
++    if(gdb_recv(pgm, buf, 1024)) return -1;
++    return 0;
++}
++
++void gdbsrv_powerup (const struct programmer_t *pgm){}
++void gdbsrv_powerdown (const struct programmer_t *pgm){}
++
++int gdbsrv_program_enable (const struct programmer_t *pgm, const AVRPART *p){}
++
++int gdbsrv_chip_erase (const struct programmer_t *pgm, const AVRPART *p){
++    avrdude_message(MSG_INFO, "chip_erase\n");
++    return 0;
++}
++
++int gdbsrv_paged_write (const struct programmer_t *pgm, const AVRPART *p, const AVRMEM *m, unsigned int page_size, unsigned int baseaddr, unsigned int n_bytes){
++    unsigned int addr = baseaddr;
++    unsigned int pkt_sz = packet_size_g;
++    if(!strcmp(m->desc, "eeprom")) addr += 0x810000;
++
++    snprintf(buf, 1024, "M%x,%x:", addr + n_bytes, packet_size_g/2);
++    pkt_sz -= strnlen(buf, 1024);
++    int wrote = 0;
++    while(wrote < n_bytes) {
++        int to_write = n_bytes - wrote;
++        if(to_write > (pkt_sz/2)) to_write = (pkt_sz/2);
++
++        int l = snprintf(buf, 1024, "M%x,%x:", addr, to_write);
++        write_hex_buffer(buf + l, m->buf + baseaddr, to_write, 1);
++
++        gdb_wrt(pgm, buf);
++        if(gdb_recv(pgm, buf, 1024)) return -1;
++        if(strncmp(buf, "OK", 2)) return -2;
++
++        addr += to_write;
++        baseaddr += to_write;
++        wrote += to_write;
++    }
++    return 0;
++}
++
++int gdbsrv_paged_load (const struct programmer_t *pgm, const AVRPART *p, const AVRMEM *m, unsigned int page_size, unsigned int baseaddr, unsigned int n_bytes){
++    unsigned int addr = baseaddr;
++    if(!strcmp(m->desc, "eeprom")) addr += 0x810000;
++
++    int read = 0;
++    while(read < n_bytes) {
++        int to_read = n_bytes - read;
++        if(to_read > (packet_size_g/2)) to_read = (packet_size_g/2);
++        snprintf(buf, 1024, "m%x,%x", addr, to_read);
++        gdb_wrt(pgm, buf);
++        if(gdb_recv(pgm, buf, 1024)) return -1;
++
++        read_hex_buffer(m->buf + baseaddr, buf, to_read * 2, 0);
++
++        addr += to_read;
++        baseaddr += to_read;
++        read += to_read;
++    }
++    return 0;
++    return 0;
++}
++
++int gdbsrv_read_sig_bytes (const struct programmer_t *pgm, AVRPART *p, const AVRMEM *m){
++    gdb_wrt(pgm, "qRcmd,73"); //s[ignature]
++    if(gdb_recv(pgm, buf, 1024)) return -1;
++    parse_monitor_answer(buf, 1024);
++    avrdude_message(MSG_INFO, "DebugWire signature: %s", buf); //\n already present in monitor answer
++    m->buf[0] = hex2nib(buf[0]) << 4 | hex2nib(buf[1]);
++    m->buf[1] = hex2nib(buf[2]) << 4 | hex2nib(buf[3]);
++    m->buf[2] = 0;
++
++    //todo signature verification for debug_wire
++    p->signature[0] = m->buf[0];
++    p->signature[1] = m->buf[1];
++    p->signature[2] = m->buf[2];
++
++    if(gdb_recv(pgm, buf, 1024)) return -1; // OK
++    return 0;
++}
++
++const char gdbsrv_desc[] = "Integrated GDB server programmer";
++void gdbsrv_initpgm(PROGRAMMER *pgm) {
++    strcpy(pgm->type, "gdbsrv");
++
++    pgm->open = gdbsrv_open;
++    pgm->close = gdbsrv_close;
++
++    pgm->display = gdbsrv_display;
++    pgm->enable = gdbsrv_enable;
++    pgm->disable = gdbsrv_disable;
++    pgm->initialize = gdbsrv_initialize;
++    pgm->powerup = gdbsrv_powerup;
++    pgm->powerdown = gdbsrv_powerdown;
++    pgm->program_enable = gdbsrv_program_enable;
++    pgm->chip_erase = gdbsrv_chip_erase;
++    pgm->paged_write = gdbsrv_paged_write;
++    pgm->paged_load = gdbsrv_paged_load;
++    pgm->read_sig_bytes = gdbsrv_read_sig_bytes;
++
++    pgm->read_byte      = avr_read_byte_default;
++    pgm->write_byte     = avr_write_byte_default;
++}
+\ No newline at end of file
+diff --git a/src/gdb_server_programmer.h b/src/gdb_server_programmer.h
+new file mode 100644
+index 0000000..5ff8630
+--- /dev/null
++++ b/src/gdb_server_programmer.h
+@@ -0,0 +1,11 @@
++//
++// Created by stefano on 24/08/22.
++//
++
++#ifndef GDBSRV_PGM_H
++#define GDBSRV_PGM_H
++
++extern const char gdbsrv_desc[];
++void gdbsrv_initpgm(PROGRAMMER *pgm);
++
++#endif //GDBSRV_PGM_H
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index 804468c..fd747d4 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -214,6 +214,8 @@ add_library(libavrdude
+     wiring.c
+     xbee.h
+     xbee.c
++    avrisp_raw_serial_to_spi.c
++    gdb_server_programmer.c
+     ${FLEX_Parser_OUTPUTS}
+     ${BISON_Parser_OUTPUTS}
+     "${EXTRA_WINDOWS_SOURCES}"
+diff --git a/src/avrdude.conf.in b/src/avrdude.conf.in
+index b4c28a1..3cc3314 100644
+--- a/src/avrdude.conf.in
++++ b/src/avrdude.conf.in
+@@ -675,6 +675,20 @@ programmer
+   connection_type = serial;
+ ;
+ 
++programmer
++  id    = "avrisp_ser_to_spi";
++  desc  = "AvrISP serial to spi raw adapter";
++  type  = "avrisp_ser_to_spi";
++  connection_type = serial;
++;
++
++programmer
++  id    = "gdbsrv";
++  desc  = "Integrated GDB server programmer";
++  type  = "gdbsrv";
++  connection_type = serial;
++;
++
+ programmer
+   id    = "avrispv2";
+   desc  = "Atmel AVR ISP V2";
+diff --git a/src/pgm_type.c b/src/pgm_type.c
+index 45ce8dc..bdacb83 100644
+--- a/src/pgm_type.c
++++ b/src/pgm_type.c
+@@ -55,6 +55,8 @@
+ #include "usbtiny.h"
+ #include "wiring.h"
+ #include "xbee.h"
++#include "avrisp_raw_serial_to_spi.h"
++#include "gdb_server_programmer.h"
+ 
+ 
+ const PROGRAMMER_TYPE programmers_types[] = { // Name(s) the programmers call themselves
+@@ -106,6 +108,8 @@ const PROGRAMMER_TYPE programmers_types[] = { // Name(s) the programmers call th
+   {"usbtiny", usbtiny_initpgm, usbtiny_desc}, // "USBtiny" or "usbtiny"
+   {"wiring", wiring_initpgm, wiring_desc}, // "Wiring"
+   {"xbee", xbee_initpgm, xbee_desc}, // "XBee"
++  {"avrisp_ser_to_spi", avrisp_serial_spi_initpgm, avrisp_serial_spi_desc}, // "avrisp_ser_to_spi"
++  {"gdbsrv", gdbsrv_initpgm, gdbsrv_desc}, // "gdbsrv"
+ };
+ 
+ const PROGRAMMER_TYPE * locate_programmer_type(const char * id)

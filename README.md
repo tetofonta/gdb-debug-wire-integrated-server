@@ -190,12 +190,42 @@ In order for the firmware to work, some modifications are needed:
 
 ### Software tools
 
+#### Custom python scripts
+
 There are two python helper scripts for easy of use of the device:
  - `flash.py`: It allows to flash and verify binary or hex files to the target memories (flash or eeprom)
  - `set_frequency.py`: Sets the Debug Wire expected frequency in case of the debugging of a different target
 
 See helps (-h) for additional info and script usage.
 All the dependencies are listed in the file `requirements.txt`
+
+#### Using avrdude
+
+A Patch file for avrdude git repository (from commit [3e49f07](https://github.com/avrdudes/avrdude/tree/3e49f078b3ffc8c0e647fc3600da8ea69e47e487)) 
+is available to compile the tool with two custom programmers:
+
+ - `avrisp_ser_to_spi` is the programmer tool for using the firmware board in SPI ISP mode.
+    The board must be used at a baud rate of 1200 in order to enable SPI ISP mode and the connections
+    are present on the ATMega16u2 ISP header except for the reset pin which is the target reset on the
+    target ISP header.
+    The SPI mode will stay active until the next power cycle.
+ - `gdbsrv` is the programmer which can be used for writing and reading flash and eeprom through 
+    the gdb interface. This programmer cannot read and write fuses and lockbits. Also, because the 
+    signatures from DebugWire and ISP differ, the signature verification is forced and will always
+    result successful.
+
+##### Compiling avrdude.
+
+```bash
+$ git clone https://github.com/avrdudes/avrdude
+$ cd avrdude
+$ git checkout 3e49f07
+$ git apply '<path_to_this_repository>/avrdude.patch'
+```
+
+After this we are ready for build time.
+Follow [these](https://github.com/avrdudes/avrdude/wiki) instructions to build avrdude for your system.
+
 
 ### Working with avr-gdb
 

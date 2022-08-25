@@ -26,6 +26,7 @@ void isp_init(void){
 
 extern void mode_gdb(void);
 uint8_t answ;
+bool esc;
 /**
  * Escape character 0x1B
  *
@@ -40,6 +41,7 @@ void isp_task(void){
     if (Endpoint_IsOUTReceived()) {
         DW_LED_OFF();
         uint8_t cmd = usb_cdc_read_byte();
+        if(esc) goto send;
         switch(cmd){
             case 0x02:
                 PORTD &= ~(1 << PIND7);
@@ -55,12 +57,13 @@ void isp_task(void){
                 isp_deinit();
                 mode_gdb();
                 return;
-            case 0x1B: {
-                uint16_t len = 0;
-                while(len == 0) len = usb_cdc_read(&cmd, 1);
-            }
+            case 0x1B:
+                esc = true;
+                break;
             default:
+            send:
                 answ = spi_transfer(cmd);
+                esc = false;
         }
 
         usb_cdc_write(&answ, 1);
