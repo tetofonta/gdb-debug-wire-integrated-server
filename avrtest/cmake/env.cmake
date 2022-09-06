@@ -51,7 +51,7 @@ function(avrtarget targetName port)
     )
     add_custom_target(
         "${targetName}-upload"
-        COMMAND python ../../host_software/flash.py --port ${port} --flash '${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${targetName}' --mcu ${MCU}
+        COMMAND python ../../host_software/flash.py --port ${port} --flash '${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${targetName}.hex' --mcu ${MCU}
         USES_TERMINAL
         DEPENDS "${targetName}-bin"
     )

@@ -4,9 +4,9 @@
             "name": "atmega328p",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/usr/lib/gcc/x86_64-pc-linux-gnu/12.1.1/include",
+                "/usr/lib/gcc/avr/12.1.0/include",
                 "/usr/local/include",
-                "/usr/lib/gcc/x86_64-pc-linux-gnu/12.1.1/include-fixed",
+                "/usr/lib/gcc/avr/12.1.0/include-fixed",
                 "/usr/include"
             ],
             "defines": [

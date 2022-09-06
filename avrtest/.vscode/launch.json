@@ -6,7 +6,7 @@
             "request": "attach",
             "name": "Attach to gdbserver",
             "executable": "${workspaceFolder}/build/bin/avrtest-elf",
-            "target": "/tmp/ttyV0",
+            "target": "/dev/ttyACM0",
             "remote": true,
             "cwd": "${workspaceFolder}",
             "gdbpath": "/usr/bin/avr-gdb",
