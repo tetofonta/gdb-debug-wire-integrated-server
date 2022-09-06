@@ -1,0 +1,91 @@
+\makeatletter
+\newcommand*{\department}[1]{\gdef\@department{#1}}
+\newcommand*{\@department}{INGEGNERIA DELL'INFORMAZIONE}
+
+\newcommand*{\degreename}[1]{\gdef\@degreename{#1}}
+\newcommand*{\@degreename}{Ingegneria Informatica}
+
+\newcommand*{\subtitle}[1]{\gdef\@subtitle{#1}}
+\newcommand*{\@subtitle}{}
+
+\newcommand*{\supervisor}[1]{\gdef\@supervisor{#1}}
+\newcommand*{\@supervisor}{}
+
+\newcommand*{\cosupervisor}[1]{\gdef\@cosupervisor{#1}}
+\newcommand*{\@cosupervisor}{}
+
+\newcommand*{\additionalcosupervisors}[1]{\gdef\@additionalcosupervisors{#1}}
+\newcommand*{\@additionalcosupervisors}{}
+
+\newcommand*{\studentno}[1]{\gdef\@studentno{#1}}
+\newcommand*{\@studentno}{}
+
+\newcommand*{\male}{\gdef\@gender{o}}
+\newcommand*{\female}{\gdef\@gender{a}}
+\newcommand*{\@gender}{o}
+
+\renewcommand*{\maketitle}{%
+\newgeometry{left=20mm,right=20mm,top=25mm,bottom=20mm}
+\begin{titlepage}
+    \begin{center}
+        
+        \begin{figure}[t]
+            \centering
+            \includegraphics[height=30mm]{logo_unibs.png}    
+        \end{figure}
+        \vspace*{5mm}
+        {\fontsize{16}{10mm}\fontfamily{lmss}\selectfont
+            \textit{DIPARTIMENTO DI \@department}\\
+            \textit{Corso di Laurea}\\
+            \textit{in \@degreename}
+        }
+        \vspace*{20mm}
+
+        {\fontsize{20}{20}\fontfamily{lmss}\selectfont\bfseries
+            Relazione Finale\\
+            \vspace*{3mm}
+            \@title\\
+        }
+
+    \end{center}
+
+    \vfill
+
+    \begin{minipage}{.15\textwidth}
+        \fontsize{16}{16}\fontfamily{lmss}\selectfont 
+        Relatore:\\
+        \if\relax\@cosupervisor\else
+            Correlatore:
+        \fi
+    \end{minipage}
+    \begin{minipage}{.75\textwidth}
+        \fontsize{16}{16}\fontfamily{lmss}\selectfont 
+        \@supervisor\\
+        \@cosupervisor
+    \end{minipage}
+
+    \vspace*{10mm}
+
+    \begin{flushright}
+        % completa con il tuo nome e matricola
+        {\fontsize{17}{17}\fontfamily{lmss}\selectfont 
+            Laureand\@gender:\\
+            \@author\\
+            Matricola n. \@studentno\\
+        }
+
+    \end{flushright}
+
+
+    \vfill
+    \begin{center}
+    {\fontsize{17}{17}\fontfamily{lmss}\selectfont 
+        % specifica l'anno accademico
+        Anno Accademico \@date
+    }
+    \end{center}
+\end{titlepage}
+\restoregeometry%
+\cleardoublepage%
+}
+\makeatother
