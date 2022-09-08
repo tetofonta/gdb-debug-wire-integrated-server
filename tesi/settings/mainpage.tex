@@ -33,18 +33,24 @@
             \centering
             \includegraphics[height=30mm]{logo_unibs.png}    
         \end{figure}
-        \vspace*{5mm}
-        {\fontsize{16}{10mm}\fontfamily{lmss}\selectfont
-            \textit{DIPARTIMENTO DI \@department}\\
-            \textit{Corso di Laurea}\\
-            \textit{in \@degreename}
-        }
-        \vspace*{20mm}
 
-        {\fontsize{20}{20}\fontfamily{lmss}\selectfont\bfseries
+        \vspace*{5mm}
+
+        {\fontsize{16}{10mm}
+            \textbf{DIPARTIMENTO DI \\ \@department}
+        }
+        \vspace*{10mm}
+
+        {\fontsize{17}{17}\selectfont
+            Corso di Laurea in\\
+            \@degreename
+        }
+        \vspace*{10mm}
+
+        {\fontsize{20}{20}\selectfont
             Relazione Finale\\
             \vspace*{3mm}
-            \@title\\
+            \textbf{\@title}\\
         }
 
     \end{center}
@@ -52,14 +58,14 @@
     \vfill
 
     \begin{minipage}{.15\textwidth}
-        \fontsize{16}{16}\fontfamily{lmss}\selectfont 
-        Relatore:\\
+        \fontsize{16}{16}\selectfont 
+        \textbf{Relatore}:\\
         \if\relax\@cosupervisor\else
-            Correlatore:
+            \textbf{Correlatore}:
         \fi
     \end{minipage}
     \begin{minipage}{.75\textwidth}
-        \fontsize{16}{16}\fontfamily{lmss}\selectfont 
+        \fontsize{16}{16}\selectfont 
         \@supervisor\\
         \@cosupervisor
     \end{minipage}
@@ -68,7 +74,7 @@
 
     \begin{flushright}
         % completa con il tuo nome e matricola
-        {\fontsize{17}{17}\fontfamily{lmss}\selectfont 
+        {\fontsize{17}{17}\selectfont 
             Laureand\@gender:\\
             \@author\\
             Matricola n. \@studentno\\
@@ -79,7 +85,7 @@
 
     \vfill
     \begin{center}
-    {\fontsize{17}{17}\fontfamily{lmss}\selectfont 
+    {\fontsize{17}{17}\selectfont 
         % specifica l'anno accademico
         Anno Accademico \@date
     }

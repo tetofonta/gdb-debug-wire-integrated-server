@@ -8,7 +8,7 @@
 
 \usepackage{blindtext}
 
-\title{Sviluppo di un sistema di aiuto alla programmazione embedded AVR mediante la realizzazione di un server GDB basato sul protocollo DebugWire}
+\title{Titolo1 \\ titolo2 \\ titolo3}
 \studentno{727199}
 \supervisor{Chiar.mo~Prof.~Alessandro~Depari}
 \department{INGEGNERIA DELL'INFORMAZIONE}
@@ -23,6 +23,7 @@
     \maketitle
 
     \setstretch{1.5}
+    
     \frontmatter
     \tableofcontents
     \cleardoublepage%
@@ -33,38 +34,10 @@
 
     \input{structure/discussione.tex}
 
-    \chapter{chapterone}
-    \blindtext[1]\cite{knuth:1984}
-    \blindtext[1]\cite{latex:companion}
-    \blindtext[1]\citesite{site:wikipedia}
+    \addcontentsline{toc}{chapter}{Bibliografia e Sitografia}
+    \bibliography{biblio/refs, biblio/images, biblio/sites, biblio/datasheets}
 
-        \begin{figure}[t]
-            \centering
-            \includegraphics[width=.5\textwidth]{logo_unibs_40.png}
-            \caption[TOF content]{Immagine non propria, necessario specificare la fonte nelle note a piede pagina\footnote{reference}\cite{img:unibs40}}%
-            \label{fig:unibslogo}
-        \end{figure}
-    
-
-    \chapter{chapterbig}
-    Esempio di citazione di un allegato\citeattachment{all:allegato1}
-    
-    \blindtext[3]\citeattachment{all:allegato2}
-
+    \input{attachments/attachments.tex}
     \input{structure/conclusione.tex}
-
-    \addcontentsline{toc}{chapter}{Bibliografia}
-    \bibliography{biblio/refs, biblio/images}
-
-    \addcontentsline{toc}{chapter}{Sitografia}
-    \bibliographysite{biblio/sites}
-
-    \addcontentsline{toc}{chapter}{Allegati}
-    \bibliographyattachment{biblio/attachments}
-
-    \listoffigures
-    \cleardoublepage%
-    \listoftables
-    \cleardoublepage%
     \input{structure/ringraziamenti.tex}
 \end{document}

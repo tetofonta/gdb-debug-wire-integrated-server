@@ -1,3 +1,15 @@
 \chapter{Introduzione}
 
-\blindtext[10]
+Possiamo vedere la programmazione di micro-controllori una specialità posta a cavallo tra due scienze ingegneristiche, l'elettronica e l'informatica.
+
+La capacità del programmatore nel creare firmware in grado di \textit{toccare} il mondo reale comporta una connessione di due modi molto diversi tra loro ma da sempre in armonia, rendendo fisica la presenza di un software e virtuale la realtà, in modo di permetter un incontro di due branche apparentemente sconnesse.
+
+Ad oggi la quasi totalità di prodotti di consumo contiene uno o più spesso più controllori digitali, essendo in un periodo storico dove la digitalizzazione è ormai esplosa; complice lo sviluppo tecnologico della produzione di dispositivi integrati e la pubblicazione di standard aperti riguardanti la struttura di processori quali RISC-V e ARM\cite{site:arm-licensing}, i quali hanno quasi monopolizzato il mercato dei semiconduttori grazie alla produzione simultanea da parte di più case di semiconduttori.
+
+Tra le tecnologie non ``open source'' a bassissimo costo presenti attualmente sul mercato possiamo trovare la famiglia Atmel AVR. Questa famiglia è la più utilizzata per applicazioni a basso costo --- date le basse prestazioni --- dove è essenziale avere un basso consumo. Per esempio alcuni controllori della famiglia presentano correnti massime di 4mA (80\mu{W} a 5V) e possono raggiungere consumi di 12pW (2\mu{W} a 3V)\cite{avr:tiny4}.
+
+L'architettura AVR è inoltre stata scelta per lo sviluppo della piattaforma open source \textit{Arduino} dall'omonima azienda per favorire la prototipazione rapida e renderla accessibile ad un pubblico ampio, composto da studenti, hobbisti, artigiani e professionisti\cite{site:arduino-about}.
+
+Bisogna però sottolineare come il fatto che l'architettura AVR sia proprietaria comporti difficoltà di utilizzo e sviluppo da parte dei programmatori.
+
+Sebbene sia stato distribuito del software open source in grado di compilare (avr-libc\cite{site:avr-libc}, avr-gcc\cite{site:avr-gcc}) per la piattaforma AVR, e siano state rilasciate le specifiche di programmazione dei vari protocolli disponibili\cite{avr:appnote:isp}\cite{avr:appnote:tpi}\cite{todo:jtag}, non sono state pubblicate informazioni relative alle procedure e protocolli di debug dei micro-controllori.

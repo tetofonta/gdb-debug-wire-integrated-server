@@ -3,6 +3,8 @@
 
 \usepackage[draft]{hyperref}
 
+\setcounter{tocdepth}{4}
+\setcounter{secnumdepth}{4}
 
 \usepackage[
     a4paper,
@@ -65,3 +67,10 @@
 %        \end{figure}
 %    }
 %
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%APPENDICE%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{tocloft}
+
+\newlistof{appendices}{apc}{}
+\newcommand{\appendices}[1]{\addcontentsline{apc}{appendices}{#1}}
+\newcommand{\newappendix}[1]{\clearpage\section*{#1}\appendices{#1}}
