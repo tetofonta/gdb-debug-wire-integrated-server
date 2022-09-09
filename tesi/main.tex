@@ -8,7 +8,7 @@
 
 \usepackage{blindtext}
 
-\title{Titolo1 \\ titolo2 \\ titolo3}
+\title{Sviluppo di un sistema di supporto alla programmazione per dispositivi integrati della famiglia AVR}
 \studentno{727199}
 \supervisor{Chiar.mo~Prof.~Alessandro~Depari}
 \department{INGEGNERIA DELL'INFORMAZIONE}
@@ -16,6 +16,8 @@
 \author{Stefano Fontana}
 \date{2021/2022}
 \male%
+
+\includeonly{structure/introduzione}
 
 \begin{document}
 
@@ -28,16 +30,14 @@
     \tableofcontents
     \cleardoublepage%
 
-    \input{structure/introduzione.tex}
+    \include{structure/introduzione}
      
     \mainmatter% 
 
-    \input{structure/discussione.tex}
-
-    \addcontentsline{toc}{chapter}{Bibliografia e Sitografia}
-    \bibliography{biblio/refs, biblio/images, biblio/sites, biblio/datasheets}
-
-    \input{attachments/attachments.tex}
-    \input{structure/conclusione.tex}
-    \input{structure/ringraziamenti.tex}
+    \include{structure/discussione}
+    \include{structure/bibliografia.tex}
+    \include{attachments/attachments}
+    \include{structure/conclusione}
+    \include{structure/ringraziamenti}
+    
 \end{document}

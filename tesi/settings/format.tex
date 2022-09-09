@@ -1,7 +1,12 @@
 %\usepackage{showframe}
 \usepackage{afterpage}
 
-\usepackage[draft]{hyperref}
+\usepackage[hidelinks]{hyperref}
+\hypersetup{
+    pdftitle={\@title},
+    pdfsubject={Relazione Finale},
+    pdfauthor={\@author}
+}
 
 \setcounter{tocdepth}{4}
 \setcounter{secnumdepth}{4}
@@ -16,7 +21,6 @@
 
 \setlength{\marginparwidth}{2.3cm}
 
-%\usepackage[skip=10pt plus1pt, indent=40pt]{parskip}
 \usepackage[labelfont=bf]{caption}
 
 \usepackage{setspace}
@@ -41,14 +45,14 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%HEADER%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \usepackage{fancyhdr}
-\pagestyle{fancy}
 
-\renewcommand{\headrulewidth}{0pt}
-\renewcommand{\footrulewidth}{0pt}
-
-\fancyhead{} % clear all header fields
-\fancyfoot{} % clear all footer fields
-\fancyfoot[CE]{\thepage}
+\fancypagestyle{plain}{%
+    \fancyhf{}% Clear header and footer
+    \fancyfoot[C]{-- {\thepage} --}
+    \renewcommand{\headrulewidth}{0pt}
+    \renewcommand{\footrulewidth}{0pt}
+}
+\pagestyle{plain}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%FOOTNOTES%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \usepackage{footnote}
@@ -74,3 +78,42 @@
 \newlistof{appendices}{apc}{}
 \newcommand{\appendices}[1]{\addcontentsline{apc}{appendices}{#1}}
 \newcommand{\newappendix}[1]{\clearpage\section*{#1}\appendices{#1}}
+
+\usepackage[capitalise]{cleveref}
+
+\usepackage{setspace}
+\crefname{section}{Sect.}{Sect.}
+\crefname{figure}{Fig.}{Fig.}
+\crefname{table}{Tab.}{Tab.}
+\crefname{equation}{Eq.}{Eq.}
+\Crefname{table}{Table}{Tables}
+\Crefname{equation}{Equation}{Equations}
+\crefname{equation}{Equation}{Equations}
+\def\figname{\csname cref@figure@name\endcsname\xspace}
+\def\tabname{\csname cref@table@name\endcsname\xspace}
+\def\secname{\csname cref@section@name\endcsname\xspace}
+\def\eqname{\csname cref@equation@name\endcsname\xspace}
+\def\eqpname{\csname cref@equation@name@plural\endcsname\xspace}
+
+%\usepackage{xspace}
+%\usepackage{listings}
+%
+%\usepackage{xcolor} 
+%\definecolor{light-gray}{gray}{0.97} 
+%\definecolor{codegreen}{rgb}{0,0.6,0}
+%
+%\lstset{
+%language=Python,
+%breaklines=true,
+%showstringspaces=false,
+%backgroundcolor = \color{light-gray},
+%basicstyle=\fontsize{8}{10}\selectfont\ttfamily,
+%tabsize=4,
+%numbers=left,
+%commentstyle = \color{blue},
+%keywordstyle = \color{red},
+%stringstyle = \color{codegreen},
+%rulecolor = \color{black},
+%captionpos=b
+%}
+%

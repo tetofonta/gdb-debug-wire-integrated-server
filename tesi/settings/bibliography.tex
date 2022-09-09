@@ -1,2 +1,10 @@
-\bibliographystyle{plain}
-\renewcommand{\bibname}{Bibliografia e Sitografia}
+%\bibliographystyle{plain}
+%\renewcommand{\bibname}{Bibliografia e Sitografia}
+
+\usepackage[backend=biber,doi=false,isbn=false,mincitenames=1,maxcitenames=4,style=ieee]{biblatex}
+\DeclareFieldFormat{sentencecase}{#1} % never apply sentence casing, even if bibtex field is unprotected
+\DeclareFieldFormat{titlecase}{#1} % never apply title casing, even if bibtex field is unprotected
+\addbibresource{./biblio/datasheets.bib}
+\addbibresource{./biblio/refs.bib}
+\addbibresource{./biblio/sites.bib}
+\addbibresource{./biblio/images.bib}
