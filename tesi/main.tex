@@ -1,12 +1,10 @@
 \documentclass[12pt]{book}
 
+\input{settings/mainpage.tex}
 \input{settings/format.tex}
 \input{settings/language.tex}
 \input{settings/utils.tex}
-\input{settings/mainpage.tex}
 \input{settings/bibliography.tex}
-
-\usepackage{blindtext}
 
 \title{Sviluppo di un sistema di supporto alla programmazione per dispositivi integrati della famiglia AVR}
 \studentno{727199}
@@ -17,7 +15,18 @@
 \date{2021/2022}
 \male%
 
-\includeonly{structure/introduzione}
+\hypersetup{
+    pdftitle={Sviluppo di un sistema di supporto alla programmazione per dispositivi integrati della famiglia AVR},
+    pdfsubject={RelazioneFinale},
+    pdfauthor={Stefano Fontana}
+}
+
+\usepackage{blindtext}
+
+\includeonly{
+    %structure/bibliografia,%
+    %structure/discussione/hardware_di_destinazione.tex
+    }
 
 \begin{document}
 
@@ -34,8 +43,17 @@
      
     \mainmatter% 
 
-    \include{structure/discussione}
-    \include{structure/bibliografia.tex}
+    \include{structure/discussione/hardware_di_destinazione}
+    \include{structure/discussione/architettura_di_sistema}
+    \include{structure/discussione/architettura_e_modello_di_comunicazione.tex}
+    \include{structure/discussione/livello_fisico.tex}
+    \include{structure/discussione/debugwire.tex}
+    \include{structure/discussione/server_gdb.tex}
+    \include{structure/discussione/real_time_terminal.tex}
+    \include{structure/discussione/ambiente_di_sviluppo.tex}
+
+    
+    \include{structure/bibliografia}
     \include{attachments/attachments}
     \include{structure/conclusione}
     \include{structure/ringraziamenti}

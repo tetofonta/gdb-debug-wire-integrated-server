@@ -43,7 +43,7 @@
 
         {\fontsize{17}{17}\selectfont
             Corso di Laurea in\\
-            \@degreename
+            \@degreename%
         }
         \vspace*{10mm}
 
@@ -57,19 +57,16 @@
 
     \vfill
 
-    \begin{minipage}{.15\textwidth}
+    \begin{flushleft}
         \fontsize{16}{16}\selectfont 
         \textbf{Relatore}:\\
+        \@supervisor%
         \if\relax\@cosupervisor\else
-            \textbf{Correlatore}:
-        \fi
-    \end{minipage}
-    \begin{minipage}{.75\textwidth}
-        \fontsize{16}{16}\selectfont 
-        \@supervisor\\
-        \@cosupervisor
-    \end{minipage}
-
+            \textbf{Correlatore}:\\
+            \@cosupervisor%
+        \fi    
+    \end{flushleft}
+    
     \vspace*{10mm}
 
     \begin{flushright}
@@ -87,7 +84,7 @@
     \begin{center}
     {\fontsize{17}{17}\selectfont 
         % specifica l'anno accademico
-        Anno Accademico \@date
+        Anno Accademico \@date%
     }
     \end{center}
 \end{titlepage}

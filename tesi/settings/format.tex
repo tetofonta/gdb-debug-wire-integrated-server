@@ -2,11 +2,6 @@
 \usepackage{afterpage}
 
 \usepackage[hidelinks]{hyperref}
-\hypersetup{
-    pdftitle={\@title},
-    pdfsubject={Relazione Finale},
-    pdfauthor={\@author}
-}
 
 \setcounter{tocdepth}{4}
 \setcounter{secnumdepth}{4}
@@ -19,12 +14,11 @@
     includeheadfoot
 ]{geometry}
 
-\setlength{\marginparwidth}{2.3cm}
-
 \usepackage[labelfont=bf]{caption}
 
 \usepackage{setspace}
 \onehalfspacing%
+\setlength\parskip{0em plus 2pt}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%CHAPTER%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \usepackage{titlesec}
@@ -48,7 +42,11 @@
 
 \fancypagestyle{plain}{%
     \fancyhf{}% Clear header and footer
-    \fancyfoot[C]{-- {\thepage} --}
+    \fancyfoot[C]{
+        \if\relax\thepage\else%
+            --- {\thepage} ---
+        \fi
+    }
     \renewcommand{\headrulewidth}{0pt}
     \renewcommand{\footrulewidth}{0pt}
 }
