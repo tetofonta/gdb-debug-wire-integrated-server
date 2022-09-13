@@ -1,0 +1,40 @@
+@startuml
+mode compact
+hide time-axis
+clock "Clock" as clk with period 30
+concise "Address" as addr
+concise "Data" as data
+binary "Read" as rd
+binary "Write" as wrt
+
+@0 
+data is {-}
+addr is {-}
+
+@30
+addr is "Compute address"
+
+@60
+addr is "Address Valid"
+data is "DATA IN"
+
+@70
+wrt is 1
+
+@90
+data is {-}
+addr is "Compute address"
+wrt is 0
+
+@120
+addr is "Address Valid"
+rd is 1
+data is "XXX"
+
+@130
+data is "DATA OUT"
+
+@150
+data is {-}
+addr is {-}
+rd is 0

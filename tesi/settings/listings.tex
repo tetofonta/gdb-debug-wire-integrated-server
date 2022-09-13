@@ -1,0 +1,30 @@
+%\lstset{
+%    language=[AVR]Assembly,
+%    breaklines=true,
+%    showstringspaces=false,
+%    backgroundcolor = \color{light-gray},
+%    basicstyle=\fontsize{8}{10}\selectfont\ttfamily,
+%    tabsize=4,
+%    numbers=left,
+%    commentstyle = \color{blue},
+%    keywordstyle = \color{red},
+%    stringstyle = \color{codegreen},
+%    rulecolor = \color{black},
+%    captionpos=b
+%}
+
+\input{settings/languages/avr-assembly.tex}
+\lstset{language=AVR, % AVR 8-bit Assembler
+        basicstyle=\small\ttfamily, % Use small true type font
+        backgroundcolor = \color{light-gray},
+        breaklines=true,
+        commentstyle = \color{codegreen},
+        keywordstyle=\color{Blue}\bf, % Instructions in blue, bold
+        keywordstyle=[2]\color{Orange}, % Registers and ports in orange
+        keywordstyle=[3]\color{Purple}, % Directives in purple
+        tabsize=4, % 5 spaces per tab
+        numbers=left, % Line numbers on left
+        firstnumber=1, % Line numbers start with line 1
+        captionpos=b,
+        numberstyle=\tiny\color{Blue}, % Line numbers are blue and small
+    }

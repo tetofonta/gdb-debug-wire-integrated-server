@@ -3,8 +3,8 @@
 
 \usepackage[hidelinks]{hyperref}
 
-\setcounter{tocdepth}{4}
-\setcounter{secnumdepth}{4}
+\setcounter{tocdepth}{3}
+\setcounter{secnumdepth}{3}
 
 \usepackage[
     a4paper,
@@ -18,23 +18,23 @@
 
 \usepackage{setspace}
 \onehalfspacing%
-\setlength\parskip{0em plus 1pt}
+\setlength\parskip{0em plus 0.5pt}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%CHAPTER%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \usepackage{titlesec}
-\titleformat{\chapter}{\normalfont\fontsize{18}{27}\bfseries}{\thechapter}{1.5em}{}
+\titleformat{\chapter}{\normalfont\fontsize{18}{27}\bfseries}{\thechapter\hspace{0.75em}---}{0.75em}{}
 \titlespacing*{\chapter}{0pt}{5.5ex plus 1ex minus .2ex}{5.3ex plus .2ex}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%SECTION%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\titleformat{\section}{\normalfont\fontsize{16}{24}\bfseries}{\thesection}{1em}{}
+\titleformat{\section}{\normalfont\fontsize{16}{24}\bfseries}{\thesection\hspace{0.5em}--}{0.5em}{}
 \titlespacing*{\section}{0pt}{2.5ex plus 1ex minus .2ex}{2.3ex plus .2ex}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%SUBSECTION%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\titleformat{\subsection}{\normalfont\fontsize{13}{19}\bfseries}{\thesubsection}{1em}{}
+\titleformat{\subsection}{\normalfont\fontsize{13}{19}\bfseries}{\thesubsection\hspace{0.5em}--}{0.5em}{}
 \titlespacing*{\subsection}{0pt}{1.5ex plus 1ex minus .2ex}{1.3ex plus .2ex}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%SUBSUBSECTION%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\titleformat{\subsubsection}{\normalfont\fontsize{12}{18}\itshape\bfseries}{\thesubsubsection}{1em}{}
+\titleformat{\subsubsection}{\normalfont\fontsize{12}{18}\itshape\bfseries}{}{0em}{}
 \titlespacing*{\subsection}{0pt}{1.5ex plus 1ex minus .2ex}{1.3ex plus .2ex}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%HEADER%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -93,25 +93,14 @@
 \def\eqname{\csname cref@equation@name\endcsname\xspace}
 \def\eqpname{\csname cref@equation@name@plural\endcsname\xspace}
 
-%\usepackage{xspace}
-%\usepackage{listings}
-%
-%\usepackage{xcolor} 
-%\definecolor{light-gray}{gray}{0.97} 
-%\definecolor{codegreen}{rgb}{0,0.6,0}
-%
-%\lstset{
-%language=Python,
-%breaklines=true,
-%showstringspaces=false,
-%backgroundcolor = \color{light-gray},
-%basicstyle=\fontsize{8}{10}\selectfont\ttfamily,
-%tabsize=4,
-%numbers=left,
-%commentstyle = \color{blue},
-%keywordstyle = \color{red},
-%stringstyle = \color{codegreen},
-%rulecolor = \color{black},
-%captionpos=b
-%}
-%
+\usepackage{xspace}
+\usepackage{listings}
+
+\usepackage{xcolor} 
+\definecolor{light-gray}{gray}{0.97} 
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{Blue}{rgb}{0,0,1}
+\definecolor{Orange}{rgb}{1,0.5,0}
+\definecolor{Purple}{rgb}{0.3,0,1}
+
+\input{settings/listings.tex}
