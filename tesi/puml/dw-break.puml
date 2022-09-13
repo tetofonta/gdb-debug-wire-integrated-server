@@ -1,0 +1,81 @@
+@startuml
+mode compact
+hide time-axis
+
+binary "BUS" as dw
+concise "BUS BIT" as bit
+concise "BUS Decode" as uart
+
+@0
+bit is {-}
+uart is {-}
+dw is 1
+
+@10
+dw is 0
+bit is S
+uart is BREAK
+
+@20
+bit is 0
+@30
+bit is 0
+@40
+bit is 0
+@50
+bit is 0
+@60
+bit is 0
+@70
+bit is 0
+@80
+bit is 0
+@90
+bit is 0
+@100
+bit is BREAK
+
+@110
+dw is 1
+bit is {-}
+uart is {-}
+
+@120
+dw is 0
+bit is S
+uart is 0x55
+@130
+bit is 1
+dw is 1
+@140
+bit is 0
+dw is 0
+@150
+bit is 1
+dw is 1
+@160
+bit is 0
+dw is 0
+@170
+bit is 1
+dw is 1
+@180
+bit is 0
+dw is 0
+@190
+bit is 1
+dw is 1
+@200
+bit is 0
+dw is 0
+
+@210
+dw is 1
+bit is E
+
+@220
+bit is {-}
+uart is {-}
+
+highlight 10 to 110 #Gold;line:DimGrey : Programmer on bus
+highlight 120 to 220 #Aqua;line:DimGrey : Target on bus

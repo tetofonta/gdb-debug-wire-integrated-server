@@ -91,12 +91,90 @@ Questa operazione infatti consente di calcolare l'indirizzo al quale effettuare 
     \caption[Immagine rielaborata a partire dalla fig. 8-4 del documento~\cite{avr:m328p}]{Sequenze di accesso in lettura e scrittura della memoria SRAM\cite{avr:m328p}}\label{fig:avr-sram-timings}
 \end{figure}
 
-in particolare, un uso comune delle istruzioni di accesso alla memoria viene mostrato dal listato \ref{}
+in particolare, un uso comune delle istruzioni di accesso alla memoria viene mostrato dal listato~\ref{lst:store-example}, riga 7
 
-\begin{lstlisting}[language=AVR, caption={Esempio}]
-    st r24, X+
+\begin{lstlisting}[language=AVR, caption={Esempio}, label=lst:store-example]
+    ldi r24, 0xFF ;Salva la costante 0xFF nel registro r24
+    eor r0, r0 ;Salva la costante 0x00 nel registro r0
+    eor r26, r26 ;Azzera il contenuto di r26 (XL)
+    eor r27, r27 ;Azzera il contenuto di r27 (XH)
+
+loop:
+    st r24, X+ ;SRAM[r27:r26] = r24
+    dec r24 ;r24--
+    cpse r24, r0 ;if(r24 == 0) goto hold
+    rjmp loop ;else goto loop
+
+hold:
+    rjmp hold ;goto hold
 \end{lstlisting}
 
+In particoare il codice presentato dal listato~\ref{lst:store-example}, dopo una breve fase di inizializzazione (linee 1-4) dove vengono azzerati i registri r0, r26 e r27 (dove gli ultimi due elencati vengono definiti nel codice dal meta-registro X), definisce un ciclo dove viene salvato il contenuto di r24 all'indirizzo puntato dal registro X con successivo incremento, seguito dall'istruzione \texttt{cpse}\footnote{Compare and Skip if Equal} la quale compara rispetto alla costante 0 il valore di r24 una volta decrementato. Nel caso in cui la comparazione risulti veritiera, viene incrementato il program counter di due word, terminando quindi l'esecuzione nel ciclo di hold.
+
 \section{Il protocollo DebugWire}
+
+Parte fondamentale del core avr, omessa dal diagramma in figura~\ref{fig:avr-arch}, è il sistema di debugging on chip ``\textit{DebugWire}''.
+
+Esso permette, tramite un tool esterno collegato all'integrato, di stallare la cpu e leggere e scrivere le memorie e i registri.\cite{avr:m328p}
+
+Affinchè le funzionalità di debugging siano disponibili, è necessario abilitare la periferica DebugWire tramite i bit di configurazione al momento della programmazione del dispositivo.
+
+\subsection{Interfaccia fisica}
+
+L'interfacciamento fisico tra controllore e dispositivo esterno avviene tramite una sola connessione al pin di reset dell'integrato \textit{target}.
+
+Il fatto che l'interfaccia di debug sia collocata sul pin di reset comporta che, una volta abilitata la periferica DebugWire, non sia più possibile resettare il dispositivo o programmarlo tramite interfaccia ISP\cite{avr:appnote:isp}\cite{avr:m328p}.
+
+La comunicazione tra programmatore e target è di tipo seriale e half duplex data la natura della connessione. In particolare il protocollo utilizzato è una derivazione di una seriale UART su un bus open collector, come è osservabile dalla figura~\ref{fig:dw-schematic}\cite{site:dw-reverse-engeneering}.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\textwidth]{dw-schematic.pdf}
+    \caption[]{Schema concettuale del funzionamento dell'interconnessione tra programmatore e controllore target per il protocollo DebugWire}\label{fig:dw-schematic}
+\end{figure}
+
+\subsubsection{Protocollo UART}
+
+Il protocollo UART è un metodo di trasmissione punto-punto digitale seriale asincrono che generalmente lavora su due connessioni tra i due attori della comunicazione. Le due linee rimangono a livello logico 1 quando non c'è attività.
+
+Le due linee prendono il nome di ``tx'' e ``rx'', in funzione dell'utilizzo che la periferica master ne fa: è necessario notare come le due linee vengano ``incrociate'' in modo tale da far sì che il pin di trasmissione di un attore vada a collegarsi con il pin di ricezione della controparte.
+
+Essendo un protocollo asincrono, ovvero vi è assenza di una linea di sincronizzazione (clock), le due parti della comunicazione devono conoscere a priori la velocità attesa sulle linee.
+
+La trasmissione inizia con un periodo di livello logico 0, in modo che sia possibile identificare l'inizio della trasmissione di un byte rilevando il fronte di transizione da livello logico 1 a livello logico 0.
+
+Durante questo tempo di bit dove la linea di trasmissione è a 0 è dunque possibile inizializzare l'ardware e sincronizzare le sorgenti di clock per la ricezione. In seguito al bit di inizio (Start Bit) si susseguono, i bit del dato, dal meno significativo al più significativo, con periodo pari al tempo di bit stesso. In funzione della specifica del protocollo possono essere inviate unità di dati fondamentali di 8 o 9 bit.
+ 
 \subsection{Funzionamento}
+
+Tutte le comunicazioni che avvengono sul bus DebugWire non hanno alcun tipo di verifica dell'integrità del dato (CRC). La comunicazione può avvenire in qualsiasi momento.
+
+In particolare il reset della comunicazione tra target e prgogrammatore/debugger avviene mediante l'invio di un BREAK\footnote{La linea viene posta a livello logico 0 per più di 9 tempi di bit} sulla linea.
+Ogni qualvolta sia rilevato un errore (per esempio viene ricevuto un byte inatteso o un comando non noto), il primo attore che rileva l'errore invierà un BREAK che causerà il reset della controparte.
+
+Ciò è possibile perchè la connessione è un bus open collector: il conflitto di accesso avviene solo ponendo la linea a livello logico 0 e non comporta cortocircuitazioni di qualsiasi genere. Il conflitto viene rilevato quando un attore riceve un dato diverso da quanto inviato (in particolare quando l'eattore riceve un bit pari a 0 quando sta inviando un bit di valore 1).
+
+La velocità di comunicazione è invece definita in funzione della frequenza della cpu del target. Nell'hardware della periferica è presente un prescaler (il cui valore di default è di 128) e la velocità di comunicazione viene stabilita come \[v_{com} (BAUD) = \frac{f_{cpu} (Hz)}{prescaler}\]
+
+Ad ogni reset della comunicazione il prescaler viene resettato al valore inizale (128).
+
+
+In risposta ad un BREAK il target risponderà sempre con l'invio di un valore noto (0x55), facendo sì che a livello fisico sia inviata un'onda quadra con frequenza \(v_{com}\)\cite{site:dw-reverse-engeneering} (si veda figura~\ref{fig:dw-timings})
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth]{dw-break-timing.png}
+    \caption[]{Diagramma delle tempistiche del bus DebugWire durante il reset della trasmissione}\label{fig:dw-timings}
+\end{figure}
+
+È dunque possibile definire un algoritmo per l'inizializzazione della sessione in modo che la frequenza della trasmissione venga dedotta dalla risposta del target invece che essere nota a priori:
+\begin{enumerate}
+    \item Preparazione dell'hardware e inizializzazione strutture dati
+    \item Invio di un break dalla durata di 100ms. La durata viene stabilita in funzione della frequenza di trasmissione ragionevolmente più bassa possibile: Considerando che la famiglia AVR integra negli integrati un oscillatore RC a 128kHz usato comunemente per operazioni ``low power'', ipotizzando che sia abilitata la funzionalità di divisione del clock per un fattore di 8\cite{avr:m328p}, si ottiene una frequenza del core di 16kHz. Ponendo quindi il prescaler di comunicazione DebugWire a 128 otteniamo una frequenza di trasmissione di 125Hz, ovvero 8ms per bit. Infine, sapendo che il tempo di break consiste in almeno 10 bit trasmessi a 0, si ottiene un tempo minimo di break di 80ms, arrotondato a 100ms
+    \item Attesa del primo fronte di trasizione da livello logico 1 a livello logico 0
+    \item Attesa del successivo fronte di transizione da livello logico 0 a livello logico 1 (calcolando il tempo intercorso tra i due fronti)
+\end{enumerate}
+
+A questo punto è possibile trovare la frequenza di bit dalla quale ricavare il baudrate.
+
 \subsection{Comandi e features}
