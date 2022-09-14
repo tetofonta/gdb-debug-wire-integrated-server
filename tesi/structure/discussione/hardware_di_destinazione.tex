@@ -93,20 +93,19 @@ Questa operazione infatti consente di calcolare l'indirizzo al quale effettuare 
 
 in particolare, un uso comune delle istruzioni di accesso alla memoria viene mostrato dal listato~\ref{lst:store-example}, riga 7
 
-\begin{lstlisting}[language=AVR, caption={Esempio}, label=lst:store-example]
+\begin{lstlisting}[language=AVR, caption={Esempio di utilizzo dell'istruzione \texttt{st}}, label=lst:store-example]
     ldi r24, 0xFF ;Salva la costante 0xFF nel registro r24
     eor r0, r0 ;Salva la costante 0x00 nel registro r0
     eor r26, r26 ;Azzera il contenuto di r26 (XL)
     eor r27, r27 ;Azzera il contenuto di r27 (XH)
-
 loop:
     st r24, X+ ;SRAM[r27:r26] = r24
     dec r24 ;r24--
     cpse r24, r0 ;if(r24 == 0) goto hold
     rjmp loop ;else goto loop
-
 hold:
     rjmp hold ;goto hold
+
 \end{lstlisting}
 
 In particoare il codice presentato dal listato~\ref{lst:store-example}, dopo una breve fase di inizializzazione (linee 1-4) dove vengono azzerati i registri r0, r26 e r27 (dove gli ultimi due elencati vengono definiti nel codice dal meta-registro X), definisce un ciclo dove viene salvato il contenuto di r24 all'indirizzo puntato dal registro X con successivo incremento, seguito dall'istruzione \texttt{cpse}\footnote{Compare and Skip if Equal} la quale compara rispetto alla costante 0 il valore di r24 una volta decrementato. Nel caso in cui la comparazione risulti veritiera, viene incrementato il program counter di due word, terminando quindi l'esecuzione nel ciclo di hold.
@@ -143,8 +142,39 @@ Essendo un protocollo asincrono, ovvero vi è assenza di una linea di sincronizz
 
 La trasmissione inizia con un periodo di livello logico 0, in modo che sia possibile identificare l'inizio della trasmissione di un byte rilevando il fronte di transizione da livello logico 1 a livello logico 0.
 
-Durante questo tempo di bit dove la linea di trasmissione è a 0 è dunque possibile inizializzare l'ardware e sincronizzare le sorgenti di clock per la ricezione. In seguito al bit di inizio (Start Bit) si susseguono, i bit del dato, dal meno significativo al più significativo, con periodo pari al tempo di bit stesso. In funzione della specifica del protocollo possono essere inviate unità di dati fondamentali di 8 o 9 bit.
- 
+Durante questo tempo di bit dove la linea di trasmissione è a livello logico 0 è dunque possibile inizializzare l'hardware e sincronizzare le sorgenti di clock per la ricezione. In seguito al bit di inizio (Start Bit) si susseguono, i bit del dato, dal meno significativo al più significativo, con periodo pari al tempo di bit stesso. In funzione della specifica del protocollo possono essere inviate unità di dati fondamentali di dimensione da 5 a 8 bit nota a priori.
+
+A seguito dei bit di dati viene quindi inviato opzionalmente un bit di parità per garantire l'integrità dei dati e successivamente la linea viene posta a livello logico 1 per uno o due periodi di bit, permettendo al ricevitore di eseguire operazioni e resettare la macchina a stati per la ricezione.\cite{site:rs-uart}
+
+Essendo un sistema asincrono è opportuno ipotizzare il non allineamento delle frequenze di invio e campionamento: In tal caso una desincronizzazione può essere tollerata se entro il limite dato dall'equazione~\ref{eq:uart-max-delay}
+\begin{equation}\label{eq:uart-max-delay}
+    t_{delay_{\max}} = \frac{1}{2}N_{bits-per-symbol}t_{bit}    
+\end{equation}
+dove \(N_{bits-per-symbol}\) è il numero di bit contenuti nel simbolo inviato e \(t_{bit}\) è il tempo per bit. Questo comportamento può essere notato dalla figura~\ref{fig:uart-sync}, dove vengono rappresentati il caso ideale e il caso di desincronizzazione massima. In ogni caso si ha che il campionamento avviene all'interno del bit in invio.
+
+\afterpage{
+    \begin{figure}[h]
+        \centering
+        \includegraphics[width=.8\textwidth]{uart-sync.png}\\
+        \includegraphics[width=.8\textwidth]{uart-unsync.png}
+        \caption[]{I diagrammi di sequenza dimostrano che, anche in caso di non sincronizzazione delle frequenze di invio e ricezione viene mantenuta l'integrità dei dati trasmessi. Viene mostrata una comunicazione seriale 8N1\footnote{Definizione della configurazione di una linea seriale. Essa è composta da tre caratteri: <Numero di bit dati><Tipo di parità ([N]one, [O]dd, [E]ven, [M]ark, [S]pace)><Numero di Stop bits>}}\label{fig:uart-sync}
+    \end{figure}
+}
+
+La motivazione per cui il campionamento avviene a metà del tempo di bit è data dal fatto che la desincronizzazione possa essere causata da una frequenza più alta o più bassa, per cui vale la relazione descritta dall'equazione~\ref{eq:uart-period-receive-delay}
+\begin{equation}\label{eq:uart-period-receive-delay}
+     t_{bit_{recv}} = t_{bit_{snd}} \pm t_{delay_{\max}}
+\end{equation}
+
+Infine, se la velocità di trasmissione fosse misurata in \textit{bit per secondo}, secondo la formula \(v_{uart} = \frac{1}{t_{bit}}\), essa non sarebbe veritiera e porterebbe confusione, in quanto la formula sopra enunciata includa nel conteggio dei bit trasmessi anche i bit di controllo (Start e Stop bit) i quali non contribuiscono all'informazione inviata. Di conseguenza è opportuno definire la velocità di trasmissione della linea seriale come il numero di simboli trasmessi per secondo. Questa definizione differisce dalla prima un quanto il simbolo è composto da un numero di bit non necessariamente pari a 8.
+
+È possibile determinare la velocità in baud a partire dal bitrate e dalla configurazione della linea UART secondo la relazione~\ref{eq:baud-from-bit-rate}\cite{site:baud}:
+\begin{equation}\label{eq:baud-from-bit-rate}
+    v_{tx_{baud}} = \frac{1}{t_{bit}(N_{databits} + N_{parity} + 2)}
+\end{equation}
+
+Da quanto è possibile dedurre dall'equazione~\ref{eq:baud-from-bit-rate}, è possibile verificare come l'effettivo bit rate di trasmissione della linea UART differisca di un fattore di \(\frac{N_{databits}}{N_{databits} + N_{parity} + 2}\) rispetto al bitrate grezzo di trasmissione \(v_{uart}\)
+
 \subsection{Funzionamento}
 
 Tutte le comunicazioni che avvengono sul bus DebugWire non hanno alcun tipo di verifica dell'integrità del dato (CRC). La comunicazione può avvenire in qualsiasi momento.
@@ -157,7 +187,6 @@ Ciò è possibile perchè la connessione è un bus open collector: il conflitto 
 La velocità di comunicazione è invece definita in funzione della frequenza della cpu del target. Nell'hardware della periferica è presente un prescaler (il cui valore di default è di 128) e la velocità di comunicazione viene stabilita come \[v_{com} (BAUD) = \frac{f_{cpu} (Hz)}{prescaler}\]
 
 Ad ogni reset della comunicazione il prescaler viene resettato al valore inizale (128).
-
 
 In risposta ad un BREAK il target risponderà sempre con l'invio di un valore noto (0x55), facendo sì che a livello fisico sia inviata un'onda quadra con frequenza \(v_{com}\)\cite{site:dw-reverse-engeneering} (si veda figura~\ref{fig:dw-timings})
 
@@ -178,3 +207,204 @@ In risposta ad un BREAK il target risponderà sempre con l'invio di un valore no
 A questo punto è possibile trovare la frequenza di bit dalla quale ricavare il baudrate.
 
 \subsection{Comandi e features}
+
+Una volta che la cpu del controllore target è in stato \textit{halt} è possibile interagire con la periferica DebugWire per eseguire le operazioni di debug. A seguito di un BREAK e successiva risposta è possibile interpellare il controllore con i comandi descritti di seguito.
+
+Vi sono due classi di comandi: Comandi basilari e comandi composti.
+I primi sono comandi che svolgono azioni semplici e definite staticamente, quali la scrittura del Program Counter, Instruction register, scrittura del registro di breakpoint hardware e configurazione di flag e comunicazione. Tramite questi comandi è possibile definire i limiti di scrittura/lettura delle memorie e eseguire istruzioni.
+
+I comandi disponibili per l'interazione con il microcontrollore target tramite DebugWire sono limitati e appartengono a quattro categorie: \textit{Communication Settings}, \textit{Flag Setting},\textit{Program Flow Control} e \textit{Memory R/W}.
+
+\subsubsection{Communication Settings}
+
+Questi comandi vengono utilizzati per modificare il valore del prescaler di comunicazione in modo da modificare la velocità di trasmissione. Sono comandi particolarmente utili nel debugging di controllori a bassa frequenza (128kHz).
+
+Non vi è una logica nota nell'assegnazione del comando al corrispondente valore del prescaler: si rende necessaria una tabella di associazione come riportato dalla tabella~\ref{tab:dw-presc-settings}
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{ c c c }
+        \textbf{Comando} & \textbf{Valore del prescaler} & \textbf{Bitrate a 16MHz} \\
+        \hline
+        0x83 & 128 & 125kbps \\
+        0x82 & 64 & 254kbps \\
+        0x81 & 32 & 500kbps \\
+        0x80 & 16 & 1Mbps \\
+        0xA0 & 8 & 2Mbps \\
+        0xA1 & 4 & 4Mbps \\
+        0xA2 & 2 & 8Mbps \\
+        0xA3 & 1 & 16Mbps \\
+        \hline
+    \end{tabular}
+    \caption[]{Tabella descrittiva dei comandi per la modifica del prescaler di trasmissione della periferica di debug del controllore target\cite{site:dw-reverse-engeneering}}\label{tab:dw-presc-settings}
+\end{table}
+
+Una volta inviato il comando di configurazione del prescaler il controllore si adatterà alla velocità richiesta e risponderà con il valore \texttt{0x55} inviato alla nuova frequenza. Questo valore può essere usato per settare adattivamente la frequenza del programmatore oppure per verificare che le impostazioni siano corrette.
+
+\subsubsection{Flag Setting}
+
+È necessario configurare lo stato della periferica prima di eseguire effettivamente le operazioni che sono state preparate. Possiamo chiamare questo stato ``Contesto di esecuzione'' in quanto la stessa configurazione dell'hardware permette di eseguire diverse azioni in funzione del contesto che viene configurato.
+
+I contesti disponibili sono elencati nella tabella~\ref{tab:dw-contexts}.
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{ c l }
+        \textbf{Comando dW} & \textbf{Contesto} \\
+        \hline
+        0x60 & Ripresa dell'esecuzione\\
+        0x61 & Ripresa dell'esecuzione fino all'indirizzo HWBP\\
+        0x64 & Lettura/Scrittura memoria Flash\\
+        0x66 & Lettura/Scrittura della SRAM\\
+        0x79 & Riprese dell'esecuzione usando l'istruzione caricata\\
+        0x7A & Single Step\\
+        \hline
+    \end{tabular}
+    \caption[]{Tabella descrittiva dei contesti di esecuzione DebugWire\cite{site:dw-reverse-engeneering}}\label{tab:dw-contexts}
+\end{table}
+
+È possibile inoltre modificare i contesti ponendo il valore del bit 5 a zero per permettere alle periferiche di temporizzazione (timers) di continuare il conteggio durante lo stepping.
+
+\subsubsection{Program Flow Control}
+
+Questi comandi sono utilizzati per confermare le operazioni da eseguire.
+
+Esistono comandi di ``GO'' per le varie operazioni composite quali la lettura e scrittura della memoria SRAM (0x20 per indirizzi multipli, 0x21 per un indirizzo singolo), esecuzione di un'istruzione precedentemente caricata in IR senza incrementare il program counter (0x23), ripresa dell'esecuzione (0x30) o single stepping (0x31).
+
+Se il bit 5 è settato allora il target effettuerà il reset della sessione inviando un BREAK seguito da 0x55 al termine dell'esecuzione.
+
+\subsubsection{Memory R/W}
+
+Questi sono i comandi fondamentali per la scrittura e lettura dei registri PC, IR, HWBP e SIGNATURE (sola lettura).
+
+Questi registri possono essere trattati relativamente alla loro funzione oppure possono essere visti come parametri di configurazione per le operazioni composite descritte in seguito.
+
+I registri di configurazione sono mappati ad un indice come descritto dalla tabella\ref{tab:dw-regs-idx}.
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{ c l }
+        \textbf{Indice} & \textbf{Registro associato} \\
+        \hline
+        0 & Program Counter (PC)\\
+        1 & Hardware Breakpoint (HWBP)\\
+        2 & Instruction Register IR\\
+        3 & DW Signature register\\
+        \hline
+    \end{tabular}
+    \caption[]{Tabella descrittiva dell'associazione degli indici ai registri elementari\cite{site:dw-reverse-engeneering}}\label{tab:dw-regs-idx}
+\end{table}
+
+Le operazioni di lettura e scrittura dei registri avvengono mediante l'invio di pacchetti come definito dalle figure~\ref{fig:dw-reg-wrt}~e~\ref{fig:dw-reg-rd}
+
+\begin{figure}[h]
+
+    \centering
+    \begin{bytefield}[endianness=big,bitwidth=1em]{24}
+        \bitheader{0-23}\\
+        \bitbox{4}{0xD} & \bitbox{4}{idx} & \bitbox{16}{data}\\
+    \end{bytefield}
+
+    \caption[]{Pacchetto di scrittura di un registro elementare. Nessuna risposta da parte del target}\label{fig:dw-reg-wrt}
+\end{figure}
+
+
+\begin{figure}[h]
+
+    \centering
+
+    \begin{lrbox}{\bytefieldbox}
+        \begin{bytefield}[endianness=big,bitwidth=1em]{8}
+            \bitheader{0-7}\\
+            \bitbox{4}{0xF} & \bitbox{4}{idx} \\
+        \end{bytefield}
+    \end{lrbox}
+    \subfloat[]{\usebox{\bytefieldbox}}
+
+    \begin{lrbox}{\bytefieldbox}
+        \begin{bytefield}[endianness=big,bitwidth=1em]{16}
+            \bitheader{0-15}\\
+            \bitbox{16}{data}\\
+        \end{bytefield}
+    \end{lrbox}
+    \subfloat[]{\usebox{\bytefieldbox}}
+
+
+    \caption[]{Pacchetto di lettura di un registro elementare (a) e successiva risposta (b)}\label{fig:dw-reg-rd}
+\end{figure}
+
+\subsubsection{Comandi compositi}
+
+DebugWire permette di leggere e scrivere la memoria SRAM mediante una combinazione di comandi elementari.
+Grazie a questa funzionalità è possibile leggere e scrivere sia la memoria dati che i registri di configurazione delle periferiche e i registri ``general purpose'' come viene evidenziato dalla figura~\ref{fig:avr-sram-alloc}.
+
+L'algoritmo per la scrittura dei registri (r0-r31) consiste in quanto segue\cite{site:dw-reverse-engeneering}:
+\begin{enumerate}
+    \item Context: SRAM R/W
+    \item Scrittura del registro iniziale nel registro PC
+    \item Scrittura del registro finale nel registro HWBP
+    \item Selezione modalità (Comando C2 seguito dall'indice dell'operazione come descritto nella tabella~\ref{tab:dw-ops})
+    \item GO SRAM R/W
+    \item (Se scrittura) Invio dei byte da scrivere.\\(Se lettura) ricezione dei byte letti.
+\end{enumerate}
+
+\begin{table}[t]
+    \centering
+    \begin{tabular}{ c l }
+        \textbf{Indice} & \textbf{Modalità} \\
+        \hline
+        0 & Lettura memoria SRAM\\
+        1 & Lettura registri \\
+        2 & Lettura memoria Flash\\
+        4 & Scrittura memoria SRAM\\
+        5 & Scrittura registri\\
+        \hline
+    \end{tabular}
+    \caption[]{Tabella descrittiva dell'associazione degli indici alle modalità di operazione sulle memorie\cite{site:dw-reverse-engeneering}}\label{tab:dw-ops}
+\end{table}
+
+Di seguito, alla figura~\ref{fig:dw-reg-rw-com}, viene riporatta la traccia di comunicazione per questo algoritmo.
+
+Analogamente è possibile leggere e scrivere la memoria SRAM e leggere la memoria FLASH con il seguente algoritmo:
+\begin{enumerate}
+    \item Scrittura dell'indirizzo di partenza nella coppia di registri \texttt{r30 - r31}
+    \item Scrittura del registro PC al valore 0x0000 se lettura o 0x0001 se scrittura
+    \item Scrittura del doppio della lunghezza dei dati (+1 se in scrittura) da leggere/scrivere registro HWBP
+    \item Selezione modalità
+    \item GO con appropriata modalità.
+\end{enumerate}
+
+Di seguito, alla figura~\ref{fig:dw-mem-rw-com}, viene riporatta la traccia di comunicazione per questo algoritmo.
+
+Inoltre è possibile eseguire direttamente un'istruzione senza scriverla nella memoria Flash. In questo caso è sufficiente scrivere nel registro IR l'opcode dell'operazione ed eseguire il comando di flow control (0x23 o 0x33). Si noti che non è possibile eseguire istruzioni di 32 bit.
+
+\begin{figure}[p]
+
+    \centering
+    \begin{bytefield}[endianness=big,bitwidth=1em]{32}
+        \bitheader{0-31}\\
+        \bitbox{8}{CNTX\_SRAM} & \bitbox{8}{0xD0} & \bitbox{16}{start\_reg} \\
+        \bitbox{8}{0xD1} & \bitbox{16}{end\_reg + 1} & \bitbox{8}{0xC2} \\
+        \bitbox{8}{MOD: 0x00/0x05} & \bitbox{8}{GO MEM}
+    \end{bytefield}
+
+    \caption[]{Comunicazione inviata dal debugger per leggere/scrivere i registri. In caso di scrittura viene seguita da (end\_reg - start\_reg) byte, altrimenti la stessa quantità di byte viene ricevuta.}\label{fig:dw-reg-rw-com}
+\end{figure}
+
+\begin{figure}[p]
+
+    \centering
+    \begin{bytefield}[endianness=big,bitwidth=1em]{32}
+        \bitheader{0-31}\\
+        \bitbox{8}{CNTX\_SRAM} & \bitbox{24}{0xD0001E} \\
+        \bitbox{24}{0xD10020} & \bitbox{8}{0xC2} \\
+        \bitbox{8}{0x05} & \bitbox{8}{0x20} & \bitbox{16}{addr\_start} \\
+        \bitbox{8}{0xC2} & \bitbox{8}{0x04/0x00/0x01} & \bitbox{16}{0xD000} \\
+        \bitbox{8}{0x00/0x01} & \bitbox{8}{0xD1} & \bitbox{16}{len * 2 (+1 if wrt)}\\
+        \bitbox{8}{GO MEM}
+    \end{bytefield}
+
+    \caption[]{Comunicazione inviata dal debugger per leggere/scrivere le memorie. In caso di scrittura viene seguita da \textit{len} byte, altrimenti la stessa quantità di byte viene ricevuta.}\label{fig:dw-mem-rw-com}
+\end{figure}
+
+Si noti come i valori dei registri \texttt{Z, PC, HWBP e IR} venga modificata da queste operazioni. Ciò rende necessaria una procedura di salvataggio e ripristino prima di riprendere l'eventuale esecuzione del codice sul dispositivo \textit{target}.
