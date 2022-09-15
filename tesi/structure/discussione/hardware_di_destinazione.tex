@@ -1,6 +1,6 @@
 \chapter{Hardware di destinazione}
     
-Come è stato scritto nell'introduzione la scheda \textit{Arduino Uno R3} è stata scelta per velocizzare lo sviluppo e per permettere al progetto di essere accessibile per un considerevole numero di utenti tenendo in considerazione le capacità e le competenze del segmento di pubblico al quale la scheda è rivolta.
+Come precedentemente scritto nell'introduzione, la scheda \textit{Arduino Uno R3} è stata scelta per velocizzare lo sviluppo e per permettere al progetto di essere accessibile a un considerevole numero di utenti tenendo in considerazione le capacità e le competenze del segmento di pubblico al quale la scheda è rivolta.
 
 \begin{figure}[b]
     \centering
@@ -8,23 +8,21 @@ Come è stato scritto nell'introduzione la scheda \textit{Arduino Uno R3} è sta
     \caption[]{Foto di una scheda Arduino Uno R3\cite{img:arduino-uno-r3}}\label{fig:arduino-uno-r3}
 \end{figure}
 
-la scheda (Figura~\ref{fig:arduino-uno-r3}) presenta una serie di connettori posti ai lati, collegati ai pin del controllore principale in centro, utili per interconnettere il dispositivo con i circuiti in sviluppo.
-L'hardware addizionale presente sul lato sinistro --- invece --- permette di alimentare la scheda da una sorgente esterna non regolata tramite il connettore cilindrico nero e di collegare il controllore principale, tramite connessione seriale, a un computer tramite la porta USB presente in alto a sinistra.
+La scheda (Figura~\ref{fig:arduino-uno-r3}) presenta una serie di connettori posti ai lati, collegati direttamente ai pin del controllore principale in posizione centrale, utili per l'interconnessione del dispositivo con i circuiti in sviluppo.
+L'hardware addizionale presente sul lato sinistro, invece, permette di alimentare la scheda da una sorgente esterna non regolata tramite il connettore cilindrico nero e di collegare il controllore principale a un computer mediante la porta USB presente in alto a sinistra la quale consente una connessione seriale.
 È inoltre possibile effettuare il reset manuale del target tramite il pulsante presente vicino alla presa USB.\@
 
-Il controllore presente al centro della scheda, in un involucro DIP-28\footnote{Dual in-line package, 28 pin}, è un ATMega328P-PU\cite{site:arduino-uno-doc}. È stato scelto un formato così ``datato'' per permettere all'utente di sostituire il chip in caso di guasto.
+Il controllore presente al centro della scheda, in un involucro DIP-28\footnote{Dual in-line package, 28 pin}, è un ATMega328P-PU\cite{site:arduino-uno-doc}. La scelta di un involucro ingombrante, in controtendenza con i processi di miniaturizzazione dell'industria elettronica, è causata dal fatto che, per mantenere una dinamica ``\textit{user friendly}'', rende possibile sostituire il controllore in caso di guasto in modo semplice --- essendo il controllore locato in uno zoccolo invece che essere saldato direttamente sulla scheda --- permettendo così di non dover cestinare l'intera scheda elettronica.\cite{site:arduino-uno-doc}
 
 \section{La famiglia AVR}
 
 Il controllore ATMega328P-PU presente sulla scheda di sviluppo è un membro della famiglia AVR di Atmel\cite{avr:m328p}.
 
-Come è possibile identificare dalla figura~\ref{fig:avr-arch} l'architettura del processore della famiglia AVR è di tipo Harvard: È evidente la dicotomia tra memoria del programma (nell'immagine ``\textit{Flash Program Memory}''), SRAM e EEPROM\cite{harvard-arch}.
+Come è possibile identificare dalla figura~\ref{fig:avr-arch} l'architettura del processore della famiglia AVR è di tipo Harvard: è evidente la dicotomia tra memoria del programma (nell'immagine ``\textit{Flash Program Memory}'') e SRAM\cite{harvard-arch}. Questa suddivisione consente di ottimizzare separatamente le due diverse tecnologie di storge intrinsecamente diverse.
 
-La suddivisione consente di ottimizzare separatamente le due diverse tecnologie di storge intrinsecamente diverse.
+È possibile osservare che la grandezza del bus dati è di 8 bit: conseguentemente è possibile dedurre che l'intera architettura si basa sull'unità fondamentale del byte.
 
-Come è possibile osservare, la grandezza del bus dati è di 8 bit, di conseguenza è possibile dedurre che l'intera architettura si basa sull'unità fondamentale del byte.
-
-Vi è poi la totale assenza di pipelining essendo un processore a singolo ciclo. La maggior parte delle istruzioni, infatti, viene eseguita in un solo ciclo di clock\cite{avr:m328p} ad esclusione delle operazioni sulle memorie le quali ``stallano'' il processore per questioni di tempi di accesso/scrittura o di istruzioni che involvono dati di lunghezza maggiore di 8 bit.
+Essendo un processore a singolo ciclo vi è poi la totale assenza di \textit{pipelining}. La maggior parte delle istruzioni, infatti, viene eseguita in un solo ciclo di clock\cite{avr:m328p} ad esclusione delle operazioni sulle memorie le quali ``stallano'' il processore per questioni di tempi di accesso/scrittura o di istruzioni che coinvolgono dati di lunghezza maggiore di 8 bit, le quali necessitano di essere salvate in più locazioni di memoria flash e quindi risulta necessario il caricamento di più indirizzi per la loro esecuzione.
 
 \begin{figure}[t]
     \centering
@@ -34,40 +32,40 @@ Vi è poi la totale assenza di pipelining essendo un processore a singolo ciclo.
 
 \subsection{Funzionalità avanzate}\label{ss:advanced-features}
 
-Infine, per i micro controllori di fascia media, esiste la differenziazione tra codice di bootloader e codice eseguibile.
+Per i micro controllori di fascia media esiste la differenziazione tra codice di bootloader e codice eseguibile.
 
-Il codice ``privilegiato'' è in grado di essere eseguito se si verificano determinati eventi, può essere protetto da sovrascrittura/lettura con criteri diversi dal codice dell'applicazione ed è in grado di riprogrammare la memoria dello stesso integrato mentre è in esecuzione (Read While Write)\cite{avr:m328p}.
+Il codice ``privilegiato'', il bootloader, può essere eseguito se si verificano determinati eventi rilevabili dall'hardware quali condizioni di reset particolari o al verificarsi di una condizione sullo stato di un pin; oppure può essere protetto da sovrascrittura/lettura con criteri diversi dal codice dell'applicazione ed è in grado di riprogrammare la memoria dello stesso integrato mentre è in esecuzione (Read While Write)\cite{avr:m328p}. Al contrario, il codice applicativo è destinato alla sola esecuzione.
 
 \subsection{Memorie}
 
-All'interno di un controllore della famiglia AVR, essendo un processore ad architettura harvard, è possibile trovare due diverse tipologie di memorie dedicate --- utili all'ottimizzazione di costi e funzionamento --- e una terza tipologia tipologia dedicata all'utilità e alla riduzione dei costi dell'hardware.
+All'interno di un controllore della famiglia AVR, essendo un processore ad architettura harvard, è possibile trovare due diverse tipologie di memorie dedicate --- utili all'ottimizzazione di costi e funzionamento --- e una terza tipologia dedicata all'utilità e alla riduzione dei costi dell'hardware (EEPROM).
 
 \subsubsection{Memoria FLASH}
 La memoria flash è dedicata alla conservazione del codice eseguibile.
-Dato l'utilizzo generale di sola lettura, essa si presenta come una memoria a lettura veloce, organizzata ad unità elementari di 16 bit e riprogrammabile a pagine.
-
-La scelta di indicizzare a ``word'' è stata adottata in quanto la dimensione delle istruzioni dell'\textit{Instruction Set} è sempre di 16 bit oppure, in casi eccezionali, di 32 bit\cite{avr:isa}.
+Dato l'utilizzo generale di sola lettura, essa si presenta come una memoria a lettura veloce, organizzata ad unità elementari di 16 bit --- dimensione minima degli opcode\cite{avr:isa} --- e riprogrammabile a pagine.
 
 Si tratta poi di una memoria complessa: per i controllori avanzati, aventi il supporto al bootloader, essa è divisa in due sezioni le quali garantiscono la possibilità di differenziare i privilegi del codice presente nelle due sezioni come descritto nella sezione~\ref{ss:advanced-features}.
 
-Essendo poi una memoria ``di programma'', essa non richiede prestazioni notevoli in scrittura: questa avviene quindi a blocchi di 512/1024byte (in funzione del controllore e della dimensione della memoria) e può essere eseguita in due diverse modalità:
+Essendo inoltre una memoria ``di programma'', essa non richiede prestazioni notevoli in scrittura: questa avviene, come detto precedentemente, a pagine, ossia a blocchi di 512/1024 bit (in funzione del controllore e della dimensione della memoria) e può essere eseguita in tre diverse modalità:
+
 \begin{itemize}
-    \item ISP\footnote{In System Programming}: In questo caso il controllore è in modalità di programmazione ed esegue i comandi inoltrati da un programmatore esterno --- connesso tramite SPI\footnote{Serial Peripheral Interface} --- mentre la cpu è in stato di \textit{halt}.
+    \item ISP\footnote{In System Programming}: In questo caso il controllore è in modalità di programmazione ed esegue i comandi inoltrati da un programmatore esterno --- connesso tramite SPI\footnote{Serial Peripheral Interface} --- mentre la CPU è in stato di \textit{halt}.
     \item Self Programming: Grazie all'istruzione \texttt{spm} è possibile riprogrammare le pagine della memoria flash dall'interno del codice stesso\footnote{Nel caso in cui sia presente il supporto al bootloader, \texttt{spm} può essere eseguito solo se il program counter punta a tale regione.}.
+    \item High Voltage Parallel Programming: Viene utilizzato in caso non sia disponibile la linea di reset perché configurata come funzionalità ausiliaria: consiste nell'applicare +12V sulla linea di reset per forzare la programmazione\cite{avr:m328p}.
 \end{itemize}
 
 \subsubsection{EEPROM}
 
-La memoria EEPROM è considerata una memoria di utilità in quanto non necessariamente essenziale alla vita del codice in esecuzione. Essa permette di salvare dati in modo non volatile nell'eventualità di una mancanza di alimentazione.
+La memoria EEPROM\footnote{Electrically Erasable and Programmable Read-Only Memory} è considerata una memoria di utilità in quanto non necessariamente essenziale alla vita del codice in esecuzione. Essa permette di salvare dati in modo non volatile nell'eventualità di una mancanza di alimentazione.
 
 Si tratta di una memoria ``lenta'' (tempi di programmazione di 3.3ms~\cite{avr:m328p}) ma in grado di essere letta e scritta con un'unità fondamentale di 8 bit.
 
-Il vantaggio che si presenta con l'integrazione di tale memoria all'interno dell'integrato consiste nell'eliminazione di un ulteriore componente sul circuito stampato nel caso essa sia necessaria, oltre al non utilizzo di una periferica di comunicazione dedicata a tale scopo.
+Il vantaggio che si presenta con l'integrazione di tale memoria all'interno dell'micro-controllore consiste nell'eliminazione di un ulteriore componente sul circuito stampato nel caso essa sia necessaria, oltre al non utilizzo di una periferica di comunicazione dedicata a tale scopo.
 
-L'interazione con la memoria avviene tramite la scrittura e lettura di determinati registri (\texttt{EECR} \texttt{EEDR} \texttt{EEAR}, EEPROM Control, Data e Address Registers)\cite{avr:m328p}.
+L'interazione con la memoria avviene tramite la scrittura e lettura dei registri \texttt{EECR} \texttt{EEDR} \texttt{EEAR} (EEPROM Control, Data e Address Registers)\cite{avr:m328p}.
 
 \subsubsection{SRAM}
-La memoria SRAM è una delle maggiori costituenti della struttura dell'integrato.
+La memoria SRAM\footnote{Static Random Access Memory} è uno dei componenti di maggiore importanza della struttura dell'integrato.
 
 Essa consiste nella principale memoria di elaborazione, ma la sua struttura è leggermente più complessa rispetto a quanto si possa trovare su un comune calcolatore.
 Infatti l'architettura AVR utilizza in modo marcato il concetto di MMIO\footnote{Memory Mapped Input and Output}.
@@ -79,11 +77,13 @@ Infatti l'architettura AVR utilizza in modo marcato il concetto di MMIO\footnote
 \end{figure}
 
 Come è possibile osservare dalla figura~\ref{fig:avr-sram-alloc} i primi 128 byte della memoria SRAM sono in realtà registri di uso generale (\texttt{r0}-\texttt{r31}) o registri di controllo delle periferiche.
-La scrittura di tali locazioni di memoria causa effetti collaterali in funzione della periferica alla quale è associata.
+La scrittura di tali locazioni di memoria causa effetti collaterali in funzione della periferica alla quale è associata. Questa sezione si divide in tre blocchi: i primi 32 byte sono i registri \textit{general purpose} i quali sono interconnessi e interagiscono con l'ALU.\@ Essi vengono utilizzati per l'elaborazione e il salvataggio di dati temporanei.
 
-È inoltre necessario notare dalla figura~\ref{fig:avr-sram-alloc} come le istruzioni di accesso alla ram impieghino due cicli di clock:l'indicizzazione della ram è effettuata tramite un indirizzamento di 16 bit, il quale rende necessario l'utilizzo congiunto di due registri (r26-r27, r28-r29, r30-r31). 
+A seguire sono presenti due zone di memoria: \textit{I/O} ed \textit{Extended I/O} contenenti i registri di controllo delle periferiche. A tal fine, dato che le scritture e le letture possono causare cambiamenti alla periferica (e.g.\ la lettura di un flag \textit{busy} per attendere il completamento di un'operazione prima di eseguirne una seconda) questi indirizzi vengono dichiarati mediante la keyword \texttt{volatile}\footnote{Keyword del compilatore C per impedire l'ottimizzazione delle letture e scritture ad un dato indirizzo}. La differenza tra le due sezioni consiste nella possibilità della prima di essere acceduta in un solo ciclo di clock tramite le istruzioni di \textit{I/O} \texttt{in}, \texttt{out}, ecc\ldots
 
-Questa operazione infatti consente di calcolare l'indirizzo al quale effettuare l'operazione incrementando, decrementando oppure lasciando invariata la coppia di registri di indicizzazione pre o post esecuzione.
+È possibile notare dalla figura~\ref{fig:avr-sram-timings} come le istruzioni di accesso alla ram impieghino due cicli di clock: l'indicizzazione della ram è effettuata tramite un indirizzamento di 16 bit, il quale rende necessario l'utilizzo congiunto di due registri (r26-r27, r28-r29, r30-r31). 
+
+Questa operazione necessita Il calcolo l'indirizzo al quale effettuare l'operazione incrementando, decrementando oppure lasciando invariata la coppia di registri di indicizzazione pre o post esecuzione. Una volta che l'indirizzo è pronto, esso deve diventare valido prima di poter effettuare l'operazione.
 
 \begin{figure}[t]
     \centering
@@ -91,38 +91,40 @@ Questa operazione infatti consente di calcolare l'indirizzo al quale effettuare 
     \caption[Immagine rielaborata a partire dalla fig. 8-4 del documento~\cite{avr:m328p}]{Sequenze di accesso in lettura e scrittura della memoria SRAM\cite{avr:m328p}}\label{fig:avr-sram-timings}
 \end{figure}
 
-in particolare, un uso comune delle istruzioni di accesso alla memoria viene mostrato dal listato~\ref{lst:store-example}, riga 7
+In particolare, un uso comune delle istruzioni di accesso alla memoria viene mostrato dal listato~\ref{lst:store-example}, riga 6.
 
-\begin{lstlisting}[language=AVR, caption={Esempio di utilizzo dell'istruzione \texttt{st}}, label=lst:store-example]
-    ldi r24, 0xFF ;Salva la costante 0xFF nel registro r24
-    eor r0, r0 ;Salva la costante 0x00 nel registro r0
-    eor r26, r26 ;Azzera il contenuto di r26 (XL)
-    eor r27, r27 ;Azzera il contenuto di r27 (XH)
-loop:
-    st r24, X+ ;SRAM[r27:r26] = r24
-    dec r24 ;r24--
-    cpse r24, r0 ;if(r24 == 0) goto hold
-    rjmp loop ;else goto loop
-hold:
-    rjmp hold ;goto hold
+\noindent\begin{minipage}{\textwidth}
+    \begin{lstlisting}[language=AVR, caption={Esempio di utilizzo dell'istruzione \texttt{st}}, label=lst:store-example]
+        ldi r24, 0xFF ;Salva la costante 0xFF nel registro r24
+        eor r0, r0 ;Salva la costante 0x00 nel registro r0
+        eor r26, r26 ;Azzera il contenuto di r26 (XL)
+        eor r27, r27 ;Azzera il contenuto di r27 (XH)
+    loop:
+        st r24, X+ ;SRAM[r27:r26] = r24
+        dec r24 ;r24--
+        cpse r24, r0 ;if(r24 == 0) goto hold
+        rjmp loop ;else goto loop
+    hold:
+        rjmp hold ;goto hold
 
-\end{lstlisting}
+    \end{lstlisting}
+\end{minipage}
 
-In particoare il codice presentato dal listato~\ref{lst:store-example}, dopo una breve fase di inizializzazione (linee 1-4) dove vengono azzerati i registri r0, r26 e r27 (dove gli ultimi due elencati vengono definiti nel codice dal meta-registro X), definisce un ciclo dove viene salvato il contenuto di r24 all'indirizzo puntato dal registro X con successivo incremento, seguito dall'istruzione \texttt{cpse}\footnote{Compare and Skip if Equal} la quale compara rispetto alla costante 0 il valore di r24 una volta decrementato. Nel caso in cui la comparazione risulti veritiera, viene incrementato il program counter di due word, terminando quindi l'esecuzione nel ciclo di hold.
+Il codice presentato dal listato~\ref{lst:store-example}, mostra nelle linee 1-4 l'azzeramento dei registri r0, r26 e r27 (dove gli ultimi due elencati vengono definiti nel codice dal meta-registro X) e in seguito definisce un ciclo dove viene salvato il contenuto di r24 all'indirizzo puntato dal registro X con successivo incremento; segue l'istruzione \texttt{cpse}\footnote{Compare and Skip if Equal} la quale compara rispetto alla costante 0 il valore di r24 una volta decrementato. Nel caso in cui la comparazione risulti veritiera, viene incrementato il program counter di due \textit{word}, terminando quindi l'esecuzione nel ciclo di \textit{hold}.
 
 \section{Il protocollo DebugWire}
 
-Parte fondamentale del core avr, omessa dal diagramma in figura~\ref{fig:avr-arch}, è il sistema di debugging on chip ``\textit{DebugWire}''.
+Parte fondamentale del core AVR, omessa dal diagramma in figura~\ref{fig:avr-arch}, è il sistema di \textit{debugging} on chip ``\textit{DebugWire}''.
 
 Esso permette, tramite un tool esterno collegato all'integrato, di stallare la cpu e leggere e scrivere le memorie e i registri.\cite{avr:m328p}
 
-Affinchè le funzionalità di debugging siano disponibili, è necessario abilitare la periferica DebugWire tramite i bit di configurazione al momento della programmazione del dispositivo.
+Affinché le funzionalità di debugging siano disponibili, è necessario abilitare la periferica DebugWire tramite i bit di configurazione al momento della programmazione del dispositivo\cite{avr:m328p}.
 
 \subsection{Interfaccia fisica}
 
 L'interfacciamento fisico tra controllore e dispositivo esterno avviene tramite una sola connessione al pin di reset dell'integrato \textit{target}.
 
-Il fatto che l'interfaccia di debug sia collocata sul pin di reset comporta che, una volta abilitata la periferica DebugWire, non sia più possibile resettare il dispositivo o programmarlo tramite interfaccia ISP\cite{avr:appnote:isp}\cite{avr:m328p}.
+Il fatto che l'interfaccia di debug sia collocata sul pin di reset comporta che, una volta abilitata la periferica DebugWire, non sia più possibile resettare il dispositivo o programmarlo tramite interfaccia ISP\cites{avr:appnote:isp}{avr:m328p}, ma si rende necessaria una procedura di disattivazione temporanea o la possibilità di programmare l'integrato tramite il protocollo DebugWire.
 
 La comunicazione tra programmatore e target è di tipo seriale e half duplex data la natura della connessione. In particolare il protocollo utilizzato è una derivazione di una seriale UART su un bus open collector, come è osservabile dalla figura~\ref{fig:dw-schematic}\cite{site:dw-reverse-engeneering}.
 
@@ -136,24 +138,24 @@ La comunicazione tra programmatore e target è di tipo seriale e half duplex dat
 
 Il protocollo UART è un metodo di trasmissione punto-punto digitale seriale asincrono che generalmente lavora su due connessioni tra i due attori della comunicazione. Le due linee rimangono a livello logico 1 quando non c'è attività.
 
-Le due linee prendono il nome di ``tx'' e ``rx'', in funzione dell'utilizzo che la periferica master ne fa: è necessario notare come le due linee vengano ``incrociate'' in modo tale da far sì che il pin di trasmissione di un attore vada a collegarsi con il pin di ricezione della controparte.
+Le linee prendono il nome di ``TX'' e ``RX'' in funzione dell'utilizzo che la periferica master ne fa: è necessario notare come le due linee vengano ``incrociate'' in modo tale da far sì che il pin di trasmissione di un attore vada a collegarsi con il pin di ricezione della controparte.
 
-Essendo un protocollo asincrono, ovvero vi è assenza di una linea di sincronizzazione (clock), le due parti della comunicazione devono conoscere a priori la velocità attesa sulle linee.
+Essendo un protocollo asincrono, ovvero vi è assenza di una linea di sincronizzazione (clock), le due parti della comunicazione devono conoscere a priori la velocità e il formato dei dati attesi sulle linee.
 
-La trasmissione inizia con un periodo di livello logico 0, in modo che sia possibile identificare l'inizio della trasmissione di un byte rilevando il fronte di transizione da livello logico 1 a livello logico 0.
+La trasmissione inizia con un periodo di livello logico 0 (\textit{Start Bit}), in modo che sia possibile l'identificazione dell'inizio della trasmissione di un simbolo rilevando il fronte di transizione da livello logico 1 a livello logico 0 (\textit{Falling Edge}).
 
-Durante questo tempo di bit dove la linea di trasmissione è a livello logico 0 è dunque possibile inizializzare l'hardware e sincronizzare le sorgenti di clock per la ricezione. In seguito al bit di inizio (Start Bit) si susseguono, i bit del dato, dal meno significativo al più significativo, con periodo pari al tempo di bit stesso. In funzione della specifica del protocollo possono essere inviate unità di dati fondamentali di dimensione da 5 a 8 bit nota a priori.
+Durante questo tempo di bit dove la linea di trasmissione è a livello logico 0 è dunque possibile inizializzare l'hardware e sincronizzare le sorgenti di clock per la ricezione. In seguito al bit di inizio si susseguono i bit del dato, dal meno significativo al più significativo, con periodo pari al tempo di bit stesso. In funzione della specifica del protocollo possono essere inviate unità di dati fondamentali di dimensione da 5 a 8 bit.
 
-A seguito dei bit di dati viene quindi inviato opzionalmente un bit di parità per garantire l'integrità dei dati e successivamente la linea viene posta a livello logico 1 per uno o due periodi di bit, permettendo al ricevitore di eseguire operazioni e resettare la macchina a stati per la ricezione.\cite{site:rs-uart}
+A seguito dei bit di dati viene quindi inviato opzionalmente un bit di parità per garantire l'integrità dei dati e successivamente la linea viene posta a livello logico 1 per uno o due periodi di bit, permettendo al ricevitore di eseguire operazioni e resettare la macchina a stati per la ricezione dell'eventuale simbolo seguente.\cite{site:rs-uart}
 
-Essendo un sistema asincrono è opportuno ipotizzare il non allineamento delle frequenze di invio e campionamento: In tal caso una desincronizzazione può essere tollerata se entro il limite dato dall'equazione~\ref{eq:uart-max-delay}
+Essendo un sistema asincrono è opportuno ipotizzare il disallineamento delle frequenze di invio e campionamento: in tal caso una desincronizzazione può essere tollerata se entro il limite dato dall'equazione~\ref{eq:uart-max-delay}
 \begin{equation}\label{eq:uart-max-delay}
-    t_{delay_{\max}} = \frac{1}{2}N_{bits-per-symbol}t_{bit}    
+    t_{delay_{\max}} = \frac{1}{2}(N_{data}+N_{parity}+N_{stop}+1)t_{bit}    
 \end{equation}
-dove \(N_{bits-per-symbol}\) è il numero di bit contenuti nel simbolo inviato e \(t_{bit}\) è il tempo per bit. Questo comportamento può essere notato dalla figura~\ref{fig:uart-sync}, dove vengono rappresentati il caso ideale e il caso di desincronizzazione massima. In ogni caso si ha che il campionamento avviene all'interno del bit in invio.
+dove \(N_{data}\) è il numero di bit contenuti nel simbolo inviato che è stato negoziato, \(N_{parity}\) indica il numero di bit di parità, \(N_{stop}\) il numero di \textit{stop bits} e \(t_{bit}\) è il tempo per bit. Inoltre si tiene conto del bit di inizio (\textit{start bit}). Questo comportamento può essere notato dalla figura~\ref{fig:uart-sync}, dove vengono rappresentati il caso ideale e il caso di desincronizzazione massima. In ogni caso si ha che il campionamento avviene all'interno del bit in invio.
 
 \afterpage{
-    \begin{figure}[h]
+    \begin{figure}[ht]
         \centering
         \includegraphics[width=.8\textwidth]{uart-sync.png}\\
         \includegraphics[width=.8\textwidth]{uart-unsync.png}
@@ -161,67 +163,70 @@ dove \(N_{bits-per-symbol}\) è il numero di bit contenuti nel simbolo inviato e
     \end{figure}
 }
 
-La motivazione per cui il campionamento avviene a metà del tempo di bit è data dal fatto che la desincronizzazione possa essere causata da una frequenza più alta o più bassa, per cui vale la relazione descritta dall'equazione~\ref{eq:uart-period-receive-delay}
+La motivazione per cui il campionamento avviene a metà del tempo di bit è data dal fatto che la desincronizzazione può essere causata da una frequenza più alta o più bassa, per cui vale la relazione descritta dall'equazione~\ref{eq:uart-period-receive-delay}
 \begin{equation}\label{eq:uart-period-receive-delay}
      t_{bit_{recv}} = t_{bit_{snd}} \pm t_{delay_{\max}}
 \end{equation}
 
-Infine, se la velocità di trasmissione fosse misurata in \textit{bit per secondo}, secondo la formula \(v_{uart} = \frac{1}{t_{bit}}\), essa non sarebbe veritiera e porterebbe confusione, in quanto la formula sopra enunciata includa nel conteggio dei bit trasmessi anche i bit di controllo (Start e Stop bit) i quali non contribuiscono all'informazione inviata. Di conseguenza è opportuno definire la velocità di trasmissione della linea seriale come il numero di simboli trasmessi per secondo. Questa definizione differisce dalla prima un quanto il simbolo è composto da un numero di bit non necessariamente pari a 8.
+Infine, se la velocità di trasmissione fosse misurata in \textit{bit per secondo}, secondo la formula \(v_{uart} = \frac{1}{t_{bit}}\), essa non sarebbe veritiera e porterebbe confusione, in quanto la formula sopra enunciata includa nel conteggio dei bit trasmessi anche i bit di controllo (Start, parity e Stop bit) i quali non contribuiscono all'informazione inviata. Di conseguenza è opportuno definire la velocità di trasmissione della linea seriale come il numero di simboli trasmessi per secondo. Questa definizione differisce dalla prima un quanto il simbolo è composto da un numero di bit non necessariamente pari a 8.
 
 È possibile determinare la velocità in baud a partire dal bitrate e dalla configurazione della linea UART secondo la relazione~\ref{eq:baud-from-bit-rate}\cite{site:baud}:
 \begin{equation}\label{eq:baud-from-bit-rate}
-    v_{tx_{baud}} = \frac{1}{t_{bit}(N_{databits} + N_{parity} + 2)}
+    v_{tx_{baud}} = \frac{1}{t_{bit}(N_{data} + N_{parity} + N_{stop} + 1)}
 \end{equation}
 
-Da quanto è possibile dedurre dall'equazione~\ref{eq:baud-from-bit-rate}, è possibile verificare come l'effettivo bit rate di trasmissione della linea UART differisca di un fattore di \(\frac{N_{databits}}{N_{databits} + N_{parity} + 2}\) rispetto al bitrate grezzo di trasmissione \(v_{uart}\)
+Da quanto è possibile dedurre dall'equazione~\ref{eq:baud-from-bit-rate}, l'effettivo bit rate di trasmissione della linea UART differisca di un fattore di \(\frac{N_{data}}{N_{data} + N_{parity} + N_{stop} + 1}\) rispetto al bitrate grezzo di trasmissione \(v_{uart}\)
 
 \subsection{Funzionamento}
 
-Tutte le comunicazioni che avvengono sul bus DebugWire non hanno alcun tipo di verifica dell'integrità del dato (CRC). La comunicazione può avvenire in qualsiasi momento.
+Tutte le comunicazioni che avvengono sul bus DebugWire non hanno alcun tipo di verifica dell'integrità del dato (Serial 8N1). La comunicazione può avvenire in qualsiasi momento.
 
-In particolare il reset della comunicazione tra target e prgogrammatore/debugger avviene mediante l'invio di un BREAK\footnote{La linea viene posta a livello logico 0 per più di 9 tempi di bit} sulla linea.
+In particolare il reset della comunicazione tra target e programmatore/debugger avviene mediante l'invio di un BREAK\footnote{La linea viene posta a livello logico 0 per più di 9 tempi di bit} sulla linea.
 Ogni qualvolta sia rilevato un errore (per esempio viene ricevuto un byte inatteso o un comando non noto), il primo attore che rileva l'errore invierà un BREAK che causerà il reset della controparte.
 
-Ciò è possibile perchè la connessione è un bus open collector: il conflitto di accesso avviene solo ponendo la linea a livello logico 0 e non comporta cortocircuitazioni di qualsiasi genere. Il conflitto viene rilevato quando un attore riceve un dato diverso da quanto inviato (in particolare quando l'eattore riceve un bit pari a 0 quando sta inviando un bit di valore 1).
+Ciò è possibile perché la connessione è un bus open collector: il conflitto di accesso avviene solo ponendo la linea a livello logico 0 e non comporta cortocircuitazioni di qualsiasi genere. Il conflitto viene rilevato quando un attore legge dal bus uno stato diverso da quanto inviato durante la trasmissione del bit (in particolare quando l'attore riceve un bit pari a 0 quando sta inviando un bit di valore 1).
 
-La velocità di comunicazione è invece definita in funzione della frequenza della cpu del target. Nell'hardware della periferica è presente un prescaler (il cui valore di default è di 128) e la velocità di comunicazione viene stabilita come \[v_{com} (BAUD) = \frac{f_{cpu} (Hz)}{prescaler}\]
+La velocità di comunicazione è invece definita in funzione della frequenza della cpu del target. Nell'hardware della periferica è presente un \textit{prescaler} (il cui valore di default è di 128) e la velocità di comunicazione viene stabilita come \[v_{com} = \frac{f_{cpu} [Hz]}{prescaler}[bps]\]
 
-Ad ogni reset della comunicazione il prescaler viene resettato al valore inizale (128).
+Ad ogni reset della comunicazione il prescaler viene resettato al valore iniziale.
 
 In risposta ad un BREAK il target risponderà sempre con l'invio di un valore noto (0x55), facendo sì che a livello fisico sia inviata un'onda quadra con frequenza \(v_{com}\)\cite{site:dw-reverse-engeneering} (si veda figura~\ref{fig:dw-timings})
 
-\begin{figure}[h]
+\begin{figure}[ht]
     \centering
     \includegraphics[width=\textwidth]{dw-break-timing.png}
     \caption[]{Diagramma delle tempistiche del bus DebugWire durante il reset della trasmissione}\label{fig:dw-timings}
 \end{figure}
 
-È dunque possibile definire un algoritmo per l'inizializzazione della sessione in modo che la frequenza della trasmissione venga dedotta dalla risposta del target invece che essere nota a priori:
+È dunque possibile definire un algoritmo per l'inizializzazione della sessione in modo che la frequenza della trasmissione venga dedotta dalla risposta del target invece che essere nota a priori, permettendo un untilizzo semplificato della periferica.
+
+L'algoritmo è strutturato come segue
 \begin{enumerate}
     \item Preparazione dell'hardware e inizializzazione strutture dati
-    \item Invio di un break dalla durata di 100ms. La durata viene stabilita in funzione della frequenza di trasmissione ragionevolmente più bassa possibile: Considerando che la famiglia AVR integra negli integrati un oscillatore RC a 128kHz usato comunemente per operazioni ``low power'', ipotizzando che sia abilitata la funzionalità di divisione del clock per un fattore di 8\cite{avr:m328p}, si ottiene una frequenza del core di 16kHz. Ponendo quindi il prescaler di comunicazione DebugWire a 128 otteniamo una frequenza di trasmissione di 125Hz, ovvero 8ms per bit. Infine, sapendo che il tempo di break consiste in almeno 10 bit trasmessi a 0, si ottiene un tempo minimo di break di 80ms, arrotondato a 100ms
-    \item Attesa del primo fronte di trasizione da livello logico 1 a livello logico 0
+    \item Invio di un break dalla durata di 100ms. La durata viene stabilita in funzione della frequenza di trasmissione ragionevolmente più bassa possibile: Considerando che la famiglia AVR integra nei suoi controllori un oscillatore RC a 128kHz usato comunemente per operazioni ``low power'' e ipotizzando che sia abilitata la funzionalità di divisione del clock per un fattore di 8\cite{avr:m328p}, si ottiene una frequenza del core di 16kHz. Ponendo quindi il prescaler di comunicazione DebugWire a 128 otteniamo una frequenza di trasmissione di 125Hz, ovvero 8ms per bit. Infine, sapendo che il tempo di break consiste in almeno 10 bit trasmessi a 0, si ottiene un tempo minimo di break di 80ms, arrotondato a 100ms
+    \item Attesa del primo fronte di transizione da livello logico 1 a livello logico 0
     \item Attesa del successivo fronte di transizione da livello logico 0 a livello logico 1 (calcolando il tempo intercorso tra i due fronti)
 \end{enumerate}
 
-A questo punto è possibile trovare la frequenza di bit dalla quale ricavare il baudrate.
+A questo punto è possibile trovare la frequenza di bit dalla quale ricavare il baud rate.
 
 \subsection{Comandi e features}
 
 Una volta che la cpu del controllore target è in stato \textit{halt} è possibile interagire con la periferica DebugWire per eseguire le operazioni di debug. A seguito di un BREAK e successiva risposta è possibile interpellare il controllore con i comandi descritti di seguito.
 
-Vi sono due classi di comandi: Comandi basilari e comandi composti.
+Vi sono due classi di comandi: comandi basilari e comandi composti.
 I primi sono comandi che svolgono azioni semplici e definite staticamente, quali la scrittura del Program Counter, Instruction register, scrittura del registro di breakpoint hardware e configurazione di flag e comunicazione. Tramite questi comandi è possibile definire i limiti di scrittura/lettura delle memorie e eseguire istruzioni.
+I Secondi sono operazioni complesse che necessitano parametri di configurazione i quali sono impostati tramite comandi basilari.
 
 I comandi disponibili per l'interazione con il microcontrollore target tramite DebugWire sono limitati e appartengono a quattro categorie: \textit{Communication Settings}, \textit{Flag Setting},\textit{Program Flow Control} e \textit{Memory R/W}.
 
 \subsubsection{Communication Settings}
 
-Questi comandi vengono utilizzati per modificare il valore del prescaler di comunicazione in modo da modificare la velocità di trasmissione. Sono comandi particolarmente utili nel debugging di controllori a bassa frequenza (128kHz).
+Questi comandi vengono utilizzati per modificare il valore del prescaler di comunicazione in modo da variare la velocità di trasmissione. Sono comandi particolarmente utili nel debugging di controllori a bassa frequenza (128kHz).
 
 Non vi è una logica nota nell'assegnazione del comando al corrispondente valore del prescaler: si rende necessaria una tabella di associazione come riportato dalla tabella~\ref{tab:dw-presc-settings}
 
-\begin{table}[h]
+\begin{table}[ht]
     \centering
     \begin{tabular}{ c c c }
         \textbf{Comando} & \textbf{Valore del prescaler} & \textbf{Bitrate a 16MHz} \\
@@ -247,7 +252,7 @@ Una volta inviato il comando di configurazione del prescaler il controllore si a
 
 I contesti disponibili sono elencati nella tabella~\ref{tab:dw-contexts}.
 
-\begin{table}[h]
+\begin{table}[ht]
     \centering
     \begin{tabular}{ c l }
         \textbf{Comando dW} & \textbf{Contesto} \\
@@ -277,11 +282,11 @@ Se il bit 5 è settato allora il target effettuerà il reset della sessione invi
 
 Questi sono i comandi fondamentali per la scrittura e lettura dei registri PC, IR, HWBP e SIGNATURE (sola lettura).
 
-Questi registri possono essere trattati relativamente alla loro funzione oppure possono essere visti come parametri di configurazione per le operazioni composite descritte in seguito.
+Questi registri possono essere trattati opportunamente a seconda della loro funzione oppure possono essere visti come parametri di configurazione per le operazioni composite descritte in seguito.
 
-I registri di configurazione sono mappati ad un indice come descritto dalla tabella\ref{tab:dw-regs-idx}.
+I registri di configurazione sono mappati da un indice come descritto dalla tabella\ref{tab:dw-regs-idx}.
 
-\begin{table}[h]
+\begin{table}[ht]
     \centering
     \begin{tabular}{ c l }
         \textbf{Indice} & \textbf{Registro associato} \\
@@ -297,7 +302,7 @@ I registri di configurazione sono mappati ad un indice come descritto dalla tabe
 
 Le operazioni di lettura e scrittura dei registri avvengono mediante l'invio di pacchetti come definito dalle figure~\ref{fig:dw-reg-wrt}~e~\ref{fig:dw-reg-rd}
 
-\begin{figure}[h]
+\begin{figure}[ht]
 
     \centering
     \begin{bytefield}[endianness=big,bitwidth=1em]{24}
@@ -309,7 +314,7 @@ Le operazioni di lettura e scrittura dei registri avvengono mediante l'invio di 
 \end{figure}
 
 
-\begin{figure}[h]
+\begin{figure}[ht]
 
     \centering
 
@@ -345,7 +350,7 @@ L'algoritmo per la scrittura dei registri (r0-r31) consiste in quanto segue\cite
     \item Scrittura del registro finale nel registro HWBP
     \item Selezione modalità (Comando C2 seguito dall'indice dell'operazione come descritto nella tabella~\ref{tab:dw-ops})
     \item GO SRAM R/W
-    \item (Se scrittura) Invio dei byte da scrivere.\\(Se lettura) ricezione dei byte letti.
+    \item (Se scrittura) Invio dei byte da scrivere.\\(Se lettura) Ricezione dei byte letti.
 \end{enumerate}
 
 \begin{table}[t]
@@ -363,7 +368,7 @@ L'algoritmo per la scrittura dei registri (r0-r31) consiste in quanto segue\cite
     \caption[]{Tabella descrittiva dell'associazione degli indici alle modalità di operazione sulle memorie\cite{site:dw-reverse-engeneering}}\label{tab:dw-ops}
 \end{table}
 
-Di seguito, alla figura~\ref{fig:dw-reg-rw-com}, viene riporatta la traccia di comunicazione per questo algoritmo.
+Di seguito, alla figura~\ref{fig:dw-reg-rw-com}, viene riportata la traccia di comunicazione per questo algoritmo.
 
 Analogamente è possibile leggere e scrivere la memoria SRAM e leggere la memoria FLASH con il seguente algoritmo:
 \begin{enumerate}
@@ -374,9 +379,9 @@ Analogamente è possibile leggere e scrivere la memoria SRAM e leggere la memori
     \item GO con appropriata modalità.
 \end{enumerate}
 
-Di seguito, alla figura~\ref{fig:dw-mem-rw-com}, viene riporatta la traccia di comunicazione per questo algoritmo.
+Di seguito, alla figura~\ref{fig:dw-mem-rw-com}, viene riportata la traccia di comunicazione per questo algoritmo.
 
-Inoltre è possibile eseguire direttamente un'istruzione senza scriverla nella memoria Flash. In questo caso è sufficiente scrivere nel registro IR l'opcode dell'operazione ed eseguire il comando di flow control (0x23 o 0x33). Si noti che non è possibile eseguire istruzioni di 32 bit.
+È possibile eseguire direttamente un'istruzione senza scriverla nella memoria Flash. In questo caso è sufficiente scrivere nel registro IR l'opcode dell'operazione ed eseguire il comando di flow control (0x23 o 0x33). Si noti che non è possibile eseguire istruzioni di 32 bit.
 
 \begin{figure}[p]
 
@@ -407,4 +412,4 @@ Inoltre è possibile eseguire direttamente un'istruzione senza scriverla nella m
     \caption[]{Comunicazione inviata dal debugger per leggere/scrivere le memorie. In caso di scrittura viene seguita da \textit{len} byte, altrimenti la stessa quantità di byte viene ricevuta.}\label{fig:dw-mem-rw-com}
 \end{figure}
 
-Si noti come i valori dei registri \texttt{Z, PC, HWBP e IR} venga modificata da queste operazioni. Ciò rende necessaria una procedura di salvataggio e ripristino prima di riprendere l'eventuale esecuzione del codice sul dispositivo \textit{target}.
+Si noti come i valori dei registri \texttt{Z, PC, HWBP e IR} vengano modificati da queste operazioni. Ciò rende necessaria una procedura di salvataggio e ripristino prima di riprendere l'eventuale esecuzione del codice sul dispositivo \textit{target}.
