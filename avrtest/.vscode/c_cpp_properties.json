@@ -15,7 +15,10 @@
                 "__ATmega328p__",
                 "__AVR_ATmega328p__",
                 "__AVR_DEV_LIB_NAME__=m328",
-                "F_CPU=16000000"
+                "F_CPU=16000000",
+                "__flash=",
+                "PROGMEM=",
+                "EEMEM="
             ],
             "compilerPath": "/usr/bin/avr-gcc",
             "cStandard": "c17",

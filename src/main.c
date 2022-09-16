@@ -44,14 +44,15 @@ __attribute__((noreturn)) int main(void) {
     DW_LED_OFF();
 
     gdb_init(16000);
+    mode_gdb();
 
     for (;;) {
         usr_btn_task(&rst_button);
 
-        if(LineEncoding.BaudRateBPS == 1200 && task == gdb_task)
-            mode_isp();
-        else if (LineEncoding.BaudRateBPS != 1200 && task == isp_task)
-            mode_gdb();
+//        if(LineEncoding.BaudRateBPS == 1200 && task == gdb_task)
+//            mode_isp();
+//        else if (LineEncoding.BaudRateBPS != 1200 && task == isp_task)
+//            mode_gdb();
 
         if (USB_DeviceState == DEVICE_STATE_Configured){
             task();
