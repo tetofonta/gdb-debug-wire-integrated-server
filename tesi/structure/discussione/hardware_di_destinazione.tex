@@ -16,25 +16,25 @@ Il controllore presente al centro della scheda, in un involucro DIP-28\footnote{
 
 \section{La famiglia AVR}
 
-Il controllore ATMega328P-PU presente sulla scheda di sviluppo è un membro della famiglia AVR di Atmel\cite{avr:m328p}.
+Il controllore ATMega328P-PU presente sulla scheda di sviluppo è un membro della famiglia AVR di Atmel\cite[1]{avr:m328p}.
 
 Come è possibile identificare dalla figura~\ref{fig:avr-arch} l'architettura del processore della famiglia AVR è di tipo Harvard: è evidente la dicotomia tra memoria del programma (nell'immagine ``\textit{Flash Program Memory}'') e SRAM\cite{harvard-arch}. Questa suddivisione consente di ottimizzare separatamente le due diverse tecnologie di storge intrinsecamente diverse.
 
 È possibile osservare che la grandezza del bus dati è di 8 bit: conseguentemente è possibile dedurre che l'intera architettura si basa sull'unità fondamentale del byte.
 
-Essendo un processore a singolo ciclo vi è poi la totale assenza di \textit{pipelining}. La maggior parte delle istruzioni, infatti, viene eseguita in un solo ciclo di clock\cite{avr:m328p} ad esclusione delle operazioni sulle memorie le quali ``stallano'' il processore per questioni di tempi di accesso/scrittura o di istruzioni che coinvolgono dati di lunghezza maggiore di 8 bit, le quali necessitano di essere salvate in più locazioni di memoria flash e quindi risulta necessario il caricamento di più indirizzi per la loro esecuzione.
+Essendo un processore a singolo ciclo vi è poi la totale assenza di \textit{pipelining}. La maggior parte delle istruzioni, infatti, viene eseguita in un solo ciclo di clock\cite[sec 7.6]{avr:m328p} ad esclusione delle operazioni sulle memorie le quali ``stallano'' il processore per questioni di tempi di accesso/scrittura o di istruzioni che coinvolgono dati di lunghezza maggiore di 8 bit, le quali necessitano di essere salvate in più locazioni di memoria flash e quindi risulta necessario il caricamento di più indirizzi per la loro esecuzione.
 
 \begin{figure}[t]
     \centering
     \includegraphics[width=.9\textwidth]{avr_arch.png}
-    \caption[Immagine ottenuta dal documento~\cite{avr:m328p}, fig. 7-1]{Schema a blocchi dell'architettura AVR\cite{avr:m328p}}\label{fig:avr-arch}
+    \caption[Immagine ottenuta dal documento~\cite{avr:m328p} fig 7-1]{Schema a blocchi dell'architettura AVR\cite[fig 7-1]{avr:m328p}}\label{fig:avr-arch}
 \end{figure}
 
 \subsection{Funzionalità avanzate}\label{ss:advanced-features}
 
 Per i micro controllori di fascia media esiste la differenziazione tra codice di bootloader e codice eseguibile.
 
-Il codice ``privilegiato'', il bootloader, può essere eseguito se si verificano determinati eventi rilevabili dall'hardware quali condizioni di reset particolari o al verificarsi di una condizione sullo stato di un pin; oppure può essere protetto da sovrascrittura/lettura con criteri diversi dal codice dell'applicazione ed è in grado di riprogrammare la memoria dello stesso integrato mentre è in esecuzione (Read While Write)\cite{avr:m328p}. Al contrario, il codice applicativo è destinato alla sola esecuzione.
+Il codice ``privilegiato'', il bootloader, può essere eseguito se si verificano determinati eventi rilevabili dall'hardware quali condizioni di reset particolari o al verificarsi di una condizione sullo stato di un pin; oppure può essere protetto da sovrascrittura/lettura con criteri diversi dal codice dell'applicazione ed è in grado di riprogrammare la memoria dello stesso integrato mentre è in esecuzione (Read While Write)\cite[sec 27.4]{avr:m328p}. Al contrario, il codice applicativo è destinato alla sola esecuzione.
 
 \subsection{Memorie}
 
@@ -51,18 +51,18 @@ Essendo inoltre una memoria ``di programma'', essa non richiede prestazioni note
 \begin{itemize}
     \item ISP\footnote{In System Programming}: In questo caso il controllore è in modalità di programmazione ed esegue i comandi inoltrati da un programmatore esterno --- connesso tramite SPI\footnote{Serial Peripheral Interface} --- mentre la CPU è in stato di \textit{halt}.
     \item Self Programming: Grazie all'istruzione \texttt{spm} è possibile riprogrammare le pagine della memoria flash dall'interno del codice stesso\footnote{Nel caso in cui sia presente il supporto al bootloader, \texttt{spm} può essere eseguito solo se il program counter punta a tale regione.}.
-    \item High Voltage Parallel Programming: Viene utilizzato in caso non sia disponibile la linea di reset perché configurata come funzionalità ausiliaria: consiste nell'applicare +12V sulla linea di reset per forzare la programmazione\cite{avr:m328p}.
+    \item High Voltage Parallel Programming: Viene utilizzato in caso non sia disponibile la linea di reset perché configurata come funzionalità ausiliaria: consiste nell'applicare +12V sulla linea di reset per forzare la programmazione\cite[sec 28.6]{avr:m328p}.
 \end{itemize}
 
 \subsubsection{EEPROM}
 
 La memoria EEPROM\footnote{Electrically Erasable and Programmable Read-Only Memory} è considerata una memoria di utilità in quanto non necessariamente essenziale alla vita del codice in esecuzione. Essa permette di salvare dati in modo non volatile nell'eventualità di una mancanza di alimentazione.
 
-Si tratta di una memoria ``lenta'' (tempi di programmazione di 3.3ms~\cite{avr:m328p}) ma in grado di essere letta e scritta con un'unità fondamentale di 8 bit.
+Si tratta di una memoria ``lenta'' (tempi di programmazione di 3.4ms\cite[tab 8-1]{avr:m328p}) ma in grado di essere letta e scritta con un'unità fondamentale di 8 bit\cite[sec 8.4]{avr:m328p}.
 
 Il vantaggio che si presenta con l'integrazione di tale memoria all'interno dell'micro-controllore consiste nell'eliminazione di un ulteriore componente sul circuito stampato nel caso essa sia necessaria, oltre al non utilizzo di una periferica di comunicazione dedicata a tale scopo.
 
-L'interazione con la memoria avviene tramite la scrittura e lettura dei registri \texttt{EECR} \texttt{EEDR} \texttt{EEAR} (EEPROM Control, Data e Address Registers)\cite{avr:m328p}.
+L'interazione con la memoria avviene tramite la scrittura e lettura dei registri \texttt{EECR} \texttt{EEDR} \texttt{EEAR} (EEPROM Control, Data e Address Registers)\cite[34]{avr:m328p}.
 
 \subsubsection{SRAM}
 La memoria SRAM\footnote{Static Random Access Memory} è uno dei componenti di maggiore importanza della struttura dell'integrato.
@@ -73,7 +73,7 @@ Infatti l'architettura AVR utilizza in modo marcato il concetto di MMIO\footnote
 \begin{figure}[b]
     \centering
     \includegraphics[width=.7\textwidth]{avr_sram_allocation.png}
-    \caption[Immagine ottenuta dal documento~\cite{avr:m328p}, fig. 8-3]{Settorizzazione della memoria SRAM del controllore ATMega328P\cite{avr:m328p}}\label{fig:avr-sram-alloc}
+    \caption[Immagine ottenuta dal documento~\cite{avr:m328p}, fig. 8-3]{Settorizzazione della memoria SRAM del controllore ATMega328P\cite[fig 8-3]{avr:m328p}}\label{fig:avr-sram-alloc}
 \end{figure}
 
 Come è possibile osservare dalla figura~\ref{fig:avr-sram-alloc} i primi 128 byte della memoria SRAM sono in realtà registri di uso generale (\texttt{r0}-\texttt{r31}) o registri di controllo delle periferiche.
@@ -88,10 +88,9 @@ Questa operazione necessita Il calcolo l'indirizzo al quale effettuare l'operazi
 \begin{figure}[t]
     \centering
     \includegraphics[width=.9\textwidth]{sram-access-timings.png}
-    \caption[Immagine rielaborata a partire dalla fig. 8-4 del documento~\cite{avr:m328p}]{Sequenze di accesso in lettura e scrittura della memoria SRAM\cite{avr:m328p}}\label{fig:avr-sram-timings}
+    \caption[Immagine rielaborata a partire dalla fig. 8-4 del documento~\cite{avr:m328p}]{Sequenze di accesso in lettura e scrittura della memoria SRAM\cite[fig 8-4]{avr:m328p}}\label{fig:avr-sram-timings}
 \end{figure}
 
-In particolare, un uso comune delle istruzioni di accesso alla memoria viene mostrato dal listato~\ref{lst:store-example}, riga 6.
 
 \noindent\begin{minipage}{\textwidth}
     \begin{lstlisting}[language=AVR, caption={Esempio di utilizzo dell'istruzione \texttt{st}}, label=lst:store-example]
@@ -110,21 +109,24 @@ In particolare, un uso comune delle istruzioni di accesso alla memoria viene mos
     \end{lstlisting}
 \end{minipage}
 
+In particolare, un uso comune delle istruzioni di accesso alla memoria viene mostrato dal listato~\ref{lst:store-example}, riga 6.
+
+
 Il codice presentato dal listato~\ref{lst:store-example}, mostra nelle linee 1-4 l'azzeramento dei registri r0, r26 e r27 (dove gli ultimi due elencati vengono definiti nel codice dal meta-registro X) e in seguito definisce un ciclo dove viene salvato il contenuto di r24 all'indirizzo puntato dal registro X con successivo incremento; segue l'istruzione \texttt{cpse}\footnote{Compare and Skip if Equal} la quale compara rispetto alla costante 0 il valore di r24 una volta decrementato. Nel caso in cui la comparazione risulti veritiera, viene incrementato il program counter di due \textit{word}, terminando quindi l'esecuzione nel ciclo di \textit{hold}.
 
 \section{Il protocollo DebugWire}
 
 Parte fondamentale del core AVR, omessa dal diagramma in figura~\ref{fig:avr-arch}, è il sistema di \textit{debugging} on chip ``\textit{DebugWire}''.
 
-Esso permette, tramite un tool esterno collegato all'integrato, di stallare la cpu e leggere e scrivere le memorie e i registri.\cite{avr:m328p}
+Esso permette, tramite un tool esterno collegato all'integrato, di stallare la cpu e leggere e scrivere le memorie e i registri.\cite[sec 25]{avr:m328p}
 
-Affinché le funzionalità di debugging siano disponibili, è necessario abilitare la periferica DebugWire tramite i bit di configurazione al momento della programmazione del dispositivo\cite{avr:m328p}.
+Affinché le funzionalità di debugging siano disponibili, è necessario abilitare la periferica DebugWire tramite i bit di configurazione al momento della programmazione del dispositivo\cite[tab 28-7]{avr:m328p}.
 
 \subsection{Interfaccia fisica}
 
 L'interfacciamento fisico tra controllore e dispositivo esterno avviene tramite una sola connessione al pin di reset dell'integrato \textit{target}.
 
-Il fatto che l'interfaccia di debug sia collocata sul pin di reset comporta che, una volta abilitata la periferica DebugWire, non sia più possibile resettare il dispositivo o programmarlo tramite interfaccia ISP\cites{avr:appnote:isp}{avr:m328p}, ma si rende necessaria una procedura di disattivazione temporanea o la possibilità di programmare l'integrato tramite il protocollo DebugWire.
+Il fatto che l'interfaccia di debug sia collocata sul pin di reset comporta che, una volta abilitata la periferica DebugWire, non sia più possibile resettare il dispositivo o programmarlo tramite interfaccia ISP\cites{avr:appnote:isp}[sec 25.3]{avr:m328p}, ma si rende necessaria una procedura di disattivazione temporanea o la possibilità di programmare l'integrato tramite il protocollo DebugWire.
 
 La comunicazione tra programmatore e target è di tipo seriale e half duplex data la natura della connessione. In particolare il protocollo utilizzato è una derivazione di una seriale UART su un bus open collector, come è osservabile dalla figura~\ref{fig:dw-schematic}\cite{site:dw-reverse-engeneering}.
 
@@ -203,7 +205,7 @@ In risposta ad un BREAK il target risponderà sempre con l'invio di un valore no
 L'algoritmo è strutturato come segue
 \begin{enumerate}
     \item Preparazione dell'hardware e inizializzazione strutture dati
-    \item Invio di un break dalla durata di 100ms. La durata viene stabilita in funzione della frequenza di trasmissione ragionevolmente più bassa possibile: Considerando che la famiglia AVR integra nei suoi controllori un oscillatore RC a 128kHz usato comunemente per operazioni ``low power'' e ipotizzando che sia abilitata la funzionalità di divisione del clock per un fattore di 8\cite{avr:m328p}, si ottiene una frequenza del core di 16kHz. Ponendo quindi il prescaler di comunicazione DebugWire a 128 otteniamo una frequenza di trasmissione di 125Hz, ovvero 8ms per bit. Infine, sapendo che il tempo di break consiste in almeno 10 bit trasmessi a 0, si ottiene un tempo minimo di break di 80ms, arrotondato a 100ms
+    \item Invio di un break dalla durata di 100ms. La durata viene stabilita in funzione della frequenza di trasmissione ragionevolmente più bassa possibile: Considerando che la famiglia AVR integra nei suoi controllori un oscillatore RC a 128kHz usato comunemente per operazioni ``low power'' e ipotizzando che sia abilitata la funzionalità di divisione del clock per un fattore di 8\cite[sec 9.11, tab 28-9]{avr:m328p}, si ottiene una frequenza del core di 16kHz. Ponendo quindi il prescaler di comunicazione DebugWire a 128 otteniamo una frequenza di trasmissione di 125Hz, ovvero 8ms per bit. Infine, sapendo che il tempo di break consiste in almeno 10 bit trasmessi a 0, si ottiene un tempo minimo di break di 80ms, arrotondato a 100ms
     \item Attesa del primo fronte di transizione da livello logico 1 a livello logico 0
     \item Attesa del successivo fronte di transizione da livello logico 0 a livello logico 1 (calcolando il tempo intercorso tra i due fronti)
 \end{enumerate}
