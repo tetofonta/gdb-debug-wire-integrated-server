@@ -41,12 +41,11 @@ Quanto enunciato precedentemente si avvera nel debugging di dispositivi embedded
 
 Possiamo vedere il firmware in esecuzione sul microcontrollore come un processo dislocato su un processore remoto con una diversa architettura.
 
-La problematica relativa la diversa architettura dei processori non costituisce motivo di preoccupazione in quanto ormai la maggior parte degli instruction set è stata inclusa nella distribuzione di GDB ``multiarch''[todo cite].
+La problematica relativa la diversa architettura dei processori non costituisce motivo di preoccupazione in quanto ormai la maggior parte degli instruction set è stata inclusa nella distribuzione di GDB multi-architettura[todo cite].
 La vera problematica si ha con il la scarsa connettività dell'integrato, la quale richiede un protocollo e un componente di adattamento \textit{ad-hoc}.
 L'architettura client-server permette quindi di implementare tale adattatore su un dispositivo esterno connesso con il \textit{target} con possibilità di implementare il protocollo di debug permettendo così di adattare l'interfaccia a tutti i dispositivi in grado di eseguire GDB.
 
 Possiamo vedere come la concezione di separazione tra applicativo di controllo ed interazione e esecutore dei comandi di debug può essere implementata dalla figura~\ref{fig:gdb-server-tunnels}.
-
 
 \begin{figure}
     \centering
@@ -72,22 +71,17 @@ Possiamo vedere come la concezione di separazione tra applicativo di controllo e
         \node (5) at (7, 4.5) {Adapter};
         \node (5) at (12, 4.5) {Tagret (AVR)};
     \end{tikzpicture}
-    \caption[]{Diagramma di incapsulamento e protcolli di comunicazione tra debugger e target}
+    \caption[]{Diagramma di incapsulamento e protocolli di comunicazione tra debugger e target}\label{fig:gdb-server-tunnels}
 \end{figure}
 
 In particolare, la figura rappresenta la scelta intrapresa per lo sviluppo del sistema in esame. È possibile notare come il softare GDB si interfacci al relativo server presente sull'adattatore (firmware presente sull'ATMega16U2) tramite il protocollo GDB appoggiandosi al protocollo USB-CDC e trasmesso sul bus seriale differenziale.
 Questi pacchetti vengono quindi convertiti dal server precedentemente menzionato il quale esegue le azioni richieste sul \textit{target} tramite la connessione DebugWire.
 
-%introduzione, architettura client server
 \subsection{Integrazione con ambienti di sviluppo}
 
 L'integrazione con gli abienti di sviluppo avviene sfruttando la standardizzazione dei comandi che GDB definisce[todo cite]. Siccome GDB implementa un'interfaccia da linea di comando dove tutti gli input e output sono ben definiti secondo uno standard, risulta di facile implementazione un software in grado di dialogare con il \textit{debugger} il cui fine è di dotare un'interfaccia grafica per agevolare lo sviluppatore. Inoltre le informazioni tratte dallo stream (stdin/stdout) possono essere mostrate in modo effettivo nell'IDE andando a decorare il codice, ovvero ad aggiungere informazioni ``tra le righe'' permettendo allo sviluppatore di focalizzarsi sullo sviluppo come da figura[todo add figura con debugging da clion?].
 
 \section{GDB Server e Livello fisico}
-
-\subsection{Protocollo}
-%descrizione del protocollo
-%checksum ecc ecc
 
 Il secondo livello è costituito dal firmware presente sull'ATMega16U2 presente sulla scheda \textit{Arduino Uno R3} (componente \texttt{U3}).
 
@@ -103,3 +97,47 @@ Il firmware dell'ATMega16U2 è composto da quattro macro regioni descritte a seg
     \item Implementazione del protocollo DebugWire
 \end{enumerate}
 
+\subsection{Protocollo GDB}
+
+Il protocollo per la comunicazione client-server di GDB è definito a partire da un canale di comunicazione in grado di trasmettere caratteri ascii.
+Così facendo si permette di trasmettere anche su canali strettamente testuali e non standard (simboli da 7 bit).
+
+Affinché sia possibile trasmettere dati in tale formato è necessario ricorrere alla codifica esadecimale testuale dei numeri come definita dai listati~\ref{lst:nib-2-char}~e~\ref{} i quali rappresentano due funzioni di conversione da intero a esadecimale testuale e viceversa.
+Si noti come nelle funzioni si parli di \textit{nibble}, ovvero un unità di quattro bit (che possono prendere valori compresi tra 0 e 15). Questo perché un byte viene convertito in due caratteri alfabetici per rappresentarlo in esadecimale e, similmente, due caratteri alfabetici rappresentano un solo byte.
+
+\noindent\begin{minipage}{\textwidth}
+    \begin{lstlisting}[language=C, caption={Funzione di conversione da nibble a carattere alfabetico}, label=lst:nib-2-char]
+    char nib2hex(unsigned char nib){
+        /*
+            Se il valore da mappare è minore di dieci allora sarà una cifra
+        */
+        if(nib < 10) return nib + '0'; 
+
+        /*
+            Altrimenti sarà una lettera (minuscola)
+        */
+        return nib - 10 + 'a';
+    }
+    \end{lstlisting}
+\end{minipage}
+
+\noindent\begin{minipage}{\textwidth}
+    \begin{lstlisting}[language=C, caption={Funzione di conversione da carattere alfabetico a nibble}, label=lst:char-2-nib]
+    unsigned char hex2nib(char hex){
+        /*
+            Se il valore è una cifra allora ricaviamo l'offset dalla cifra `0' in quanto sequenziali
+        */
+        if(hex >= '0' && hex <= '9') return hex - '0';
+        /*
+            Altrimenti riproponiamo per la lettera 'a' + 10
+        */
+        return hex - 'a' + 10;
+    }
+    \end{lstlisting}
+\end{minipage}
+
+I valori stabiliti negli offset sono di facile interpretazione: si ricordi che nel linguaggio C i caratteri hanno lo stesso significato di interi a otto bit, di conseguenza è possibile sommare o sottrarre caratteri i quali verranno interpretati con il loro relativo valore numerico assegnato dalla tabella ascii[todo cite]. 
+
+In particolare il carattere `a' corrisponde al valore esadecimale 0x41 e il carattere `0' corrisponde al valore 0x30.
+
+Infine si ricorda che le cifre numeriche e le lettere, siano esse minuscole e minuscole, sono sequenziali in tale tabella.
