@@ -1,7 +1,10 @@
 %\usepackage{showframe}
 \usepackage{afterpage}
-
 \usepackage[hidelinks]{hyperref}
+\usepackage{bytefield}
+
+\usepackage{subfig}
+\newsavebox{\bytefieldbox}
 
 \setcounter{tocdepth}{3}
 \setcounter{secnumdepth}{3}
@@ -18,7 +21,8 @@
 
 \usepackage{setspace}
 \onehalfspacing%
-\setlength\parskip{0em plus 0.5pt}
+
+\setlength\parskip{0em plus 10pt}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%CHAPTER%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \usepackage{titlesec}
@@ -71,11 +75,11 @@
 %
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%APPENDICE%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\usepackage{tocloft}
+\usepackage[subfigure]{tocloft}
 
 \newlistof{appendices}{apc}{}
 \newcommand{\appendices}[1]{\addcontentsline{apc}{appendices}{#1}}
-\newcommand{\newappendix}[1]{\clearpage\section*{#1}\appendices{#1}}
+\newcommand{\newappendix}[1]{\clearpage\section{#1}\appendices{#1}}
 
 \usepackage[capitalise]{cleveref}
 

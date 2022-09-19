@@ -25,8 +25,12 @@
 
 \includeonly{
     structure/bibliografia,%
-    structure/discussione/hardware_di_destinazione.tex
-    }
+%    %structure/introduzione,%
+%    structure/discussione/hardware_di_destinazione,%
+    structure/discussione/architettura_di_sistema,%
+%    structure/discussione/debugwire,%
+    attachments/attachments,%
+}
 
 \begin{document}
 
@@ -45,13 +49,12 @@
 
     \include{structure/discussione/hardware_di_destinazione}
     \include{structure/discussione/architettura_di_sistema}
-    \include{structure/discussione/architettura_e_modello_di_comunicazione.tex}
-    \include{structure/discussione/livello_fisico.tex}
     \include{structure/discussione/debugwire.tex}
+    \include{structure/discussione/livello_fisico.tex}
     \include{structure/discussione/server_gdb.tex}
     \include{structure/discussione/real_time_terminal.tex}
     \include{structure/discussione/ambiente_di_sviluppo.tex}
-
+    \include{structure/conclusione}
     
     \include{structure/bibliografia}
     \renewcommand{\listfigurename}{Figure referenziate}
@@ -60,7 +63,6 @@
 
     \appendix
     \include{attachments/attachments}
-    \include{structure/conclusione}
     \include{structure/ringraziamenti}
     
 \end{document}
