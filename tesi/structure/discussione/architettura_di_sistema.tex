@@ -79,7 +79,13 @@ Questi pacchetti vengono quindi convertiti dal server precedentemente menzionato
 
 \subsection{Integrazione con ambienti di sviluppo}
 
-L'integrazione con gli abienti di sviluppo avviene sfruttando la standardizzazione dei comandi che GDB definisce[todo cite]. Siccome GDB implementa un'interfaccia da linea di comando dove tutti gli input e output sono ben definiti secondo uno standard, risulta di facile implementazione un software in grado di dialogare con il \textit{debugger} il cui fine è di dotare un'interfaccia grafica per agevolare lo sviluppatore. Inoltre le informazioni tratte dallo stream (stdin/stdout) possono essere mostrate in modo effettivo nell'IDE andando a decorare il codice, ovvero ad aggiungere informazioni ``tra le righe'' permettendo allo sviluppatore di focalizzarsi sullo sviluppo come da figura[todo add figura con debugging da clion?].
+L'integrazione con gli abienti di sviluppo avviene sfruttando la standardizzazione dei comandi che GDB definisce[todo cite]. Siccome GDB implementa un'interfaccia da linea di comando dove tutti gli input e output sono ben definiti secondo uno standard, risulta di facile implementazione un software in grado di dialogare con il \textit{debugger} il cui fine è di dotare un'interfaccia grafica per agevolare lo sviluppatore. Inoltre le informazioni tratte dallo stream (stdin/stdout) possono essere mostrate in modo effettivo nell'IDE andando a decorare il codice, ovvero ad aggiungere informazioni ``tra le righe'' permettendo allo sviluppatore di focalizzarsi sullo sviluppo come da figura~\ref{fig:vscode-dbg-dec}.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.8\textwidth]{vscode-dbg-decoration.png}
+    \caption[]{Esempio di decorazione del codice durante il debug.}\label{fig:vscode-dbg-dec}
+\end{figure}
 
 \section{GDB Server e Livello fisico}
 
@@ -138,6 +144,28 @@ Si noti come nelle funzioni si parli di \textit{nibble}, ovvero un unità di qua
 
 I valori stabiliti negli offset sono di facile interpretazione: si ricordi che nel linguaggio C i caratteri hanno lo stesso significato di interi a otto bit, di conseguenza è possibile sommare o sottrarre caratteri i quali verranno interpretati con il loro relativo valore numerico assegnato dalla tabella ascii[todo cite]. 
 
-In particolare il carattere `a' corrisponde al valore esadecimale 0x41 e il carattere `0' corrisponde al valore 0x30.
+In particolare il carattere `a' corrisponde al valore esadecimale 0x41 e il carattere `0' corrisponde al valore 0x30. Si ricorda che le cifre numeriche e le lettere, siano esse minuscole e minuscole, sono sequenziali in tale tabella.
 
-Infine si ricorda che le cifre numeriche e le lettere, siano esse minuscole e minuscole, sono sequenziali in tale tabella.
+Il protocollo GDB, inoltre, permette al server --- quando il target non è in stato di \textit{halt} --- di inviare notifiche da mostrare a schermo mediante il comando \texttt{O}.
+
+Questa funzionalità sarà la base per l'implementazione del terminale in tempo reale.
+
+\subsubsection{Formato}
+
+I pacchetti inviati sul canale di comunicazione, come mostrato dalla fiugura~\ref{fig:gdb-packet}, sono composti da una sezione contenente il comando e delimitata dai caratteri \texttt{\$} e \texttt{\#} seguita da due caratteri esadecimali rappresentanti un byte di controllo il cui valore è dato dall'equazione~\ref{eq:gdb-checksum}
+
+\begin{figure}[t]
+    \centering
+    \begin{bytefield}[endianness=big,bitwidth=1em]{32}
+        \bitbox{4}{\$} & \bitbox{20}{cmd} & \bitbox{4}{\#} & \bitbox{4}{CHKSM}\\
+    \end{bytefield}
+    \caption[]{Struttura di un pacchetto utilizzato nella comunicazione client-server GDB.}\label{fig:gdb-packet}
+\end{figure}
+
+\begin{equation}\label{eq:gdb-checksum}
+    CHKSM = byte2asciihex \left( \sum_{1=0}^{\# cmd} \left(cmd_i\right) \ \bmod{256}\right)
+\end{equation}
+
+Questa procedura permette di implementare un parser di comandi a bassissimo impatto sulla memoria ram in quanto è possibile calcolare il checksum durante la ricezione.
+
+Il formato dei comandi è generalmente definito come una lettera alfabetica seguita da una serie di parametri separati dal carattere virgola e a seguire gli argomenti, codificati in esadecimale alfabetco, separati dai parametri tramite i due punti\cite{site:gdbproto}.
