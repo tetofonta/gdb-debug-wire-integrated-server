@@ -303,3 +303,64 @@ Si noti come i valori dei registri \texttt{Z, PC, HWBP e IR} vengano modificati 
 
 
 \section{Modifiche hardware alla scheda}
+
+Come discusso nell'introduzione la scheda \textit{Arduino UNO R3} non presenta alcun supporto al debugging o ad estensioni per tale funzione.
+
+Questo comporta la necessità di sviluppare una nuva scheda derivata dall'architettura di \textit{Arduino UNO} --- il cui sviluppo comporterebbe un dispendio di energie e tempo non indifferenti e alte possibilità di errore --- oppure la modifica hardware e firmware di un esemplare della stessa.
+
+Affinché sia possibile utilizzare l'interfaccia di debugging DebugWire è necessaria una connessione con pull-up diretta con il pin i reset dell'integrato.
+
+Come è possibile osservare dall'allegato~\ref{app:r3-schematic}, L'integrato \texttt{U3} è connesso al pin di reset del target (\texttt{U4}) tramite il condensatore \texttt{C5} (si veda la figura~\ref{fig:r3-schematic-rst-detail}). Sarà dunque necessario rimuovere tale condensatore e ripristinare una connessione diretta tra i micro-controllori come evidenziato dalla figura~\ref{fig:remove-c5}.
+
+\begin{figure}[t]
+    \hfill
+    \begin{minipage}{.45\textwidth}
+        \subfloat[][]{\includegraphics[width=.9\textwidth]{cap_begin.png}}
+    \end{minipage}
+    \begin{minipage}{.45\textwidth}
+        \subfloat[][]{\includegraphics[width=.5\textwidth]{cap_removed.png}} \\
+        \subfloat[][]{\includegraphics[width=.5\textwidth]{cap_shorted.png}}
+    \end{minipage}
+    \hfill
+    \caption[]{Procedimento di rimozione del condensatore \texttt{C5}. Il condensatore viene rimosso (b) e successivamente la connessione viene ripistinata (c)}\label{fig:remove-c5}
+\end{figure}
+
+Tale modifica rende inoperabile il firmware presente sul controllore ATMega16U2 in quanto così facendo la linea di reset rimarrebbe asserita al livello logico 0 durante la durata della connessione con l'\texttt{host}.
+
+Questa modifica comporta però il collegamento i componenti \texttt{RN2D} e \texttt{RN1D} i quali vanno a costituire un partitore di tensione che porrebbe la linea di reset ad un livello logico indefinito ad una tensione di 0.45V. Per questo motivo si rende necessaria una seconda modifica: è necessario isolare la resistenza \texttt{RN2D} targliando la traccia come mostrato in figura~\ref{fig:cut-rnd2}
+
+\begin{figure}[b]
+    \centering
+    \includegraphics[width=.25\textwidth]{cut_rnd2.png}
+    \caption[]{Isolamento del componente \texttt{RN2D} tagliando la traccia evidenziata.}\label{fig:cut-rnd2}
+\end{figure}
+
+Questa modifica si ripercuote negativamente sulla possibilità di eseguire il bootloader sull'ATMega16U2, in quanto è necessario che il pin 13 sia posto a 0V perchè esso possa essere caricato. Vi sono quindi tre possibilità:
+\begin{enumerate}
+    \item Caricare il firmware personalizzato antecedentemente alle modifiche hardware.
+    \item Utilizzare un programmatore esterno tramite l'header di programmazione \texttt{ICSP1}
+    \item Collegare temporaneamente durante il reset dell'ATMega16U2 la traccia tagliata con l'ausilio di uno strumento conduttivo.
+\end{enumerate} 
+
+\subsubsection{Riutilizzo del pulsante di reset}
+
+La connessione per il debugging, trattasi di una linea seriale open drain, comporta che il punsante di reset presente sulla scheda non sia più funzionante, in quanto le funzionalità originali del pin di reset vengono disattivate con l'attivazione della periferica DebugWire.
+
+La soluzione adottata consiste nell'implementazione di un soft-reset gestito dal microcontrollore ATMega16U2: La connessione del pulsante viene modificata in modo che esso sia un input letto dal firmware modificato del micro-controllore adattatore, il quale si occuperà di resettare il \textit{target} mediante l'invio di una sequenza di comandi descritta dall'algoritmo seguente:
+\begin{enumerate}
+    \item Halt del target (BREAK)
+    \item Reset del controllore (0x07)
+    \item Ripresa dell'esecuzione (0x30)
+\end{enumerate}
+
+A tal fine è necessario installare una connessione ausiliaria tramite un filo e tagliare la traccia di connessione del pulsante come mostrato dalla figura~\ref{fig:rst-rewire}
+
+\begin{figure}[h]
+    \centering
+    \subfloat[][]{\includegraphics[width=.2\textwidth]{rst-solder-front.png}}
+    \hspace{8mm}
+    \subfloat[][]{\includegraphics[width=.2\textwidth]{rst-solder-rear.png}}
+
+    \caption[]{Procedimento di isolamento e riutilizzo del pulsante di reset mostrato dal lato superiore (a) e inferiore (b). Si noti la traccia tagliata nell'immagine (b)}\label{fig:rst-rewire}
+\end{figure}
+

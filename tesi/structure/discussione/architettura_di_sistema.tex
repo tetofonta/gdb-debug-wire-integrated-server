@@ -1,8 +1,8 @@
 \chapter{Architettura di sistema}
 
-Affinché l'utente sia agevolato nello sviluppo di un firmware esso deve sfruttare al meglio l'interoperabilità dei componenti e le potenzialità dell'intero sistema di sviluppo.
+Affinché l'utente sia agevolato nello sviluppo di un firmware egli deve sfruttare al meglio l'interoperabilità dei componenti e le potenzialità dell'intero sistema di sviluppo.
 
-Risulta quindi necessaria una visione di insieme dell'intero sistema invece che una valutazione locale dei singoli componenti. Risulta inoltre necessaria una valutazione della compatibilità intercomponente affinché la loro interazione permetta allo sviluppatore di operare con facilità.
+Risulta quindi necessaria una visione di insieme dell'intero sistema invece che una valutazione locale dei singoli componenti. Risulta inoltre necessaria una valutazione della compatibilità inter-componente affinché la loro interazione permetta allo sviluppatore di operare con facilità.
 
 \begin{figure}[t]
     \centering
@@ -16,11 +16,11 @@ Il primo livello, ovvero il livello di interfaccia con lo sviluppatore, consiste
 
 Enfasi particolare viene posta sull'integrazione da parte dell'IDE del software GDB.\@
 
-Il \textit{debugging} è una delle pratiche ormai fondamentali della programmazione la quale permette una comprensione agevolata del flusso di esecuzione del codice e permette di ispezionarne i vari stati.
+Il \textit{debugging} è una delle pratiche ormai fondamentali della programmazione che permette una comprensione agevolata del flusso di esecuzione del codice e permette di ispezionarne i vari stati.
 
 In particolare esso permette di analizzare uno stato intermedio tramite l'esecuzione in modo interattivo, consentendo allo sviluppatore di condurre ``un'indagine'' relativa a un funzionamento inatteso del firmware. Per citare un detto diffuso sulle piattaforme social in ambito di programmazione possiamo affermare che la procedura di \textit{debugging} sia paragonabile ad un'indagine condotta dallo sviluppatore dove egli stesso è il colpevole.
 
-È necessario porre un'ulteriore enfasi sull'aggettivo ``interattivo'': la differenza tra \textit{debugging} e \textit{logging} sta proprio nel fatto che il secondo consiste solamente nella stampa, su un terminale o file, di una serie di messaggi statici e predefiniti al fine di tracciare gli eventi per un'analisi futura e inaspettata. Ciò non permette quindi di effettuare decisioni in funzione dei risultati parziali ottenuti nella procedura di \textit{debugging} a meno di riprogrammare il dispositivo --- inficiando così sulla longevità delle memorie --- e ricapitolare l'esecuzione del codice.
+È necessario porre un'ulteriore enfasi sull'aggettivo ``interattivo'': la differenza tra \textit{debugging} e \textit{logging} sta proprio nel fatto che il secondo consiste solamente nella stampa, su un terminale o file, di una serie di messaggi statici e predefiniti al fine di tracciare gli eventi per un'analisi futura e inaspettata. Ciò non permette quindi di effettuare decisioni in funzione dei risultati parziali ottenuti nella procedura di \textit{debugging} a meno di riprogrammare il dispositivo --- inficiando così la longevità delle memorie --- e ricapitolare l'esecuzione del codice.
 
 Risulta quindi di grande importanza poter accedere a uno (o più) software per il debugging in modo che esso possa essere efficiente.
 Uno dei software più utilizzati per il debugging del software compilato, qualunque sia il linguaggio scelto, è Gnu GDB\cite{site:gdb}.

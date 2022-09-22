@@ -133,7 +133,7 @@ Le due sorgenti di alimentazione della scheda si identificano nel componente \te
 
 Per analizzare il circuito presentato dalla figura~\ref{fig:r3-schematic-pwr-sel-detail} è necessario ipotizzare diversi scenari iniziali.
 
-Ipotizzando il caso in cui la scheda viene collegata ad una sorgente di alimentazione esterna maggiore di 7V tramite il connettore \texttt{X1}, si ha che il collegamento \texttt{USBVCC} avrà tensione pari a 0V.
+Ipotizzando il caso in cui la scheda venga collegata ad una sorgente di alimentazione esterna maggiore di 7V tramite il connettore \texttt{X1}, si ha che il collegamento \texttt{USBVCC} avrà tensione pari a 0V.
 L'ingresso, inoltre, alimenterà il componente \texttt{U1} (non mostrato in figura) che regolerà la tensione e alimenterà la linea \texttt{+5V}, la quale alimenterà il componente \texttt{U2} che, a sua volta, alimenterà la linea \texttt{+3V3}.
 Il comparatore (\texttt{U5A}) avrà uscita a 5V se \texttt{VIN} --- collegato direttamente alla sorgente esterna tramite un diodo (\texttt{D1}) --- è superiore a 6.6V: l'uscita del comparatore pilota il gate del mosfet a canale P \texttt{P1} non avendo però alcun effetto in quanto, come detto precedentemente, \texttt{USBVCC} è posto a 0V.
 
@@ -143,11 +143,11 @@ Ipotizzando ora il caso in cui la scheda è solamente collegata a un computer tr
 Essendo \texttt{VIN} posta a 0V, l'uscita del comparatore sarà anch'essa posta a 0V --- essendo il componente LMV358 un amplificatore operazionale \textit{rail-to-rail}\cite{ti:lmv358} ---
 stabilendo una differenza di potenziale tra il gate e il source di 5V abbattendo così la resistenza equivalente e portando la linea di alimentazione a 5V effettivi\cite{onsemi:fdn340p}.
 
-Ipotizzando infine che, data la condizione stabile precedentemente descritta, l'utente collega la scheda a una seconda sorgente (tramite \texttt{X1}) contemporaneamente all'alimentazione USB.\@ In questo caso, se la tensione VIN è superiore a 6.6V, l'uscita del comparatore \texttt{U5A} incrementerà a 5V, causando così una differenza di potenziale gate-source per il componente \texttt{T1} di 0V e di conseguenza la ``disconnessione'' del carico da \texttt{USBVCC}.
+Ipotizzando infine che, data la condizione stabile precedentemente descritta, l'utente colleghi la scheda a una seconda sorgente (tramite \texttt{X1}) contemporaneamente all'alimentazione USB.\@ In questo caso, se la tensione VIN è superiore a 6.6V, l'uscita del comparatore \texttt{U5A} incrementerà a 5V, causando così una differenza di potenziale gate-source per il componente \texttt{T1} di 0V e di conseguenza la ``disconnessione'' del carico da \texttt{USBVCC}.
 
 \subsection{Comunicazione con l'host}
 
-Il caricamento e la comunicazione tra \textit{target} e \textit{Host} avviene tramite una linea seriale UART.\@ Ne consegue il problema di adattare un'interfaccia seriale TTL non presente su un computer \textit{consumer grade} a una presente sulle comuni piattaforme di elaborazione.
+Il caricamento e la comunicazione tra \textit{target} e \textit{Host} avvengono tramite una linea seriale UART.\@ Ne consegue il problema di adattare un'interfaccia seriale TTL non presente su un computer \textit{consumer grade} a una presente sulle comuni piattaforme di elaborazione.
 
 Questa funzionalità viene svolta dal componente \texttt{U3} dello schema allegato (\ref{app:r3-schematic}). Esso è un microcontrollore della famiglia AVR con il supporto USB.\@
 
@@ -166,7 +166,7 @@ Oltre alle connessioni relative alla comunicazione seriale tra \textit{target} e
 Secondo la specifica RS-232, oltre alle due linee seriali (TXD e RXD), sono presenti anche delle line di ``\textit{flow control}'', tra le quali possiamo notare la linea \texttt{DTR}.
 
 Questa linea è asserita dalla maggior parte dei driver seriali (e seriali virtuali) al momento della connessione al dispositivo o del collegamento. Così facendo, grazie a \texttt{C5} è possibile avere un impulso sulla linea di reset prima che il circuito ritorni all'equilibrio: Inizialmente il condensatore \texttt{C5} si trova in equilibrio con la linea DTR posta a 5V e la linea di RESET posta a +5V per mezzo della resistenza di pull'up. Al momento dell'asserzione, la linea DTR viene posta a 0V: il condensatore \texttt{C5} si carica causando un calo nella linea di reset fino a 0V, la quale poi evolverà secondo il modo del sistema dato dal prodotto tra la resistenza e la capacità di \texttt{RN1D} e \texttt{C5}.
-Al momento della disconnessione il condensatore, causerà un picco positivo nella linea di reset fino a circa 10V che viene però soppresso dalla presenza di \texttt{D2}.
+Al momento della disconnessione il condensatore causerà un picco positivo nella linea di reset fino a circa 10V che viene però soppresso dalla presenza di \texttt{D2}.
 
 \subsection{Programmazione}
 
