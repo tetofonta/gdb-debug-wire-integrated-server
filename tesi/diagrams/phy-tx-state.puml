@@ -1,0 +1,16 @@
+@startuml
+
+[*] -right-> Idle
+Idle -right-> StartBit: Timer IRQ Enable
+StartBit -right-> Data
+Data --> Data : [bit no < 8]
+Data -down-> StopBit : [bit no == 8]
+StopBit --> Idle: [No send queued] \n Timer IRQ Disable \n Receive Enable
+StopBit --> StartBit: [Byte queued]
+
+Data: Set Bus Value
+Data: Calculate next bit
+
+StartBit: Set Bus Value
+StartBit: Calculate next bit
+

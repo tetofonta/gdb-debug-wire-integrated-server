@@ -1,0 +1,14 @@
+@startuml
+
+[*] -right-> Idle
+Idle -right-> Data: Timer reset\nTimer IRQ Enable\nFE IRQ Disable
+Data --> Data : [bit no < 8]
+Data -down-> StopBit : [bit no == 8]
+StopBit --> Idle: Timer IRQ Disable \n FE IRQ Disable
+
+Data: Read Bus Value
+Data: Store Bit
+
+StopBit: Store Byte in Buffer
+StopBit: Fire IRQ function
+

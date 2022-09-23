@@ -6,7 +6,6 @@ Si rende necessario quindi implementare tale interfaccia in modo efficiente al f
 
 \section{Implementazione}
 
-\subsection{Implementazione ideale}
 L'implementazione inizialmente progettata in fase di ideazione, ancora prima che fosse stabilita la piattaforma hardware, sfruttava la periferica UART presente sul controllore ATMega16U2\cite[chap. 18]{avr:m16u2}.
 
 Al fine di implementare l'accesso alla linea open drain si rende necessario l'utilizzo di un componente aggiuntivo come mostrato nella figura~\ref{fig:od-impl}, la quale mostra due alternative di implementazione utilizzando un diodo o un transistor. 
@@ -37,12 +36,14 @@ Al fine di implementare l'accesso alla linea open drain si rende necessario l'ut
     \caption[]{L'immagine mostra due possibili circuiti per l'adattamento della periferica UART dell'ATMega16U2 alla linea seriale open drain.}\label{fig:od-impl}
 \end{figure}
 
-Il principio di funzionamento dei circuiti in figura~\ref{fig:od-impl} è pressoché identico: Il valore del pin txd viene replicato sulla linea di connessione con un livello logico 0 ``forte'' e un livello logico 0 ``debole'' dato dalla resistenza \(R_{pullap}\) e in entrambi i casi il pin txd viene utilizzato come collettore di corrente.
+Il principio di funzionamento dei circuiti in figura~\ref{fig:od-impl} è pressoché identico: Il valore del pin txd viene replicato sulla linea di connessione con un livello logico 0 ``forte'' e un livello logico 0 ``debole'' dato dalla resistenza \(R_{pullup}\) e in entrambi i casi il pin txd viene utilizzato come collettore di corrente.
 La differenza consiste nella quantità di componenti aggiuntivi e nelle prestazioni.
 
-Il circuito (a) consente di raggiungere un livello logico 0 pari a circa 0.3V, data dalla differenza di potenziale \(V_{ce}\) del transistor in saturazione, mentre il circuito (b) raggiunge un livello logico 0 di 0.7V data dalla caduta di tensione del diodo. Nel secondo caso sarebbe possibile migliorare le prestazioni utilizzano un diodo \textit{schottky} causando però un innalzamento della capacitanza della linea.
+Il circuito (a) permette, tramite il pin \textit{txd}, di porre la differenza di potenziale \(V_{be}\) tra base ed emettitore del transistor a circa 5V --- ignorando la caduta di tensione irrilevante sulla resistenza R1 --- permettendo una corrente di base sufficiente a mandare il transistor in saturazione. Questo manda il transistor in conduzione, ed essendo in saturazione, porta la differenza di potenziale \(V_{ce}\) a circa 0.2V imponendo così la tensione sulla connessione verso il target.
 
-I risultati sopra mostrati sono verificati dalle simulazioni i cui risultati sono mostrati in figura~\ref{graph:sim}.
+Contrariamente il circuito (b) sfrutta il diodo D1 per ottenere lo stesso risultato. La differenza consta nel fatto che nel circuito (a) il transistor permette di avere una caduta di tensione minore essendo in saturazione, cosa che avviene quando il segnale \textit{txd} è zero.
+
+I circuiti sopra mostrati sono verificati dalle simulazioni i cui risultati sono mostrati in figura~\ref{graph:sim}. In aggiunta a quanto esibito, il circuito (b) è stato simulato con un diodo schottky 1N5817 con capacitanza di 125pF per valutarne il comportamento.
 
 \begin{figure}
     \centering
@@ -66,13 +67,15 @@ I risultati sopra mostrati sono verificati dalle simulazioni i cui risultati son
                 ]
                 \addplot table [x=t, y=v(tgt), col sep=comma, mark=none] {sims/phy-sim-diode.csv};
                 \addplot table [x=t, y=v(txd), col sep=comma, mark=none] {sims/phy-sim-diode.csv};
-                \legend{$tgt$,$txd$}
+                \addplot table [x=Time, y=V(NODE1), col sep=comma, mark=none] {sims/phy-sim-schottky.csv};
+                \legend{$tgt (pn)$,$txd$}
             \end{axis}
         \end{tikzpicture}
     \caption[]{Risultati della simulazione dei circuiti in figura~\ref{fig:od-impl} con tempo di bit pari a 8\(\mu\)S}\label{graph:sim}
 \end{figure}
 
-Come è possibile notare nel secondo caso la tensione della linea \textit{tgt} non è mai inferiore a 0.7V.
+Come è possibile notare nel secondo caso la tensione della linea \textit{tgt} non è mai inferiore a 0.7V per la giunzione \textit{pn} mentre nel caso della giunzione metallo-semiconduttore la tensione associata al livello logico 0 è pari a circa 0.15V. Bisogna però sottolineare come nel caso di un diodo schottky l'alta capacitanza causa una lentezza di commutazione non indifferente, essendo che il segnale non raggiunge mai i 5V. 
+
 
 Sfruttando la periferica UART dell'ATMega16U2 risulta quindi notevolmente semplificata l'implementazione della comunicazione DebugWire, oltre a rendere possibile un approccio ad interrupt per la scrittura del firmware.
 
@@ -102,10 +105,22 @@ Se invece lo stato del pin viene posto come input, ossia lo stato del primo flip
 
 La lettura dello stato del pin può avvenire in qualunque momento tramite la lettura del registro PINx, il quale asserisce la linea RPx e riporta lo stato salvato nello stadio di sincronizzazione.
 
-La scrittura di tale registro viene reindirizzata al controllo del multiplexer in modo da poter invertire lo stato del pin senza averlo precedentemente letto, dimezzando la quantità di operazioni necessarie.
+La scrittura di tale registro viene reindirizzata al controllo del multiplexer in modo da poter invertire lo stato del pin senza averlo precedentemente letto, dimezzando la quantità di operazioni necessarie all'inversione dello stato.
 
+Risulta quindi necessario stabilire due sequenze di operazioni per portare il pin da livello logico basso ``forte'' a livello logico alto ``debole''. In particolare la transizione da livello logico alto a livello logico basso deve avvenire precedentemente alla configurazione della direzione del pin. Questo garantisce che non vi siano possibilità di conflitti potenzialmente catastrofici, considerando il fatto che il segnale che determina l'attivazione del pullup è anche responsabile dello stato del pin. Questo problema risulta evitabile utilizzando un pullup esterno.
 
+Analogamente per la conversione da livello logico basso a livello logico alto il cambio di stato dovrà avvenire successivamente al cambio di direzione.
 
+Così facendo si riducono le possibilità di guasto e si minimizzano i tempi di incertezza --- considerando l'assenza di un pullup esterno --- i quali si limitano al tempo intercorso tra i due cambi di configurazione: ci sarà sempre un intervallo di tempo dove lo stato del pin sarà posto a livello logico basso e il pin posto in configurazione di input, lasciando così la connessione flottante.
 
-%usando un solo pin
-%state machine?
+In questi casi, data la durata di natura molto breve della commutazione e del periodo di incertezza, la capacitanza parassita della connessione permetterà di mantenere un livello logico costante.
+
+\subsubsection{Implementazione del protocollo di comunicazione}
+
+L'implementazione della comunicazione seriale emulata a livello software è soggetta a vincoli relativi al tempo di esecuzione.
+
+L'implementazione si basa sull'utilizzo del timer TIMER1, un timer a 16 bit in grado di generare interrupt di comparazione e sul rilevamento della caduta da livello logico alto a basso per identificare un bit di inizio trasmissione.
+
+Il concetto sul quale si basa il funzionamento consiste nel mantenere il timer in esecuzione ed eventualmente resettarne il conteggio nel caso si renda necessario una re-sincronizzazione in ricezione.
+
+La trasmissione avviene tramite l'esecuzione di una macchina a stati la quale iterazione è determinata dall'interrupt del TIMER1.
