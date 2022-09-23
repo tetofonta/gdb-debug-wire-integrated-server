@@ -1,7 +1,12 @@
 \chapter{Livello fisico}
-%half duplex one line uart
-    \section{Implementazione}
-    \subsection{Implementazione ideale}
-    %usando uart del mega16
-    \subsection{Implementazione effettiva}
-    %usando un solo pin
+
+Come riportato nella sezione~\ref{ss:dw-phy}, l'interfaccia tra debug server, l'ATMega16U2, e il controllore target è costituita da una linea seriale open drain.
+
+Si rende necessario quindi implementare tale interfaccia in modo efficiente al fine di permettere al server GDB di interfacciarsi con il \textit{target} tramite DebugWire
+
+\section{Implementazione}
+\subsection{Implementazione ideale}
+%usando uart del mega16
+\subsection{Implementazione effettiva}
+%usando un solo pin
+%state machine?

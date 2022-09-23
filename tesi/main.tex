@@ -23,14 +23,15 @@
 
 \usepackage{blindtext}
 
-%\includeonly{
-%    structure/bibliografia,%
+\includeonly{
+    structure/bibliografia,%
 %%    %structure/introduzione,%
 %%    structure/discussione/hardware_di_destinazione,%
 %    structure/discussione/architettura_di_sistema,%
 %%    structure/discussione/debugwire,%
-%    attachments/attachments,%
-%}
+    structure/discussione/livello_fisico,%
+    attachments/attachments,%
+}
 
 \begin{document}
 
@@ -57,9 +58,6 @@
     \include{structure/conclusione}
     
     \include{structure/bibliografia}
-    \renewcommand{\listfigurename}{Figure referenziate}
-    \listoffigures
-
 
     \appendix
     \include{attachments/attachments}

@@ -7,7 +7,7 @@ Esso permette, tramite un tool esterno collegato all'integrato, di stallare la c
 
 Affinché le funzionalità di debugging siano disponibili, è necessario abilitare la periferica DebugWire tramite i bit di configurazione al momento della programmazione del dispositivo\cite[tab 28-7]{avr:m328p}.
 
-\subsection{Interfaccia fisica}
+\subsection{Interfaccia fisica}\label{ss:dw-phy}
 
 L'interfacciamento fisico tra controllore e dispositivo esterno avviene tramite una sola connessione al pin di reset dell'integrato \textit{target}.
 
@@ -270,7 +270,7 @@ Di seguito, alla figura~\ref{fig:dw-mem-rw-com}, viene riportata la traccia di c
 
 È possibile eseguire direttamente un'istruzione senza scriverla nella memoria Flash. In questo caso è sufficiente scrivere nel registro IR l'opcode dell'operazione ed eseguire il comando di flow control (0x23 o 0x33). Si noti che non è possibile eseguire istruzioni di 32 bit.
 
-\begin{figure}[p]
+\begin{figure}[b]
 
     \centering
     \begin{bytefield}[endianness=big,bitwidth=1em]{32}
@@ -283,7 +283,7 @@ Di seguito, alla figura~\ref{fig:dw-mem-rw-com}, viene riportata la traccia di c
     \caption[]{Comunicazione inviata dal debugger per leggere/scrivere i registri. In caso di scrittura viene seguita da (end\_reg - start\_reg) byte, altrimenti la stessa quantità di byte viene ricevuta.}\label{fig:dw-reg-rw-com}
 \end{figure}
 
-\begin{figure}[p]
+\begin{figure}[t]
 
     \centering
     \begin{bytefield}[endianness=big,bitwidth=1em]{32}
