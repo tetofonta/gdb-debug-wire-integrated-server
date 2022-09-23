@@ -2,7 +2,9 @@
 \usepackage{afterpage}
 \usepackage[hidelinks]{hyperref}
 \usepackage{bytefield}
-\usepackage{subfig}
+%\usepackage{subfig}
+\usepackage{caption}
+\usepackage{subcaption}
 \newsavebox{\bytefieldbox}
 
 \setcounter{tocdepth}{3}
@@ -74,7 +76,7 @@
 %
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%APPENDICE%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\usepackage[subfigure]{tocloft}
+\usepackage{tocloft}
 
 \newlistof{appendices}{apc}{}
 \newcommand{\appendices}[1]{\addcontentsline{apc}{appendices}{#1}}
@@ -106,3 +108,4 @@
 \definecolor{Purple}{rgb}{0.3,0,1}
 
 \input{settings/listings.tex}
+

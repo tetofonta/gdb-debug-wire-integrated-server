@@ -35,7 +35,6 @@
 \RequirePackage{bookmark}
 \RequirePackage{setspace}
 \RequirePackage{afterpage}
-\RequirePackage{subfig}
 \RequirePackage[labelfont=bf]{caption}
 
 
