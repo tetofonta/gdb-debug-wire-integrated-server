@@ -1,4 +1,4 @@
-@startuml
+@startuml sys-arch
 
 skinparam nodesep 60
 skinparam ranksep 10
@@ -32,3 +32,4 @@ gdb <-down-> gdbsrv: GDB Server Protocol
 srv <--> avr #0000FF: DebugWire
 dw --> avr: Debug
 gdbsrv <-down-> avr: RTT
+@enduml

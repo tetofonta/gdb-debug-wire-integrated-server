@@ -21,7 +21,7 @@ La comunicazione tra programmatore e target è di tipo seriale e half duplex dat
     \caption[]{Schema concettuale del funzionamento dell'interconnessione tra programmatore e controllore target per il protocollo DebugWire}\label{fig:dw-schematic}
 \end{figure}
 
-\subsubsection{Protocollo UART}
+\subsubsection{Protocollo UART}\label{ss:uart}
 
 Il protocollo UART è un metodo di trasmissione punto-punto digitale seriale asincrono che generalmente lavora su due connessioni tra i due attori della comunicazione. Le due linee rimangono a livello logico 1 quando non c'è attività.
 
@@ -44,8 +44,8 @@ dove \(N_{data}\) è il numero di bit contenuti nel simbolo inviato che è stato
 \afterpage{
     \begin{figure}[ht]
         \centering
-        \includegraphics[width=.8\textwidth]{uart-sync.png}\\
-        \includegraphics[width=.8\textwidth]{uart-unsync.png}
+        \includegraphics[width=.8\textwidth]{uart-timings.pdf}\\
+        \includegraphics[width=.8\textwidth]{uart-timings-unsync.pdf}
         \caption[]{I diagrammi di sequenza dimostrano che, anche in caso di non sincronizzazione delle frequenze di invio e ricezione viene mantenuta l'integrità dei dati trasmessi. Viene mostrata una comunicazione seriale 8N1\footnote{Definizione della configurazione di una linea seriale. Essa è composta da tre caratteri: <Numero di bit dati><Tipo di parità ([N]one, [O]dd, [E]ven, [M]ark, [S]pace)><Numero di Stop bits>}}\label{fig:uart-sync}
     \end{figure}
 }
@@ -81,7 +81,7 @@ In risposta ad un BREAK il target risponderà sempre con l'invio di un valore no
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=\textwidth]{dw-break-timing.png}
+    \includegraphics[width=\textwidth]{dw-break.pdf}
     \caption[]{Diagramma delle tempistiche del bus DebugWire durante il reset della trasmissione}\label{fig:dw-timings}
 \end{figure}
 
@@ -213,6 +213,7 @@ Le operazioni di lettura e scrittura dei registri avvengono mediante l'invio di 
     \end{lrbox}
     \subfloat[]{\usebox{\bytefieldbox}}
 
+    \vspace*{5mm}%
     \begin{lrbox}{\bytefieldbox}
         \begin{bytefield}[endianness=big,bitwidth=1em]{16}
             \bitheader{0-15}\\
@@ -322,12 +323,12 @@ Come è possibile osservare dall'allegato~\ref{app:r3-schematic}, L'integrato \t
         \subfloat[][]{\includegraphics[width=.5\textwidth]{cap_shorted.png}}
     \end{minipage}
     \hfill
-    \caption[]{Procedimento di rimozione del condensatore \texttt{C5}. Il condensatore viene rimosso (b) e successivamente la connessione viene ripistinata (c)}\label{fig:remove-c5}
+    \caption[]{Procedimento di rimozione del condensatore \texttt{C5}. Il condensatore viene rimosso (b) e successivamente la connessione viene ripristinata (c)}\label{fig:remove-c5}
 \end{figure}
 
 Tale modifica rende inoperabile il firmware presente sul controllore ATMega16U2 in quanto così facendo la linea di reset rimarrebbe asserita al livello logico 0 durante la durata della connessione con l'\texttt{host}.
 
-Questa modifica comporta però il collegamento i componenti \texttt{RN2D} e \texttt{RN1D} i quali vanno a costituire un partitore di tensione che porrebbe la linea di reset ad un livello logico indefinito ad una tensione di 0.45V. Per questo motivo si rende necessaria una seconda modifica: è necessario isolare la resistenza \texttt{RN2D} targliando la traccia come mostrato in figura~\ref{fig:cut-rnd2}
+Questa modifica comporta però il collegamento i componenti \texttt{RN2D} e \texttt{RN1D} i quali vanno a costituire un partitore di tensione che porrebbe la linea di reset ad un livello logico indefinito ad una tensione di 0.45V. Per questo motivo si rende necessaria una seconda modifica: è necessario isolare la resistenza \texttt{RN2D} tagliando la traccia come mostrato in figura~\ref{fig:cut-rnd2}
 
 \begin{figure}[b]
     \centering

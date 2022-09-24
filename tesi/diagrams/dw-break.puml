@@ -1,4 +1,4 @@
-@startuml
+@startuml dw-break
 mode compact
 hide time-axis
 
@@ -79,3 +79,4 @@ uart is {-}
 
 highlight 10 to 110 #Gold;line:DimGrey : Programmer on bus
 highlight 120 to 220 #Aqua;line:DimGrey : Target on bus
+@enduml

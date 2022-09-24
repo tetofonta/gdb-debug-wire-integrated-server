@@ -58,13 +58,19 @@
     \vfill
 
     \begin{flushleft}
-        \fontsize{16}{16}\selectfont 
-        \textbf{Relatore}:\\
-        \@supervisor%
-        \if\relax\@cosupervisor\else
-            \textbf{Correlatore}:\\
-            \@cosupervisor%
-        \fi    
+        \begin{minipage}{.45\textwidth}
+            \fontsize{16}{16}\selectfont 
+            \textbf{Relatore}:\\
+            \@supervisor%
+            \if\relax\@cosupervisor\else
+                \textbf{Correlatore}:\\
+                \@cosupervisor%
+            \fi    
+        \end{minipage}
+        \begin{minipage}{.4\textwidth}
+            \vspace{6mm}
+            \includegraphics[width=70mm]{../../../firma_depari.png}
+        \end{minipage}
     \end{flushleft}
     
     \vspace*{10mm}

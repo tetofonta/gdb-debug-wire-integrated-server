@@ -1,0 +1,109 @@
+@startuml phy-rx-timing
+
+mode compact
+'hide time-axis
+
+binary "Bus" as bus
+
+binary "TIMER1 IQR" as tim
+binary "TIMER1 IRQ EN" as irqen
+
+concise "State" as state
+concise "Receiving" as recv
+
+binary "_OD_UART_BUSY" as busy
+binary "_OD_UART_AVAIL" as avail
+
+concise "FIFO len" as len
+concise "FIFO Head" as head
+
+
+bus is 1
+
+@len
+0 is 0
+12.7 is 1
+
+@head
+0 is {-}
+12.7 is 0x4B
+
+@bus
+3 is 0
+4 is 1
+6 is 0
+7 is 1
+8 is 0
+10 is 1
+11 is 0
+12 is 1
+
+@irqen
+0 is 0
+3.2 is 1
+12.7 is 0
+
+@state
+0 is Idle
+3.2 is Data
+4.5 is Data
+5.5 is Data
+6.5 is Data
+7.5 is Data
+8.5 is Data
+9.5 is Data
+10.5 is Data
+11.5 is Stop
+12.5 is Idle
+
+@busy
+3.2 is 1
+12.7 is 0
+
+@avail
+12.75 is 1
+
+@recv
+0 is {-}
+3.2 is 0x00
+4.5 is 0x80
+5.5 is 0xC0
+6.5 is 0x60
+7.5 is 0xB0
+8.5 is 0x58
+9.5 is 0x2C
+10.5 is 0x96
+11.5 is 0x4B
+12.7 is {-}
+
+@tim
+0 is 0
+0.2 is 1
+0.25 is 0
+1.2 is 1
+1.25 is 0
+2.2 is 1
+2.25 is 0
+
+4.5 is 1
+4.55 is 0
+5.5 is 1
+5.55 is 0
+6.5 is 1
+6.55 is 0
+7.5 is 1
+7.55 is 0
+8.5 is 1
+8.55 is 0
+9.5 is 1
+9.55 is 0
+10.5 is 1
+10.55 is 0
+11.5 is 1
+11.55 is 0
+12.5 is 1
+12.55 is 0
+13.5 is 1
+13.55 is 0
+
+@enduml

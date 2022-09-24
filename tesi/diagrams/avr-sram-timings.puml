@@ -1,4 +1,4 @@
-@startuml
+@startuml avr-sram-timings
 mode compact
 hide time-axis
 clock "Clock" as clk with period 30
@@ -38,3 +38,5 @@ data is "DATA OUT"
 data is {-}
 addr is {-}
 rd is 0
+
+@enduml

@@ -1,0 +1,215 @@
+@startuml phy-tx-timing
+
+mode compact
+'hide time-axis
+
+binary "Bus" as bus
+concise "Coda" as queue
+concise "Sending" as data
+binary "OD_UART_TX_FULL" as full
+binary "_OD_UART_BUSY" as busy
+concise "Stato" as state
+binary "IRQ" as irq
+
+bus is 1
+
+@0
+bus is 1
+queue is {-}
+data is {-}
+state is Idle
+
+@1
+queue is 0xBE
+full is 1
+
+@2
+queue is {-}
+data is 0xBE
+full is 0
+busy is 1
+
+@4
+irq is 1
+state is Start
+bus is 0
+@4.1
+irq is 0
+
+@5
+irq is 1
+state is Data
+bus is 0
+@5.1
+irq is 0
+@5.8
+data is 0x5F
+
+@6
+irq is 1
+state is Data
+bus is 1
+@6.1
+irq is 0
+@6.8
+data is 0x2F
+
+@7
+irq is 1
+state is Data
+bus is 1
+@7.1
+irq is 0
+@7.8
+data is 0x17
+
+@8
+irq is 1
+state is Data
+bus is 1
+@8.1
+irq is 0
+@8.8
+data is 0x0B
+
+@9
+irq is 1
+state is Data
+bus is 1
+@9.1
+irq is 0
+@9.8
+data is 0x05
+
+@10
+irq is 1
+state is Data
+bus is 1
+queue is 0x63
+full is 1
+@10.1
+irq is 0
+@10.8
+data is 0x02
+
+@11
+irq is 1
+state is Data
+bus is 0
+@11.1
+irq is 0
+@11.8
+data is 0x01
+
+@12
+irq is 1
+state is Data
+bus is 1
+@12.1
+irq is 0
+@12.8
+data is 0
+
+@13
+irq is 1
+state is Stop
+bus is 1
+@13.1
+irq is 0
+@13.5
+data is 0x63
+queue is {-}
+full is 0
+
+@14
+state is Start
+irq is 1
+bus is 0
+@14.1
+irq is 0
+
+@15
+irq is 1
+state is Data
+bus is 1
+@15.1
+irq is 0
+@15.8
+data is 0x31
+
+@16
+irq is 1
+state is Data
+bus is 1
+@16.1
+irq is 0
+@16.8
+data is 0x18
+
+@17
+irq is 1
+state is Data
+bus is 0
+@17.1
+irq is 0
+@17.8
+data is 0x0C
+
+@18
+irq is 1
+state is Data
+bus is 0
+@18.1
+irq is 0
+@18.8
+data is 0x06
+
+@19
+irq is 1
+state is Data
+bus is 0
+@19.1
+irq is 0
+@19.8
+data is 0x03
+
+@20
+irq is 1
+state is Data
+bus is 1
+@20.1
+irq is 0
+@20.8
+data is 0x01
+
+@21
+irq is 1
+state is Data
+bus is 1
+@21.1
+irq is 0
+@21.8
+data is 0x00
+
+@22
+irq is 1
+state is Data
+bus is 0
+@22.1
+irq is 0
+
+@23
+irq is 1
+state is Stop
+bus is 1
+@23.1
+irq is 0
+
+@24
+data is {-}
+busy is 0
+state is Idle
+
+''['0x63', '0x31', '0x18', '0xc', '0x6', '0x3', '0x1', '0x0']
+
+@enduml

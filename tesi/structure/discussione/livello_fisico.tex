@@ -17,7 +17,7 @@ Al fine di implementare l'accesso alla linea open drain si rende necessario l'ut
         \begin{circuitikz}
             \draw (0, 0) node[label={[font=\footnotesize]above:rxd}] {} to[short, *-] (2, 0) to[short, -] (2, 1) to[R={\(R_{pullup}\)}] (2, 2) to [short, -] (2, 2.5) to [short, -] (2.5, 2.5) to [short, -] (2.5, 3);
             \draw (2.5, 2.5) to[short, -] (3, 2.5) to[short, -] (3, 2) to[R={\(R1\)}] (3, 1);
-            \draw (3,-1) node [npn,xscale=-1,anchor=B] (npn) {} (npn.collector);
+            \draw (3,-1) node [npn,xscale=-1,anchor=B] (npn) {\reflectbox{\(Q1\)}} (npn.collector);
             \draw (3, 1) to[short, -] (3, -1);
             \draw (2, 0) to[short, *-*] (4, 0) node[label={[font=\footnotesize]above:target}] {};
             \draw (0, -2) node[label={[font=\footnotesize]above:txd}] {} to[short, *-]  (2.16, -2) to[short, -] (2.16, -1.75);
@@ -123,4 +123,87 @@ L'implementazione si basa sull'utilizzo del timer TIMER1, un timer a 16 bit in g
 
 Il concetto sul quale si basa il funzionamento consiste nel mantenere il timer in esecuzione ed eventualmente resettarne il conteggio nel caso si renda necessario una re-sincronizzazione in ricezione.
 
-La trasmissione avviene tramite l'esecuzione di una macchina a stati la quale iterazione è determinata dall'interrupt del TIMER1.
+Entrambe le azioni di trasmissione e ricezione vengono implementate come una macchina a stati la quale iterazione è controllata dall'interrupt di comparazione di TIMER1.
+
+Entrambe le funzionalità sono divide in due domini di esecuzione: l'esecuzione invocata dall'utente e la macchina a stati relativa eseguita con l'interrupt. 
+
+La funzionalità di invio è implementata tramite un meccanismo di accodamento per due processi producer/consumer: alla prima invocazione della funzione di invio il byte viene salvato nella coda e viene abilitata la macchina a stati mostrata in figura~\ref{fig:phy-state-tx} tramite il flag \texttt{\_OD\_UART\_BUSY} la quale consumerà il dato al primo interrupt di comparazione, mentre nella seconda invocazione un secondo byte verrà inserito nella coda e la funzione potrà ritornare liberamente. 
+
+È compito della macchina a stati riconoscere che un secondo byte è stato aggiunto alla coda \texttt{OD\_UART\_TX\_FULL} e di conseguenza essa inizierà una nuova trasmissione invece che andare allo stato \texttt{IDLE}.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=.95\textwidth]{phy-tx-state.pdf}
+    \caption[]{Macchina a stati per l'implementazione della trasmissione seriale}\label{fig:phy-state-tx}
+\end{figure}
+
+Il comportamento sopra descritto viene riassunto dalla figura~\ref{fig:phy-tx-timing}. Si noti come i cambiamenti di stato e il calcolo dei valori avvenga nell'iterazione precedente all'attuazione.
+Inoltre l'immagine mostra come un eventuale aggiunta di un dato alla coda persista e venga indicata dal flag \texttt{OD\_UART\_TX\_FULL}.
+
+Una volta terminata l'esecuzione dell'invio del dato, essendoci un ulteriore byte in coda, viene ripresa l'esecuzione immediatamente.
+
+\begin{figure}[p]
+    \checkoddpage%
+    \ifoddpage%
+        \begin{adjustbox}{addcode={\begin{minipage}{\width}}{\caption[]{%
+            Diagramma delle tempistiche di esecuzione dell'invio di dati sulla linea seriale implementata via software.}\label{fig:phy-tx-timing}\end{minipage}},rotate=90,center}
+            \includegraphics[width=\textheight]{phy-tx-timing.pdf}%
+        \end{adjustbox}
+    \else
+        \begin{adjustbox}{addcode={\begin{minipage}{\width}}{\caption[]{%
+            Diagramma delle tempistiche di esecuzione dell'invio di dati sulla linea seriale implementata via software.}\label{fig:phy-tx-timing}\end{minipage}},rotate=-90,center}
+            \includegraphics[width=\textheight]{phy-tx-timing.pdf}%
+        \end{adjustbox}
+    \fi
+\end{figure}
+
+
+
+La parte di ricezione viene implementata con una seconda macchina a stati mostrata in figura~\ref{fig:phy-rx-state} ma il primo passaggio di stato, da Idle a StartBit avviene alla ricezione di un interrupt relativo al cambiamento di stato del bus.
+
+La ragione per cui questo passaggio debba avvenire all'avvenimento di un interrupt consiste nel fatto che il \textit{target} può inviare una risposta in qualsiasi istante temporale.
+
+Risulta quindi necessario l'utilizzo di una struttura FIFO per il salvataggio dei dati ricevuti dalla quale poi l'utente potrà attingere durante l'esecuzione del software. In particolare il flag \texttt{\_OD\_UART\_AVAIL} indicherà la presenza di dati non ancora letti nel buffer.
+
+Si rende quindi necessario poter ripristinare il conteggio del TIMER1 al fine di re-sincronizzare il clock di campionamento del bus al centro del bit per i motivi descritti nella sezione~\ref{ss:uart}, in particolare facendo riferimento all'equazione~\ref{eq:uart-period-receive-delay}. Questo comportamento è riassunto dalla figura~\ref{fig:phy-rx-timing}.
+
+Alla ricezione dell'interrupt di cambio di stato la macchina a stati viene inizializzata e il timer resettato in modo che il successivo interrupt di comparazione avvenga a metà del bit successivo. Ad ogni interrupt il valore del bus viene aggiunto secondo l'equazione~\ref{eq:rx-push} al valore temporaneo fino al raggiungimento delle otto iterazioni. A questo punto lo stato passa a \texttt{StopBit}, dove il valore temporaneo viene inserito nella coda e viene asserito il flag \texttt{\_OD\_UART\_AVAIL}.
+
+\begin{equation}\label{eq:rx-push}
+    tmp_{i+1} = (bus << 7) | (tmp_i >> 1)
+\end{equation}
+
+\begin{figure}[p]
+    \centering
+    \includegraphics[width=.75\textwidth]{phy-rx-state.pdf}
+    \caption[]{Macchina a stati relativa alla ricezione della seriale implementata in software.}\label{fig:phy-rx-state}
+\end{figure}
+
+\begin{figure}[p]
+    \centering
+    \includegraphics[width=.99\textwidth]{phy-rx-timing.pdf}
+    \caption[]{Macchina a stati relativa alla ricezione della seriale implementata in software.}\label{fig:phy-rx-timing}
+\end{figure}
+
+Il listato~\ref{lst:fe-irq-management} mostra il frammento di codice per la gestione dell'inizio ricezione. 
+
+\noindent\begin{minipage}{\textwidth}
+    \begin{lstlisting}[language=C, caption={IRQ di gestione inizio trasmissione}, label=lst:fe-irq-management]
+__attribute__((optimize("-Ofast"))) ISR(INT7_vect){
+    cli();
+    FE_IRQ_DISABLE(); //start a new rx. clear irq
+    fast_flags = 0;
+    uart_flags |= OD_UART_FLAG_BUSY_MASK; //set busy flag, reset flags
+    TCNT1 = 0; //set counter to start at next bit. make correction for timer startup and bad things.
+    TIMER_IRQ_ENABLE(); //enable timer and clear irq
+    TIMER_IRQ_CLEAR();
+    sei();
+}
+    \end{lstlisting}
+\end{minipage}
+
+È possibile osservare come nella compilazione dell'handler dell'interrupt venga privilegiata la velocità di esecuzione anziché lo spazio occupato dal compilato, e come il TIMER1 venga impostato a 0. Così facendo il campionamento avverrà verso l'inizio del bit inviato anziché alla metà del tempo di bit. 
+
+Questo non è da considerarsi un problema data la bassa frequenza dell'insieme.
+
+È inoltre necessario impostare \texttt{TCNT1 = OCR1A >\textcompwordmark> 2} nel caso si voglia utilizzare frequenze vicine a 125000 bit per secondo in quanto vanno considerati i tempi di esecuzione del codice e di reazione del timer. Questo valore è stato trovato sperimentalmente mediante l'uso di un analizzatore logico.
