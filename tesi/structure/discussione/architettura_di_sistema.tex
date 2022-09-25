@@ -43,7 +43,7 @@ Possiamo vedere il firmware in esecuzione sul microcontrollore come un processo 
 
 La problematica relativa la diversa architettura dei processori non costituisce motivo di preoccupazione in quanto ormai la maggior parte degli instruction set è stata inclusa nella distribuzione di GDB multi-architettura[todo cite].
 La vera problematica si ha con il la scarsa connettività dell'integrato, la quale richiede un protocollo e un componente di adattamento \textit{ad-hoc}.
-L'architettura client-server permette quindi di implementare tale adattatore su un dispositivo esterno connesso con il \textit{target} con possibilità di implementare il protocollo di debug permettendo così di adattare l'interfaccia a tutti i dispositivi in grado di eseguire GDB.
+L'architettura client-server permette quindi di implementare tale adattatore su un dispositivo esterno connesso con il \textit{target} con possibilità di implementare il protocollo di debug permettendo così di adattare l'interfaccia a tutti i dispositivi in grado di eseguire GDB.\@ 
 
 Possiamo vedere come la concezione di separazione tra applicativo di controllo ed interazione e esecutore dei comandi di debug può essere implementata dalla figura~\ref{fig:gdb-server-tunnels}.
 
@@ -108,11 +108,11 @@ Il firmware dell'ATMega16U2 è composto da quattro macro regioni descritte a seg
 Il protocollo per la comunicazione client-server di GDB è definito a partire da un canale di comunicazione in grado di trasmettere caratteri ascii.
 Così facendo si permette di trasmettere anche su canali strettamente testuali e non standard (simboli da 7 bit).
 
-Affinché sia possibile trasmettere dati in tale formato è necessario ricorrere alla codifica esadecimale testuale dei numeri come definita dai listati~\ref{lst:nib-2-char}~e~\ref{} i quali rappresentano due funzioni di conversione da intero a esadecimale testuale e viceversa.
+Affinché sia possibile trasmettere dati in tale formato è necessario ricorrere alla codifica esadecimale testuale dei numeri come definita dai listati~\ref{lst:nib-2-char}~e~\ref{lst:char-2-nib} i quali rappresentano due funzioni di conversione da intero a esadecimale testuale e viceversa.
 Si noti come nelle funzioni si parli di \textit{nibble}, ovvero un unità di quattro bit (che possono prendere valori compresi tra 0 e 15). Questo perché un byte viene convertito in due caratteri alfabetici per rappresentarlo in esadecimale e, similmente, due caratteri alfabetici rappresentano un solo byte.
 
 \noindent\begin{minipage}{\textwidth}
-    \begin{lstlisting}[language=C, caption={Funzione di conversione da nibble a carattere alfabetico}, label=lst:nib-2-char]
+    \begin{lstlisting}[style=C, caption={Funzione di conversione da nibble a carattere alfabetico}, label=lst:nib-2-char]
     char nib2hex(unsigned char nib){
         /*
             Se il valore da mappare è minore di dieci allora sarà una cifra
@@ -128,7 +128,7 @@ Si noti come nelle funzioni si parli di \textit{nibble}, ovvero un unità di qua
 \end{minipage}
 
 \noindent\begin{minipage}{\textwidth}
-    \begin{lstlisting}[language=C, caption={Funzione di conversione da carattere alfabetico a nibble}, label=lst:char-2-nib]
+    \begin{lstlisting}[style=C, caption={Funzione di conversione da carattere alfabetico a nibble}, label=lst:char-2-nib]
     unsigned char hex2nib(char hex){
         /*
             Se il valore è una cifra allora ricaviamo l'offset dalla cifra `0' in quanto sequenziali

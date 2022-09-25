@@ -16,4 +16,56 @@ visitato il 07-09-2022
         {attachments/Arduino_Uno_Rev3-schematic.pdf}
 \end{center}
 
+\newappendix{Algoritmo di programmazione memoria Flash tramite DebugWire}\label{app:dw-flash-prog}
+
+\begin{lstlisting}[language=AVR]
+    ;L'algoritmo si aspetta i seguenti registri impostati dal debugger:
+    ; r26 = const(3)
+    ; r27 = const(1)
+    ; r28 = const(5)
+    ; r29 = const(0x40)
+    ; r30 = const(page_address_l)
+    ; r31 = const(page_address_h)
+
+
+    ;clear page
+    out SPMCSR, r26 ; PGERS | SPMEN
+    spm
+
+    ;write tmp buffer
+    ldi r28, 0x11 ; RWWSRE | SPMEN => read while write read enable if bootloader support, else clear tmp buffer
+    out SPMCSR, r28
+    spm
+
+wrt_buf:
+    in r0, DWDR; read data from dw, sent by debugger
+    in r1, DWDR; r0:r1 contains the word to be written
+    out SPMCSR, r27 ; SPMEN
+    spm
+    adiw Z, 2
+    ;debugger loops to wrt_buf until the full page is written.
+
+    ;issue write
+    out SPMCSR, r28 ; PGWRT | SPMEN
+    spm
+\end{lstlisting}
+
+\newappendix{Algoritmo di programmazione memoria\\EEPROM tramite DebugWire}\label{app:dw-eeprom-prog}
+
+\begin{lstlisting}[language=AVR]
+    ;L'algoritmo si aspetta i seguenti registri impostati dal debugger:
+    ; r28 = const(4)
+    ; r29 = const(2)
+    ; r30 = const(address_l)
+    ; r31 = const(address_h)
+
+    out EEARH, r31
+    out EEARL, r30 ; set write address
+    in r0, DWDR ; sent by debugger by dw
+
+    out EEDR, r0 ; set data to be written
+    out EECR, r28 ; EEMPE
+    out EECR, r29 ; EEPE
+\end{lstlisting}
+
 \addtocontents{toc}{\protect\setcounter{tocdepth}{3}}

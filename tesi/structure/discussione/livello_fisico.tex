@@ -188,7 +188,7 @@ Alla ricezione dell'interrupt di cambio di stato la macchina a stati viene inizi
 Il listato~\ref{lst:fe-irq-management} mostra il frammento di codice per la gestione dell'inizio ricezione. 
 
 \noindent\begin{minipage}{\textwidth}
-    \begin{lstlisting}[language=C, caption={IRQ di gestione inizio trasmissione}, label=lst:fe-irq-management]
+    \begin{lstlisting}[style=C, caption={IRQ di gestione inizio trasmissione}, label=lst:fe-irq-management]
 __attribute__((optimize("-Ofast"))) ISR(INT7_vect){
     cli();
     FE_IRQ_DISABLE(); //start a new rx. clear irq

@@ -1,3 +1,13 @@
 \chapter{Real time terminal}
-    \section{Compilazione e linking}
-    \section{Ruolo del server di debug}
+
+Come precedentemente anticipato, questo progetto mira a costituire un insieme di strumenti e funzionalità per il supporto del programmatore alla programmazione nel mondo embedded AVR.\@
+
+Nei capitoli precedenti è stata discussa l'implementazione di un server GDB per effettuare il debugging sul controllore e permettere l'ispezione in loco degli effetti dei programmi e l'alterazione delle risorse durante l'esecuzione a fini diagnostici. 
+
+Affiancata alla pratica del debugging possiamo classificare un'altro metodo diagnostico: il \textit{logging}.
+
+Questa seconda pratica --- spesso usata in modo scorretto per analizzare un problema in una porzione di codice --- consente di generare messaggi analizzabili successivamente a fine di \textit{auditing}, ovvero l'analisi di messaggi di log passati per individuare malfunzionamenti o vulnerabilità inattesi e imprevisti.
+
+I messaggi di log sono anche utili per individuare in quale macro area del codice si trova un possibile baco per poi indagare tramite debugger una volta identificata la causa scatenante.
+
+La questione diviene velocemente come implementare tale funzionalità sulla piattaforma AVR.\@ La maggior parte dei progetti e delle piattaforme utilizza la periferica UART del target al fine di comunicare con l'host impedendone così l'utilizzo da parte del programmatore per comunicare con altre periferiche. Alcune piattaforme hanno ottimizzato questo utilizzo dedicando la linea seriale anche alla programmazione, riducendo però lo spazio disponibile nella memoria flash in quanto tale operazione deve essere svolta da un programmatore. 
