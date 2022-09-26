@@ -8,21 +8,21 @@ Come precedentemente scritto nell'introduzione, la scheda \textit{Arduino Uno R3
     \caption[]{Foto di una scheda Arduino Uno R3\cite{img:arduino-uno-r3}}\label{fig:arduino-uno-r3}
 \end{figure}
 
-La scheda (Figura~\ref{fig:arduino-uno-r3}) presenta una serie di connettori posti ai lati, collegati direttamente ai pin del controllore principale in posizione centrale, utili per l'interconnessione del dispositivo con i circuiti in sviluppo.
+La scheda, mostrata in Figura~\ref{fig:arduino-uno-r3}, presenta una serie di connettori posti ai lati, collegati direttamente ai pin del controllore principale in posizione centrale, utili per l'interconnessione del dispositivo con i circuiti in sviluppo.
 L'hardware addizionale presente sul lato sinistro, invece, permette di alimentare la scheda da una sorgente esterna non regolata tramite il connettore cilindrico nero e di collegare il controllore principale a un computer mediante la porta USB presente in alto a sinistra la quale consente una connessione seriale.
 È inoltre possibile effettuare il reset manuale del target tramite il pulsante presente vicino alla presa USB.\@
 
-Il controllore presente al centro della scheda, in un involucro DIP-28\footnote{Dual in-line package, 28 pin}, è un ATMega328P-PU\cite{site:arduino-uno-doc}. La scelta di un involucro ingombrante, in controtendenza con i processi di miniaturizzazione dell'industria elettronica, è causata dal fatto che, per mantenere una dinamica ``\textit{user friendly}'', rende possibile sostituire il controllore in caso di guasto in modo semplice --- essendo il controllore locato in uno zoccolo invece che essere saldato direttamente sulla scheda --- permettendo così di non dover cestinare l'intera scheda elettronica.\cite{site:arduino-uno-doc}
+Il controllore, presente al centro della scheda, in un involucro DIP-28\footnote{Dual in-line package, 28 pin}, è un ATMega328P-PU\cite{site:arduino-uno-doc}. La scelta di un involucro ingombrante, in controtendenza con i processi di miniaturizzazione dell'industria elettronica, è causata dal fatto che, per mantenere una dinamica ``\textit{user friendly}'', rende possibile sostituire il controllore in caso di guasto in modo semplice --- essendo il controllore locato in uno zoccolo invece che essere saldato direttamente sulla scheda --- permettendo così di non dover cestinare l'intera scheda elettronica.\cite{site:arduino-uno-doc}
 
 \section{La famiglia AVR}
 
 Il controllore ATMega328P-PU presente sulla scheda di sviluppo è un membro della famiglia AVR di Atmel\cite[1]{avr:m328p}.
 
-Come è possibile identificare dalla figura~\ref{fig:avr-arch} l'architettura del processore della famiglia AVR è di tipo Harvard: è evidente la dicotomia tra memoria del programma (nell'immagine ``\textit{Flash Program Memory}'') e SRAM\cite{harvard-arch}. Questa suddivisione consente di ottimizzare separatamente le due diverse tecnologie di storge intrinsecamente diverse.
+Come è possibile identificare dalla figura~\ref{fig:avr-arch} l'architettura del processore della famiglia AVR è di tipo Harvard: è evidente la dicotomia tra memoria del programma (nell'immagine ``\textit{Flash Program Memory}'') e SRAM\cite{harvard-arch}. Questa suddivisione consente di ottimizzare separatamente le due diverse tecnologie di memorie intrinsecamente diverse.
 
 È possibile osservare che la grandezza del bus dati è di 8 bit: conseguentemente è possibile dedurre che l'intera architettura si basa sull'unità fondamentale del byte.
 
-Essendo un processore a singolo ciclo vi è poi la totale assenza di \textit{pipelining}. La maggior parte delle istruzioni, infatti, viene eseguita in un solo ciclo di clock\cite[sec 7.6]{avr:m328p} ad esclusione delle operazioni sulle memorie le quali ``stallano'' il processore per questioni di tempi di accesso/scrittura o di istruzioni che coinvolgono dati di lunghezza maggiore di 8 bit, le quali necessitano di essere salvate in più locazioni di memoria flash e quindi risulta necessario il caricamento di più indirizzi per la loro esecuzione.
+La maggior parte delle istruzioni viene eseguita in un solo ciclo di clock\cite[sec 7.6]{avr:m328p} --- essendo un processore con pipeline a due stadi --- ad esclusione delle operazioni sulle memorie le quali ``stallano'' il processore per questioni di tempi di accesso/scrittura, di istruzioni che coinvolgono dati di lunghezza maggiore di 8 bit oppure istruzioni che implicano il ripristino della pipeline come le istruzioni di salto.
 
 \begin{figure}[t]
     \centering
@@ -51,14 +51,14 @@ Essendo inoltre una memoria ``di programma'', essa non richiede prestazioni note
 \begin{itemize}
     \item ISP\footnote{In System Programming}: In questo caso il controllore è in modalità di programmazione ed esegue i comandi inoltrati da un programmatore esterno --- connesso tramite SPI\footnote{Serial Peripheral Interface} --- mentre la CPU è in stato di \textit{halt}.
     \item Self Programming: Grazie all'istruzione \texttt{spm} è possibile riprogrammare le pagine della memoria flash dall'interno del codice stesso\footnote{Nel caso in cui sia presente il supporto al bootloader, \texttt{spm} può essere eseguito solo se il program counter punta a tale regione.}.
-    \item High Voltage Parallel Programming: Viene utilizzato in caso non sia disponibile la linea di reset perché configurata come funzionalità ausiliaria: consiste nell'applicare +12V sulla linea di reset per forzare la programmazione\cite[sec 28.6]{avr:m328p}.
+    \item High Voltage Parallel Programming: Viene utilizzato in caso la linea di reset sia configurata con una funzione ausiliaria: consiste nell'applicare +12V sulla pin di reset forzando la modalità di programmazione parallela a discapito della configurazione del pin\cite[sec 28.6]{avr:m328p}.
 \end{itemize}
 
 \subsubsection{EEPROM}
 
 La memoria EEPROM\footnote{Electrically Erasable and Programmable Read-Only Memory} è considerata una memoria di utilità in quanto non necessariamente essenziale alla vita del codice in esecuzione. Essa permette di salvare dati in modo non volatile nell'eventualità di una mancanza di alimentazione.
 
-Si tratta di una memoria ``lenta'' (tempi di programmazione di 3.4ms\cite[tab 8-1]{avr:m328p}) ma in grado di essere letta e scritta con un'unità fondamentale di 8 bit\cite[sec 8.4]{avr:m328p}.
+Si tratta di una memoria ``lenta'' (tempi di programmazione di 3.4ms\cite[tab 8-1]{avr:m328p}) ma in grado di essere letta e scritta con un'unità fondamentale di 8 bit\cite[sec 8.4]{avr:m328p} e presenta una vita dieci volte più duratura in termini di scritture rispetto alla memoria flash.
 
 Il vantaggio che si presenta con l'integrazione di tale memoria all'interno dell'micro-controllore consiste nell'eliminazione di un ulteriore componente sul circuito stampato nel caso essa sia necessaria, oltre al non utilizzo di una periferica di comunicazione dedicata a tale scopo.
 
@@ -76,22 +76,25 @@ Infatti l'architettura AVR utilizza in modo marcato il concetto di MMIO\footnote
     \caption[Immagine ottenuta dal documento~\cite{avr:m328p}, fig. 8-3]{Settorizzazione della memoria SRAM del controllore ATMega328P\cite[fig 8-3]{avr:m328p}}\label{fig:avr-sram-alloc}
 \end{figure}
 
-Come è possibile osservare dalla figura~\ref{fig:avr-sram-alloc} i primi 128 byte della memoria SRAM sono in realtà registri di uso generale (\texttt{r0}-\texttt{r31}) o registri di controllo delle periferiche.
+Come è possibile osservare dalla figura~\ref{fig:avr-sram-alloc} i primi 128 byte dello spazio degli indirizzi della memoria SRAM sono in realtà registri di uso generale (\texttt{r0}-\texttt{r31}) o registri di controllo delle periferiche.
+
+Questi vengono identificati da un indirizzo nella memoria SRAM ma sono in realtà periferiche e hardware dislocato nelle varie periferiche che essi controllano.
+
 La scrittura di tali locazioni di memoria causa effetti collaterali in funzione della periferica alla quale è associata. Questa sezione si divide in tre blocchi: i primi 32 byte sono i registri \textit{general purpose} i quali sono interconnessi e interagiscono con l'ALU.\@ Essi vengono utilizzati per l'elaborazione e il salvataggio di dati temporanei.
 
 A seguire sono presenti due zone di memoria: \textit{I/O} ed \textit{Extended I/O} contenenti i registri di controllo delle periferiche. A tal fine, dato che le scritture e le letture possono causare cambiamenti alla periferica (e.g.\ la lettura di un flag \textit{busy} per attendere il completamento di un'operazione prima di eseguirne una seconda) questi indirizzi vengono dichiarati mediante la keyword \texttt{volatile}\footnote{Keyword del compilatore C per impedire l'ottimizzazione delle letture e scritture ad un dato indirizzo}. La differenza tra le due sezioni consiste nella possibilità della prima di essere acceduta in un solo ciclo di clock tramite le istruzioni di \textit{I/O} \texttt{in}, \texttt{out}, ecc\ldots
 
-È possibile notare dalla figura~\ref{fig:avr-sram-timings} come le istruzioni di accesso alla ram impieghino due cicli di clock: l'indicizzazione della ram è effettuata tramite un indirizzamento di 16 bit, il quale rende necessario l'utilizzo congiunto di due registri (r26-r27, r28-r29, r30-r31). 
+È possibile notare dalla figura~\ref{fig:avr-sram-timings} come le istruzioni di accesso alla ram impieghino due cicli di clock: l'indicizzazione della ram da parte di alcune istruzioni è effettuata utilizzando il valore composto da una coppia di registri\footnote{r26-r27, r28-r29, r30-r31} al momento dell'esecuzione. 
 
-Questa operazione necessita Il calcolo l'indirizzo al quale effettuare l'operazione incrementando, decrementando oppure lasciando invariata la coppia di registri di indicizzazione pre o post esecuzione. Una volta che l'indirizzo è pronto, esso deve diventare valido prima di poter effettuare l'operazione.
+Queste operazioni possono indirizzare la SRAM tramite il valore presente nei registri dedicati oltre alla possibilità di fare pre-incremento e post-incremento del valore contenuto in tali indirizzi.
 
-\begin{figure}[t]
+\begin{figure}[b]
     \centering
     \includegraphics[width=.9\textwidth]{avr-sram-timings.pdf}
     \caption[Immagine rielaborata a partire dalla fig. 8-4 del documento~\cite{avr:m328p}]{Sequenze di accesso in lettura e scrittura della memoria SRAM\cite[fig 8-4]{avr:m328p}}\label{fig:avr-sram-timings}
 \end{figure}
 
-
+In particolare, un uso comune delle istruzioni di accesso alla memoria viene mostrato dal listato~\ref{lst:store-example}, riga 6.
 
 \noindent\begin{minipage}{\textwidth}
     \begin{lstlisting}[language=AVR, caption={Esempio di utilizzo dell'istruzione \texttt{st}}, label=lst:store-example]
@@ -109,9 +112,6 @@ Questa operazione necessita Il calcolo l'indirizzo al quale effettuare l'operazi
 
     \end{lstlisting}
 \end{minipage}
-
-In particolare, un uso comune delle istruzioni di accesso alla memoria viene mostrato dal listato~\ref{lst:store-example}, riga 6.
-
 
 Il codice presentato dal listato~\ref{lst:store-example}, mostra nelle linee 1-4 l'azzeramento dei registri r0, r26 e r27 (dove gli ultimi due elencati vengono definiti nel codice dal meta-registro X) e in seguito definisce un ciclo dove viene salvato il contenuto di r24 all'indirizzo puntato dal registro X con successivo incremento; segue l'istruzione \texttt{cpse}\footnote{Compare and Skip if Equal} la quale compara rispetto alla costante 0 il valore di r24 una volta decrementato. Nel caso in cui la comparazione risulti veritiera, viene incrementato il program counter di due \textit{word}, terminando quindi l'esecuzione nel ciclo di \textit{hold}.
 

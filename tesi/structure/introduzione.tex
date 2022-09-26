@@ -1,13 +1,13 @@
 \chapter{Introduzione}
 
-Possiamo vedere la programmazione di micro-controllori come una specialità posta a cavallo tra due scienze ingegneristiche, l'elettronica e l'informatica.
+È possibile vedere la programmazione di micro-controllori come una specialità posta a cavallo tra due scienze ingegneristiche, l'elettronica e l'informatica.
 La capacità del programmatore nel creare firmware in grado di \textit{toccare} il mondo reale comporta una connessione dei due mondi molto diversi tra loro ma da sempre in armonia, rendendo fisica la presenza di un software e virtuale la realtà circostante, in modo da permettere un incontro di due concezioni apparentemente sconnesse.
 
-Ad oggi, trovandoci in un periodo storico dove la digitalizzazione è ormai esplosa, la quasi totalità di prodotti di consumo contiene uno o, più spesso, più controllori digitali.
-Complice della digitalizzazione sono lo sviluppo tecnologico della produzione di dispositivi integrati e la pubblicazione di standard aperti riguardanti l'architettura di processori --- quali RISC-V e ARM\cite{site:arm-licensing} ---, i quali, grazie alla realizzazione di prodotti appartenenti a queste architetture da parte di più aziende del settore, hanno ormai mutato radicalmente il panorama dello sviluppo elettronico digitale.\cite{arm-intel-phone-market}\cite{site:arm-press-200b-chips}
+Ad oggi, trovandoci in un periodo storico dove la digitalizzazione è ormai esplosa, la quasi totalità di prodotti di consumo contiene uno o più controllori digitali.
+Complice della digitalizzazione sono lo sviluppo tecnologico della produzione di dispositivi integrati e la pubblicazione di standard aperti riguardanti l'architettura di processori --- quali RISC-V e ARM~\cite{site:arm-licensing} ---, i quali, grazie alla realizzazione di prodotti appartenenti a queste architetture da parte di più aziende del settore, hanno ormai mutato radicalmente il panorama dello sviluppo elettronico digitale~\cite{arm-intel-phone-market}\cite{site:arm-press-200b-chips}.
 
-Tra le tecnologie non ``open source'' a bassissimo costo presenti attualmente sul mercato, invece, possiamo trovare la famiglia \textit{Atmel AVR}: Una semplice architettura RISC a 8 bit dalle periferiche limitate e prestazioni massime di 20MIPS\footnote{Million instructions per second}.
-Questa famiglia è la più utilizzata per applicazioni in cui è essenziale avere un basso consumo di corrente: per esempio alcuni controllori della famiglia presentano correnti massime di 4mA (80\(\mu\)W a 5V) e possono raggiungere consumi di 12pW (2\(\mu\)A a 3V)\cite{avr:tiny4}.
+Tra le tecnologie non ``open source'' a bassissimo costo presenti attualmente sul mercato, invece, possiamo trovare la famiglia \textit{Atmel AVR}: Una semplice architettura RISC a 8~bit dalle periferiche limitate e prestazioni massime di \SI{20}{MIPS}\footnote{Million instructions per second}.
+Questa famiglia è la più utilizzata per applicazioni in cui è essenziale avere un basso consumo di corrente: per esempio alcuni controllori della famiglia presentano correnti massime di \SI{4}{\milli\ampere} (\SI{80}{\micro\watt} a \SI{5}{\volt}) e possono raggiungere consumi di \SI{12}{\pico\watt} (\SI{2}{\micro\ampere} a \SI{3}{\volt})\cite{avr:tiny4}.
 
 L'architettura AVR è inoltre stata scelta per lo sviluppo della piattaforma open source \textit{Arduino} dall'omonima azienda per favorire la prototipazione rapida e renderla accessibile ad un pubblico ampio, composto da studenti, hobbisti, artigiani e professionisti\cite{site:arduino-about}, dando così alla famiglia AVR maggiore visibilità sulla gamma a basso costo.
 
@@ -18,11 +18,11 @@ Questi sono implementati negli strumenti di sviluppo proprietari dove non è pos
 
 A fini sia di progettazione industriale che di programmazione ``personale'' è inoltre fondamentale poter mantenere il controllo del flusso di esecuzione del codice oltre al saper interagire correttamente con l'hardware, pertanto le attività di \textit{debugging} assumono un ruolo di fondamentale importanza
 
-La pratica di debugging consiste nell'interrompere il flusso del codice in esecuzione sul micro-controllore in esame (\textit{target}) tramite un'operazione di \textit{halt} e nell' analizzare il contenuto di memorie e registri. Il \textit{debugging} consente anche di eseguire le istruzioni ``passo-passo'', al fine di analizzare e trovare errori logici o implementativi nel firmware in sviluppo.
+La pratica di debugging consiste nell'interrompere il flusso del codice in esecuzione sul micro-controllore in esame (\textit{target}) tramite un'operazione di \textit{halt} e nell'analizzare il contenuto di memorie e registri. Il \textit{debugging} consente anche di eseguire le istruzioni ``passo-passo'', al fine di analizzare e trovare errori logici o implementativi nel firmware in sviluppo.
 
 La famiglia AVR implementa due diversi protocolli di debug: JTAG e DebugWire; il primo per componenti ``ad alte prestazioni'' mentre il secondo per i controllori ``\textit{low cost}''.
 
-Obiettivo di questa relazione sarà lo sviluppo di un sistema di aiuto alla programmazione in grado di fornire, attraverso il reverse engineering del protocollo DebugWire\cite{site:dw-reverse-engeneering}, supporto alle operazioni di debug rispettando i principi open source e senza utilizzare alcun tipo di materiale proprietario su tutti i fronti delle attività quali 
+L' Obiettivo sarà lo sviluppo di un sistema di aiuto alla programmazione in grado di fornire, attraverso il reverse engineering del protocollo DebugWire\cite{site:dw-reverse-engeneering}, supporto alle operazioni di debug rispettando i principi open source e senza utilizzare alcun tipo di materiale proprietario su tutti i fronti delle attività quali:
 \begin{itemize}
     \item Sistemi di sviluppo: Verranno mostrate configurazioni per ambienti di programmazione distribuiti con licenze aperte. 
     \item Software di supporto: Si prevede l'utilizzo del software avr-gdb\cite{site:gdb} tramite la creazione di un ``server remoto'' collegato al controllore target. L'utilizzo di software preesistente garantisce un continuo aggiornamento e mantenimento, oltre che permettere alta interoperabilità tra software che lo supportano. Il suo utilizzo sarà essenziale alla configurazione dell'ambiente di sviluppo.
@@ -30,7 +30,7 @@ Obiettivo di questa relazione sarà lo sviluppo di un sistema di aiuto alla prog
     \item Hardware: Il processo di sviluppo del sistema sarà basato su una piattaforma hardware open source e già esistente. La piattaforma scelta è \textit{Arduino Uno R3} in quanto essa è la scheda di prototipazione più diffusa.
 \end{itemize}
 
-È dunque possibile valutare tre importanti aspetti migliorativi che conseguono dal completamento di questa relazione: all'attuale ecosistema di sviluppo della piattaforma \textit{Arduino}, sebbene sia in continuo miglioramento, mancano il supporto al debugging per le piattaforme \textit{low cost} e un valido sistema di aiuto alla programmazione composto da strumenti quali autocompletamento del codice, assistenza alla codifica e ``code hinting''.
+È dunque possibile valutare alcuni importanti aspetti migliorativi che conseguono dal completamento di questa relazione: all'attuale ecosistema di sviluppo della piattaforma \textit{Arduino}, sebbene sia in continuo miglioramento, mancano il supporto al debugging per le piattaforme \textit{low cost} e un valido sistema di aiuto alla programmazione composto da strumenti quali autocompletamento del codice, assistenza alla codifica e ``code hinting''.
 
 Inoltre è problematica comune del processo di sviluppo che la comunicazione tra \textit{target} e ambiente di lavoro avvenga tramite l'utilizzo dell'unica periferica seriale (UART\footnote{Universal Asynchronous Receiver-Transmitter}) presente sul dispositivo, impedendone così l'utilizzo nello sviluppo di un caso applicativo che richieda tale periferica.
 
@@ -38,7 +38,7 @@ Verrà quindi implementata una soluzione di comunicazione interno tra target e d
 
 L'utilizzo di un ambiente di sviluppo completo permette di garantire la familiarità di utilizzo all'utente finale --- essendo pratica comune sviluppare con diverse tecnologie utilizzando lo stesso programma --- e l'integrazione con i suddetti strumenti di assistenza alla programmazione e debug.
 
-Vi sono poi vantaggi riguardanti la scelta della piattaforma \textit{Arduino Uno R3} la quale, oltre a rispecchiare la filosofia open source, permette di velocizzare le tempistiche di sviluppo avendo fin da subito a disposizione un hardware ben testato.\cite{site:arduino-mini-le}
+Vi sono poi vantaggi riguardanti la scelta della piattaforma \textit{Arduino Uno R3} la quale, oltre a rispecchiare la filosofia open source, permette di velocizzare le tempistiche di sviluppo avendo fin da subito a disposizione un hardware ben comprovato.\cite{site:arduino-mini-le}
 
 Il sistema ultimato sarà dunque un set di strumenti complementari e modifiche da apportare alla scheda sopra descritta in modo che chiunque sia in grado di effettuare i cambiamenti per utilizzarlo, sviluppato interamente con strumenti e dati disponibili al pubblico tramite la rete internet e senza l'uso di strumenti hardware proprietari.
 

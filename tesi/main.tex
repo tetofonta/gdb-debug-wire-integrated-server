@@ -23,16 +23,16 @@
 
 \usepackage{blindtext}
 
-%\includeonly{
-%    structure/bibliografia,%
-%%    %structure/introduzione,%
-%%    structure/discussione/hardware_di_destinazione,%
-%%    structure/discussione/architettura_di_sistema,%
-%%    structure/discussione/debugwire,%
+\includeonly{
+    structure/bibliografia,%
+    structure/introduzione,%
+    structure/discussione/hardware_di_destinazione,% chapt 1
+    structure/discussione/architettura_di_sistema,% chapt 2
+    structure/discussione/debugwire,% chapt 3
 %    structure/discussione/livello_fisico,%
-%%    attachments/attachments,%
-%}
-%
+    attachments/attachments,%
+}
+
 \begin{document}
 
     \pagenumbering{gobble}
@@ -51,9 +51,7 @@
     \include{structure/discussione/hardware_di_destinazione}
     \include{structure/discussione/architettura_di_sistema}
     \include{structure/discussione/debugwire.tex}
-    \include{structure/discussione/livello_fisico.tex}
-    \include{structure/discussione/server_gdb.tex}
-    \include{structure/discussione/real_time_terminal.tex}
+    \include{structure/discussione/implementazione.tex}
     \include{structure/discussione/ambiente_di_sviluppo.tex}
     \include{structure/conclusione}
     
@@ -64,4 +62,3 @@
     \include{structure/ringraziamenti}
     
 \end{document}
-
