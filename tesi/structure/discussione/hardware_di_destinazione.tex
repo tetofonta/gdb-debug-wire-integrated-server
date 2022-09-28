@@ -76,7 +76,7 @@ Infatti l'architettura AVR utilizza in modo marcato il concetto di MMIO\footnote
     \caption[Immagine ottenuta dal documento~\cite{avr:m328p}, fig. 8-3]{Settorizzazione della memoria SRAM del controllore ATMega328P\cite[fig 8-3]{avr:m328p}}\label{fig:avr-sram-alloc}
 \end{figure}
 
-Come è possibile osservare dalla figura~\ref{fig:avr-sram-alloc} i primi 128 byte dello spazio degli indirizzi della memoria SRAM sono in realtà registri di uso generale (\texttt{r0}-\texttt{r31}) o registri di controllo delle periferiche.
+Come è possibile osservare dalla figura~\ref{fig:avr-sram-alloc}, i primi 128 byte dello spazio degli indirizzi della memoria SRAM sono in realtà registri di uso generale (\texttt{r0}-\texttt{r31}) o registri di controllo delle periferiche.
 
 Questi vengono identificati da un indirizzo nella memoria SRAM ma sono in realtà periferiche e hardware dislocato nelle varie periferiche che essi controllano.
 

@@ -1,8 +1,8 @@
 \chapter{Architettura di sistema}
 
-Affinché l'utente sia agevolato nello sviluppo di un firmware egli deve sfruttare al meglio l'interoperabilità dei componenti e le potenzialità dell'intero sistema di sviluppo.
+Affinché l'utente sia agevolato nello sviluppo di un firmware, egli deve sfruttare al meglio l'interoperabilità dei componenti e le potenzialità dell'intero sistema di sviluppo.
 
-Risulta quindi necessaria una visione di insieme dell'intero sistema invece che una valutazione locale dei singoli componenti. Risulta inoltre necessaria una valutazione della compatibilità inter-componente affinché la loro interazione permetta allo sviluppatore di operare con facilità.
+Risulta quindi necessaria una visione di insieme dell'intero sistema invece che una valutazione locale dei singoli componenti in parallelo a una valutazione della compatibilità inter-componente affinché la loro interazione permetta allo sviluppatore di operare con facilità.
 
 \begin{figure}[t]
     \centering
@@ -12,28 +12,30 @@ Risulta quindi necessaria una visione di insieme dell'intero sistema invece che 
 
 Come osservabile dalla figura~\ref{fig:sys-arch}, il sistema sviluppato si basa su tre livelli fisici collegati a cascata, in modo tale da adattare le azioni ad alto livello scelte dall'utente ai comandi di debug a basso livello che permettono di interagire con il controllore \textit{target}. 
 
-Il primo livello, ovvero il livello di interfaccia con lo sviluppatore, consiste nel software utilizzato per lo sviluppo del firmware contenente tutti gli strumenti di supporto alla programmazione C. Questi software, anche noti IDE\footnote{Integrated Development Environment}, hanno il compito di accorpare svariate funzionalità mediante integrazione di software esterni allo scopo di favorire lo sviluppo fornendo un ambiente unico e integrato allo sviluppatore, dal quale effettuare tutte le operazioni quali sviluppo, compilazione, debugging e upload.
+Il primo livello, ovvero il livello di interfaccia con lo sviluppatore, consiste nel software utilizzato per lo sviluppo del firmware contenente tutti gli strumenti di supporto alla programmazione C. Questi software, anche noti come IDE\footnote{Integrated Development Environment}, hanno il compito di accorpare svariate funzionalità mediante integrazione di software esterni allo scopo di favorire lo sviluppo fornendo un ambiente unico e integrato allo sviluppatore, dal quale effettuare tutte le operazioni quali sviluppo, compilazione, debugging e upload.
 
 Enfasi particolare viene posta sull'integrazione da parte dell'IDE del software GDB.\@
 
+Questo server viene utilizzato da un componente ormai fondamentale degli IDE il quale costituirà parte di maggiore interesse per la presente analisi detto ``\textit{debugger}''.
+
 Il \textit{debugging} è una delle pratiche ormai fondamentali della programmazione che permette una comprensione agevolata del flusso di esecuzione del codice e permette di ispezionarne i vari stati.
 
-In particolare esso permette di analizzare uno stato intermedio tramite l'esecuzione in modo interattivo, consentendo allo sviluppatore di condurre ``un'indagine'' relativa a un funzionamento inatteso del firmware. Per citare un detto diffuso sulle piattaforme social in ambito di programmazione possiamo affermare che la procedura di \textit{debugging} sia paragonabile ad un'indagine condotta dallo sviluppatore dove egli stesso è il colpevole.
+In particolare esso garantisce la possibilità di analizzare uno stato intermedio tramite l'esecuzione del codice in modo interattivo, consentendo allo sviluppatore di condurre ``un'indagine'' relativa a un funzionamento inatteso del firmware. Per citare un detto diffuso sulle piattaforme social in ambito di programmazione possiamo affermare che la procedura di \textit{debugging} sia paragonabile ad un'indagine condotta dallo sviluppatore dove egli stesso è il colpevole.
 
 È necessario porre un'ulteriore enfasi sull'aggettivo ``interattivo'': la differenza tra \textit{debugging} e \textit{logging} sta proprio nel fatto che il secondo consiste solamente nella stampa, su un terminale o file, di una serie di messaggi statici e predefiniti al fine di tracciare gli eventi per un'analisi futura e inaspettata. Ciò non permette quindi di effettuare decisioni in funzione dei risultati parziali ottenuti nella procedura di \textit{debugging} a meno di riprogrammare il dispositivo --- inficiando così la longevità delle memorie --- e ricapitolare l'esecuzione del codice.
 
 Risulta quindi di grande importanza poter accedere a uno (o più) software per il debugging in modo che esso possa essere efficiente.
-Uno dei software più utilizzati per il debugging del software compilato, qualunque sia il linguaggio scelto, è Gnu GDB\cite{site:gdb}.
+Uno dei software più utilizzati per il debugging del codice compilato, qualunque sia il linguaggio scelto, è Gnu GDB\cite{site:gdb}.
 
 \section{Gnu Debugger}\label{sec:gdb}
 
 Il software GDB è un debugger multiarchitettura\cite{site:gdb} utilizzato per l'ispezione degli stati di esecuzione dei software compilati.
 In particolare esso presenta un'architettura multipla di funzionamento in funzione della localizzazione del processo da ispezionare.
 
-Generalmente il processo da analizzare è direttamente localizzato sulla stessa macchina nella qualle il processo GDB viene istanziato. In questo caso è sufficiente utilizare delle chiamate di sistema (\textit{syscall}) in grado di accedere e bloccare l'esecuzione del processo da parte del sistema operativo.
+Generalmente il processo da analizzare è direttamente localizzato sulla stessa macchina nella quale il processo GDB viene istanziato. In questo caso è sufficiente utilizzare delle chiamate di sistema (\textit{syscall}) in grado di accedere e bloccare l'esecuzione del processo da parte del sistema operativo.
 Sarà dunque possibile modificare il contenuto della porzione di memoria in cui è caricato l'eseguibile in modo da sostituire l'istruzione incriminata con un'istruzione di ``\textit{break}''. Questa istruzione causerà, al momento della sua esecuzione, un'eccezione a livello hardware la quale verrà gestita dal kernel e notificherà il processo \textit{debugger} che il processo \textit{debuggee} ha raggiunto un \textit{breakpoint}.
 
-Purtroppo non sempre il processo \textit{debuggee} è in esecuzione sullo stesso processore. Questo comporta la necessità di scindere in due componenti il programma utilizzato per effettuare il \textit{debug} adottando un'architettura client-server per consentire la dislocazione del processo \textit{debuggee}.
+Purtroppo non sempre il processo \textit{debuggee} è in esecuzione sullo stesso processore in cui si trova il processo GDB client. Questo comporta la necessità di scindere in due componenti il programma utilizzato per effettuare il \textit{debug} adottando un'architettura client-server per consentire la dislocazione del processo \textit{debuggee}.
 
 \subsection{Debugging di dispositivi embedded}
 
@@ -41,11 +43,11 @@ Quanto enunciato precedentemente si avvera nel debugging di dispositivi embedded
 
 Possiamo vedere il firmware in esecuzione sul microcontrollore come un processo dislocato su un processore remoto con una diversa architettura.
 
-La problematica relativa la diversa architettura dei processori non costituisce motivo di preoccupazione in quanto ormai la maggior parte degli instruction set è stata inclusa nella distribuzione di GDB multi-architettura[todo cite].
-La vera problematica si ha con il la scarsa connettività dell'integrato, la quale richiede un protocollo e un componente di adattamento \textit{ad-hoc}.
+La problematica relativa alla diversa architettura dei processori non costituisce motivo di preoccupazione in quanto ormai la maggior parte degli \textit{instruction set} è stata inclusa nella distribuzione di GDB multi-architettura\cite{site:gdb}.
+La vera problematica si ha con la scarsa connettività dell'integrato, la quale richiede un protocollo e un componente di adattamento \textit{ad-hoc}.
 L'architettura client-server permette quindi di implementare tale adattatore su un dispositivo esterno connesso con il \textit{target} con possibilità di implementare il protocollo di debug permettendo così di adattare l'interfaccia a tutti i dispositivi in grado di eseguire GDB.\@ 
 
-Possiamo vedere come la concezione di separazione tra applicativo di controllo ed interazione e esecutore dei comandi di debug può essere implementata dalla figura~\ref{fig:gdb-server-tunnels}.
+Possiamo vedere come la concezione di separazione tra applicativo di controllo e interazione ed esecutore dei comandi di debug può essere implementata dalla figura~\ref{fig:gdb-server-tunnels}.
 
 \begin{figure}
     \centering
@@ -74,12 +76,12 @@ Possiamo vedere come la concezione di separazione tra applicativo di controllo e
     \caption[]{Diagramma di incapsulamento e protocolli di comunicazione tra debugger e target}\label{fig:gdb-server-tunnels}
 \end{figure}
 
-In particolare, la figura rappresenta la scelta intrapresa per lo sviluppo del sistema in esame. È possibile notare come il softare GDB si interfacci al relativo server presente sull'adattatore (firmware presente sull'ATMega16U2) tramite il protocollo GDB appoggiandosi al protocollo USB-CDC e trasmesso sul bus seriale differenziale.
+In particolare, la figura rappresenta la scelta intrapresa per lo sviluppo del sistema in esame. È possibile notare come il software GDB si interfacci al relativo server presente sull'adattatore (firmware presente sull'ATMega16U2) tramite il protocollo GDB appoggiandosi al protocollo USB-CDC per l'invio dei pacchetti di comunicazione e venga trasmesso sul bus seriale differenziale.
 Questi pacchetti vengono quindi convertiti dal server precedentemente menzionato il quale esegue le azioni richieste sul \textit{target} tramite la connessione DebugWire.
 
 \subsection{Integrazione con ambienti di sviluppo}
 
-L'integrazione con gli abienti di sviluppo avviene sfruttando la standardizzazione dei comandi che GDB definisce[todo cite]. Siccome GDB implementa un'interfaccia da linea di comando dove tutti gli input e output sono ben definiti secondo uno standard, risulta di facile implementazione un software in grado di dialogare con il \textit{debugger} il cui fine è di dotare un'interfaccia grafica per agevolare lo sviluppatore. Inoltre le informazioni tratte dallo stream (stdin/stdout) possono essere mostrate in modo effettivo nell'IDE andando a decorare il codice, ovvero ad aggiungere informazioni ``tra le righe'' permettendo allo sviluppatore di focalizzarsi sullo sviluppo come da figura~\ref{fig:vscode-dbg-dec}.
+L'integrazione con gli ambienti di sviluppo avviene sfruttando la standardizzazione dei comandi che GDB definisce[todo cite]. Siccome GDB implementa un'interfaccia da linea di comando dove tutti gli input e output sono ben definiti secondo uno standard, risulta di facile implementazione un software in grado di dialogare con il \textit{debugger} il cui fine è di introdurre un'interfaccia grafica per agevolare lo sviluppatore. Inoltre le informazioni tratte dallo stream (stdin/stdout) possono essere mostrate in modo effettivo nell'IDE andando a decorare il codice, ovvero ad aggiungere informazioni ``tra le righe'' permettendo allo sviluppatore di focalizzarsi sullo sviluppo come da figura~\ref{fig:vscode-dbg-dec}.
 
 \begin{figure}[t]
     \centering
@@ -89,11 +91,11 @@ L'integrazione con gli abienti di sviluppo avviene sfruttando la standardizzazio
 
 \section{GDB Server e Livello fisico}
 
-Il secondo livello è costituito dal firmware presente sull'ATMega16U2 presente sulla scheda \textit{Arduino Uno R3} (componente \texttt{U3}).
+Il secondo livello è costituito dal firmware presente sull'ATMega16U2 collocato sulla scheda \textit{Arduino Uno R3} (componente \texttt{U3}).
 
-Questo firmare, completamente ripensato rispetto all'originale, si occupa di convertire i comandi inviati dall'\textit{host} tramite una connessione USB simulando un dispositivo seriale e adattarli al debugging tramite DebugWire, implementando un server GDB direttamente all'interno dell'integrato.
+Questo firmare, completamente ripensato rispetto all'originale, si occupa di convertire i comandi inviati dall'\textit{host} tramite una connessione USB simulando un dispositivo seriale e di adattarli al debugging tramite DebugWire, implementando un server GDB direttamente all'interno dell'integrato.
 
-Il secondo livello si occuperà di mantenere una connessione compresa di stato con il \textit{debugger}, ``tradurre'' i comandi GDB in modo che possano essere inoltrata al target tramite protocollo DebugWire e garantire funzionalità aggiuntive quali un livello di comunicazione \textit{target-to-host} su connessione di debug nominato Real Time Terminal (RTT).
+Il secondo livello si occuperà di mantenere una connessione compresa di stato con il \textit{debugger}, ``tradurre'' i comandi GDB in modo che possano essere inoltrati al target tramite protocollo DebugWire e garantire funzionalità aggiuntive quali un livello di comunicazione \textit{target-to-host} su connessione di debug nominato Real Time Terminal (RTT).
 
 Il firmware dell'ATMega16U2 è composto da quattro macro regioni descritte a seguire in questa relazione:
 \begin{enumerate}
@@ -105,11 +107,11 @@ Il firmware dell'ATMega16U2 è composto da quattro macro regioni descritte a seg
 
 \subsection{Protocollo GDB}
 
-Il protocollo per la comunicazione client-server di GDB è definito a partire da un canale di comunicazione in grado di trasmettere caratteri ascii.
-Così facendo si permette di trasmettere anche su canali strettamente testuali e non standard (simboli da 7 bit).
+Il protocollo per la comunicazione client-server di GDB è definito a partire da un canale di comunicazione in grado di trasmettere caratteri \textit{ASCII}.
+Così facendo è possibile trasmettere anche su canali strettamente testuali e non standard (simboli da 7 bit).
 
 Affinché sia possibile trasmettere dati in tale formato è necessario ricorrere alla codifica esadecimale testuale dei numeri come definita dai listati~\ref{lst:nib-2-char}~e~\ref{lst:char-2-nib} i quali rappresentano due funzioni di conversione da intero a esadecimale testuale e viceversa.
-Si noti come nelle funzioni si parli di \textit{nibble}, ovvero un unità di quattro bit (che possono prendere valori compresi tra 0 e 15). Questo perché un byte viene convertito in due caratteri alfabetici per rappresentarlo in esadecimale e, similmente, due caratteri alfabetici rappresentano un solo byte.
+Si noti come nelle funzioni si parli di \textit{nibble}, ovvero un'unità di quattro bit (che possono prendere valori compresi tra 0 e 15). Questo perché un byte viene convertito in due caratteri alfabetici per essere rappresentato in esadecimale e, similmente, due caratteri alfabetici rappresentano un solo byte.
 
 \noindent\begin{minipage}{\textwidth}
     \begin{lstlisting}[style=C, caption={Funzione di conversione da nibble a carattere alfabetico}, label=lst:nib-2-char]
@@ -142,9 +144,9 @@ Si noti come nelle funzioni si parli di \textit{nibble}, ovvero un unità di qua
     \end{lstlisting}
 \end{minipage}
 
-I valori stabiliti negli offset sono di facile interpretazione: si ricordi che nel linguaggio C i caratteri hanno lo stesso significato di interi a otto bit, di conseguenza è possibile sommare o sottrarre caratteri i quali verranno interpretati con il loro relativo valore numerico assegnato dalla tabella ascii[todo cite]. 
+I valori stabiliti negli offset sono di facile interpretazione: si ricordi che nel linguaggio C i caratteri hanno lo stesso significato di interi a otto bit, di conseguenza è possibile sommare o sottrarre caratteri i quali verranno interpretati con il loro relativo valore numerico assegnato dalla tabella \textit{ASCII}. 
 
-In particolare il carattere `a' corrisponde al valore esadecimale 0x41 e il carattere `0' corrisponde al valore 0x30. Si ricorda che le cifre numeriche e le lettere, siano esse minuscole e minuscole, sono sequenziali in tale tabella.
+In particolare il carattere `a' corrisponde al valore esadecimale 0x41 e il carattere `0' corrisponde al valore 0x30. Si ricordi che le cifre numeriche e le lettere, siano esse minuscole o minuscole, sono sequenziali in tale tabella.
 
 Il protocollo GDB, inoltre, permette al server --- quando il target non è in stato di \textit{halt} --- di inviare notifiche da mostrare a schermo mediante il comando \texttt{O}.
 
@@ -152,7 +154,7 @@ Questa funzionalità sarà la base per l'implementazione del terminale in tempo 
 
 \subsubsection{Formato}
 
-I pacchetti inviati sul canale di comunicazione, come mostrato dalla fiugura~\ref{fig:gdb-packet}, sono composti da una sezione contenente il comando e delimitata dai caratteri \texttt{\$} e \texttt{\#} seguita da due caratteri esadecimali rappresentanti un byte di controllo il cui valore è dato dall'equazione~\ref{eq:gdb-checksum}
+I pacchetti inviati sul canale di comunicazione, come mostrato dalla figura~\ref{fig:gdb-packet}, sono composti da una sezione contenente il comando e delimitata dai caratteri \texttt{\$} e \texttt{\#} seguita da due caratteri esadecimali rappresentanti un byte di controllo il cui valore è dato dall'equazione~\ref{eq:gdb-checksum}
 
 \begin{figure}[t]
     \centering
@@ -166,6 +168,6 @@ I pacchetti inviati sul canale di comunicazione, come mostrato dalla fiugura~\re
     CHKSM = byte2asciihex \left( \sum_{1=0}^{\# cmd} \left(cmd_i\right) \ \bmod{256}\right)
 \end{equation}
 
-Questa procedura permette di implementare un parser di comandi a bassissimo impatto sulla memoria ram in quanto è possibile calcolare il checksum durante la ricezione.
+Questa procedura permette di implementare un parser di comandi a bassissimo impatto sulla memoria RAM in quanto è possibile calcolare il \textit{checksum} durante la ricezione.
 
-Il formato dei comandi è generalmente definito come una lettera alfabetica seguita da una serie di parametri separati dal carattere virgola e a seguire gli argomenti, codificati in esadecimale alfabetco, separati dai parametri tramite i due punti\cite{site:gdbproto}.
+Il formato dei comandi è generalmente definito come una lettera alfabetica seguita da una serie di parametri separati dal carattere virgola e a seguire gli argomenti, codificati in esadecimale alfabetico, separati dai parametri tramite i due punti\cite{site:gdbproto}.
