@@ -501,14 +501,45 @@ Sarebbe possibile rendere la ricerca e l'ordinamento più efficiente utilizzando
 
 \section{Real Time Terminal}
 
-Come precedentemente anticipato, questo progetto mira a costituire un insieme di strumenti e funzionalità per il supporto del programmatore alla programmazione nel mondo embedded AVR.\@
+Come precedentemente anticipato, questo progetto mira a costituire un insieme di strumenti e funzionalità per il supporto alla programmazione nel mondo embedded AVR.\@
 
-Nei capitoli precedenti è stata discussa l'implementazione di un server GDB per effettuare il debugging sul controllore e permettere l'ispezione in loco degli effetti dei programmi e l'alterazione delle risorse durante l'esecuzione a fini diagnostici. 
+Nei capitoli precedenti è stata discussa l'implementazione di un server GDB per effettuare il debugging sul controllore e permettere l'ispezione \textit{in loco} degli effetti dei programmi e l'alterazione delle risorse durante l'esecuzione a fini diagnostici. 
 
-Affiancata alla pratica del debugging possiamo classificare un'altro metodo diagnostico: il \textit{logging}.
+Affiancata alla pratica del debugging possiamo classificare un altro metodo diagnostico: il \textit{logging}.
 
-Questa seconda pratica --- spesso usata in modo scorretto per analizzare un problema in una porzione di codice --- consente di generare messaggi analizzabili successivamente a fine di \textit{auditing}, ovvero l'analisi di messaggi di log passati per individuare malfunzionamenti o vulnerabilità inattesi e imprevisti.
+Questa seconda pratica --- spesso usata in modo scorretto per analizzare un problema in una porzione di codice --- consente di generare messaggi analizzabili successivamente a fine di \textit{auditing}; con ciò si intende l'analisi di messaggi di log passati per individuare malfunzionamenti o vulnerabilità inattesi e imprevisti.
 
-I messaggi di log sono anche utili per individuare in quale macro area del codice si trova un possibile baco per poi indagare tramite debugger una volta identificata la causa scatenante.
+I messaggi di log sono anche utili per individuare in quale macro area del codice si trova un possibile baco per poi indagare l'effettivo comportamento inatteso tramite debugger una volta identificata la causa scatenante.
 
-La questione diviene velocemente come implementare tale funzionalità sulla piattaforma AVR.\@ La maggior parte dei progetti e delle piattaforme utilizza la periferica UART del target al fine di comunicare con l'host impedendone così l'utilizzo da parte del programmatore per comunicare con altre periferiche. Alcune piattaforme hanno ottimizzato questo utilizzo dedicando la linea seriale anche alla programmazione, riducendo però lo spazio disponibile nella memoria flash in quanto tale operazione deve essere svolta da un programmatore. 
+L'attenzione si sposta dunque su come implementare tale funzionalità sulla piattaforma AVR.\@ La maggior parte dei progetti e delle piattaforme utilizza la periferica UART del target al fine di comunicare con l'host, impedendone così l'utilizzo da parte del programmatore per comunicare con altre periferiche. Alcune piattaforme hanno ottimizzato questo utilizzo dedicando la linea seriale anche alla programmazione, riducendo però lo spazio disponibile nella memoria flash in quanto tale operazione deve essere svolta da un programmatore. 
+
+Tale funzionalità viene implementata %da tetino
+mediante la collaborazione del server GDB il quale mascherà tali eventi alle procedure di debug.
+
+Così facendo avverranno due tipologie di BREAK da parte del \textit{target}: questi avverranno quando un breakpoint viene raggiunto o quando il \textit{target} vuole inviare un messaggio. La distinzione avviene leggendo lo stato di una struttura posta in principio alla memoria SRAM definita tramite l'ausilio di un linker script.
+
+Tale struttura è definita secondo quanto riportato dal listato~\ref{lst:rtt-struct}.
+
+\noindent\begin{minipage}{\textwidth}
+    \begin{lstlisting}[style=C, caption={Struttura utilizzata per il salvataggio dei riferimenti ai breakpoint software}, label=lst:rtt-struct]
+    typedef struct{
+        uint8_t available : 1;
+        uint8_t enabled : 1;
+        uint8_t size : 6;
+        uint8_t data[64];
+    } __attribute__((packed)) rtt_data;
+    \end{lstlisting}
+\end{minipage}
+
+Come descritto dalla figura~\ref{fig:rtt-gdbsrv}, quando un BREAK viene rilevato proveniente dal \textit{target} il server GDB valuta se l'utente ha abilitato il monitor RTT.\@ Questa Scelta si rispecchia in quanto la variabile \texttt{rtt.enabled} viene posta a 1 dal server GDB quando l'utente desidera abilitare tale funzionalità. Il softare presente sull'integrato \textit{target} verificherà lo stato di tale variabile prima di eseguire l'istruzione \texttt{break}.
+
+Se tale condizione risultasse verificata, il server GDB verifica la presenza di dati da riporare all'utente. In tal caso i dati vengono letti, la variabile available resettata e viene ripresa l'esecuzione mascherando l'evento di interruzione al client GDB.\@ In caso contrario il BREAK viene propagato perchè non derivante da una scrittura dell'RTT.\@ 
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.8\textwidth]{rtt-handling.pdf}
+    \caption[]{Diagramma di attività descrivente il procedimento di gestione di un'interruzione da parte del target}\label{fig:rtt-gdbsrv}
+\end{figure}
+
+%todo parlare di linkerscript
+%libreria statica e compilazione cmake?

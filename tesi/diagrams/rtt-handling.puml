@@ -1,0 +1,23 @@
+@startuml rtt-handling
+
+start
+
+:WAIT BREAK <
+
+if (rtt.enabled) then
+    :Read RAMBASE + rtt.available;
+    if (rtt.available > 0) then
+        :Encode Message;
+        :Read SRAM_BASE + rtt.buffer;
+        :Encode Message;
+        :Send Message>
+        :Resume;
+    else
+        :Send Signal>
+    endif
+else
+    :Send Signal>
+endif
+stop
+
+@enduml
