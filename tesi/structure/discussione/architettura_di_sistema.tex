@@ -10,7 +10,7 @@ Risulta quindi necessaria una visione di insieme dell'intero sistema invece che 
     \caption[]{Diagramma dei componenti del sistema di assistenza alla programmazione e debugging}\label{fig:sys-arch}
 \end{figure}
 
-Come osservabile dalla figura~\ref{fig:sys-arch}, il sistema sviluppato si basa su tre livelli fisici collegati a cascata, in modo tale da adattare le azioni ad alto livello scelte dall'utente ai comandi di debug a basso livello che permettono di interagire con il controllore \textit{target}. 
+Come osservabile dalla \cref{fig:sys-arch}, il sistema sviluppato si basa su tre livelli fisici collegati a cascata, in modo tale da adattare le azioni ad alto livello scelte dall'utente ai comandi di debug a basso livello che permettono di interagire con il controllore \textit{target}. 
 
 Il primo livello, ovvero il livello di interfaccia con lo sviluppatore, consiste nel software utilizzato per lo sviluppo del firmware contenente tutti gli strumenti di supporto alla programmazione C. Questi software, anche noti come IDE\footnote{Integrated Development Environment}, hanno il compito di accorpare svariate funzionalità mediante integrazione di software esterni allo scopo di favorire lo sviluppo fornendo un ambiente unico e integrato allo sviluppatore, dal quale effettuare tutte le operazioni quali sviluppo, compilazione, debugging e upload.
 
@@ -47,7 +47,7 @@ La problematica relativa alla diversa architettura dei processori non costituisc
 La vera problematica si ha con la scarsa connettività dell'integrato, la quale richiede un protocollo e un componente di adattamento \textit{ad-hoc}.
 L'architettura client-server permette quindi di implementare tale adattatore su un dispositivo esterno connesso con il \textit{target} con possibilità di implementare il protocollo di debug permettendo così di adattare l'interfaccia a tutti i dispositivi in grado di eseguire GDB.\@ 
 
-Possiamo vedere come la concezione di separazione tra applicativo di controllo e interazione ed esecutore dei comandi di debug può essere implementata dalla figura~\ref{fig:gdb-server-tunnels}.
+Possiamo vedere come la concezione di separazione tra applicativo di controllo e interazione ed esecutore dei comandi di debug può essere implementata dalla \cref{fig:gdb-server-tunnels}.
 
 \begin{figure}
     \centering
@@ -81,7 +81,7 @@ Questi pacchetti vengono quindi convertiti dal server precedentemente menzionato
 
 \subsection{Integrazione con ambienti di sviluppo}
 
-L'integrazione con gli ambienti di sviluppo avviene sfruttando la standardizzazione dei comandi che GDB definisce[todo cite]. Siccome GDB implementa un'interfaccia da linea di comando dove tutti gli input e output sono ben definiti secondo uno standard, risulta di facile implementazione un software in grado di dialogare con il \textit{debugger} il cui fine è di introdurre un'interfaccia grafica per agevolare lo sviluppatore. Inoltre le informazioni tratte dallo stream (stdin/stdout) possono essere mostrate in modo effettivo nell'IDE andando a decorare il codice, ovvero ad aggiungere informazioni ``tra le righe'' permettendo allo sviluppatore di focalizzarsi sullo sviluppo come da figura~\ref{fig:vscode-dbg-dec}.
+L'integrazione con gli ambienti di sviluppo avviene sfruttando la standardizzazione dei comandi che GDB definisce[todo cite]. Siccome GDB implementa un'interfaccia da linea di comando dove tutti gli input e output sono ben definiti secondo uno standard, risulta di facile implementazione un software in grado di dialogare con il \textit{debugger} il cui fine è di introdurre un'interfaccia grafica per agevolare lo sviluppatore. Inoltre le informazioni tratte dallo stream (stdin/stdout) possono essere mostrate in modo effettivo nell'IDE andando a decorare il codice, ovvero ad aggiungere informazioni ``tra le righe'' permettendo allo sviluppatore di focalizzarsi sullo sviluppo come da \cref{fig:vscode-dbg-dec}.
 
 \begin{figure}[t]
     \centering
@@ -110,7 +110,7 @@ Il firmware dell'ATMega16U2 è composto da quattro macro regioni descritte a seg
 Il protocollo per la comunicazione client-server di GDB è definito a partire da un canale di comunicazione in grado di trasmettere caratteri \textit{ASCII}.
 Così facendo è possibile trasmettere anche su canali strettamente testuali e non standard (simboli da 7 bit).
 
-Affinché sia possibile trasmettere dati in tale formato è necessario ricorrere alla codifica esadecimale testuale dei numeri come definita dai listati~\ref{lst:nib-2-char}~e~\ref{lst:char-2-nib} i quali rappresentano due funzioni di conversione da intero a esadecimale testuale e viceversa.
+Affinché sia possibile trasmettere dati in tale formato è necessario ricorrere alla codifica esadecimale testuale dei numeri come definita dai \cref{lst:nib-2-char,lst:char-2-nib} i quali rappresentano due funzioni di conversione da intero a esadecimale testuale e viceversa.
 Si noti come nelle funzioni si parli di \textit{nibble}, ovvero un'unità di quattro bit (che possono prendere valori compresi tra 0 e 15). Questo perché un byte viene convertito in due caratteri alfabetici per essere rappresentato in esadecimale e, similmente, due caratteri alfabetici rappresentano un solo byte.
 
 \noindent\begin{minipage}{\textwidth}
@@ -154,7 +154,7 @@ Questa funzionalità sarà la base per l'implementazione del terminale in tempo 
 
 \subsubsection{Formato}
 
-I pacchetti inviati sul canale di comunicazione, come mostrato dalla figura~\ref{fig:gdb-packet}, sono composti da una sezione contenente il comando e delimitata dai caratteri \texttt{\$} e \texttt{\#} seguita da due caratteri esadecimali rappresentanti un byte di controllo il cui valore è dato dall'equazione~\ref{eq:gdb-checksum}
+I pacchetti inviati sul canale di comunicazione, come mostrato dalla \cref{fig:gdb-packet}, sono composti da una sezione contenente il comando e delimitata dai caratteri \texttt{\$} e \texttt{\#} seguita da due caratteri esadecimali rappresentanti un byte di controllo il cui valore è dato dall'\cref{eq:gdb-checksum}
 
 \begin{figure}[t]
     \centering

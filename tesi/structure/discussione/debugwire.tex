@@ -1,7 +1,7 @@
 \chapter{DebugWire}
 \section{Descrizione del protocollo e fondamentali}
 
-Parte fondamentale del core AVR, omessa dal diagramma in figura~\ref{fig:avr-arch}, è il sistema di \textit{debugging} on chip ``\textit{DebugWire}''.
+Parte fondamentale del core AVR, omessa dal diagramma in \cref{fig:avr-arch}, è il sistema di \textit{debugging} on chip ``\textit{DebugWire}''.
 
 Esso permette, tramite un tool esterno collegato all'integrato, di interrompere l'esecuzione della cpu e successivamente di effettuare operazioni di lettura e scrittura sulle memorie e sui registri.\cite[sec 25]{avr:m328p}
 
@@ -13,7 +13,7 @@ L'interfacciamento fisico tra controllore e dispositivo esterno avviene tramite 
 
 Il fatto che l'interfaccia di debug sia collocata sul pin di reset comporta che, una volta abilitata la periferica DebugWire, non sia più possibile resettare il dispositivo o programmarlo tramite interfaccia ISP\cites{avr:appnote:isp}[sec 25.3]{avr:m328p}, ma si rende necessaria una procedura di disattivazione temporanea o la possibilità di programmare l'integrato tramite il protocollo DebugWire.
 
-La comunicazione tra programmatore e target è di tipo seriale e half duplex data la natura della connessione. In particolare il protocollo utilizzato è una derivazione di una seriale UART su un bus open collector, come è osservabile dalla figura~\ref{fig:dw-schematic}\cite{site:dw-reverse-engeneering}.
+La comunicazione tra programmatore e target è di tipo seriale e half duplex data la natura della connessione. In particolare il protocollo utilizzato è una derivazione di una seriale UART su un bus open collector, come è osservabile dalla \cref{fig:dw-schematic}\cite{site:dw-reverse-engeneering}.
 
 \begin{figure}[t]
     \centering
@@ -35,11 +35,11 @@ Durante questo tempo di bit dove la linea di trasmissione è a livello logico 0 
 
 A seguito dei bit di dati viene quindi inviato opzionalmente un bit di parità per garantire l'integrità dei dati e successivamente la linea viene posta a livello logico 1 per uno o due periodi di bit, permettendo al ricevitore di eseguire operazioni e resettare la macchina a stati per la ricezione dell'eventuale simbolo seguente.\cite{site:rs-uart}
 
-Essendo un sistema asincrono è opportuno ipotizzare il disallineamento delle frequenze di invio e campionamento: in tal caso una desincronizzazione può essere tollerata se entro il limite dato dall'equazione~\ref{eq:uart-max-delay}
+Essendo un sistema asincrono è opportuno ipotizzare il disallineamento delle frequenze di invio e campionamento: in tal caso una desincronizzazione può essere tollerata se entro il limite dato dall'\cref{eq:uart-max-delay}
 \begin{equation}\label{eq:uart-max-delay}
     t_{delay_{\max}} = \frac{1}{2}(N_{data}+N_{parity}+N_{stop}+1)t_{bit}    
 \end{equation}
-dove \(N_{data}\) è il numero di bit contenuti nel simbolo inviato che è stato negoziato, \(N_{parity}\) indica il numero di bit di parità, \(N_{stop}\) il numero di \textit{stop bits} e \(t_{bit}\) è il tempo per bit. Inoltre si tiene conto del bit di inizio (\textit{start bit}). Questo comportamento può essere notato dalla figura~\ref{fig:uart-sync}, dove vengono rappresentati il caso ideale e il caso di desincronizzazione massima. In ogni caso si ha che il campionamento avviene all'interno del bit in invio.
+dove \(N_{data}\) è il numero di bit contenuti nel simbolo inviato che è stato negoziato, \(N_{parity}\) indica il numero di bit di parità, \(N_{stop}\) il numero di \textit{stop bits} e \(t_{bit}\) è il tempo per bit. Inoltre si tiene conto del bit di inizio (\textit{start bit}). Questo comportamento può essere notato dalla \cref{fig:uart-sync}, dove vengono rappresentati il caso ideale e il caso di desincronizzazione massima. In ogni caso si ha che il campionamento avviene all'interno del bit in invio.
 
 \afterpage{
     \begin{figure}[ht]
@@ -50,7 +50,7 @@ dove \(N_{data}\) è il numero di bit contenuti nel simbolo inviato che è stato
     \end{figure}
 }
 
-La motivazione per cui il campionamento avviene a metà del tempo di bit è data dal fatto che la desincronizzazione può essere causata da una frequenza più alta o più bassa, per cui vale la relazione descritta dall'equazione~\ref{eq:uart-period-receive-delay}
+La motivazione per cui il campionamento avviene a metà del tempo di bit è data dal fatto che la desincronizzazione può essere causata da una frequenza più alta o più bassa, per cui vale la relazione descritta dall'\cref{eq:uart-period-receive-delay}
 \begin{equation}\label{eq:uart-period-receive-delay}
      t_{bit_{recv}} = t_{bit_{snd}} \pm t_{delay_{\max}}
 \end{equation}
@@ -62,7 +62,7 @@ Infine, se la velocità di trasmissione fosse misurata in \textit{bit per second
     v_{tx_{baud}} = \frac{1}{t_{bit}(N_{data} + N_{parity} + N_{stop} + 1)}
 \end{equation}
 
-Da quanto è possibile dedurre dall'equazione~\ref{eq:baud-from-bit-rate}, l'effettivo bit rate di trasmissione della linea UART differisca di un fattore di \(\frac{N_{data}}{N_{data} + N_{parity} + N_{stop} + 1}\) rispetto al bitrate grezzo di trasmissione \(v_{uart}\)
+Da quanto è possibile dedurre dall'\cref{eq:baud-from-bit-rate}, l'effettivo bit rate di trasmissione della linea UART differisca di un fattore di \(\frac{N_{data}}{N_{data} + N_{parity} + N_{stop} + 1}\) rispetto al bitrate grezzo di trasmissione \(v_{uart}\)
 
 
 \subsection{Funzionamento}
@@ -80,7 +80,7 @@ La velocità di comunicazione è invece definita in funzione della frequenza del
 
 Ad ogni reset della comunicazione il prescaler viene resettato al valore iniziale.
 
-In risposta ad un BREAK il target risponderà sempre con l'invio di un valore noto (0x55), facendo sì che a livello fisico sia inviata un'onda quadra con frequenza \(v_{com}\)\cite{site:dw-reverse-engeneering} (si veda figura~\ref{fig:dw-timings})
+In risposta ad un BREAK il target risponderà sempre con l'invio di un valore noto (0x55), facendo sì che a livello fisico sia inviata un'onda quadra con frequenza \(v_{com}\)\cite{site:dw-reverse-engeneering} (si veda \cref{fig:dw-timings})
 
 \begin{figure}[ht]
     \centering
@@ -114,7 +114,7 @@ I comandi disponibili per l'interazione con il microcontrollore target tramite D
 
 Questi comandi vengono utilizzati per modificare il valore del prescaler di comunicazione in modo da variare la velocità di trasmissione. Sono comandi particolarmente utili nel debugging di controllori a bassa frequenza (128kHz).
 
-Non vi è una logica nota nell'assegnazione del comando al corrispondente valore del prescaler: si rende necessaria una tabella di associazione come riportato dalla tabella~\ref{tab:dw-presc-settings}
+Non vi è una logica nota nell'assegnazione del comando al corrispondente valore del prescaler: si rende necessaria una tabella di associazione come riportato dalla \cref{tab:dw-presc-settings}
 
 \begin{table}[ht]
     \centering
@@ -140,7 +140,7 @@ Una volta inviato il comando di configurazione del prescaler il controllore si a
 
 È necessario configurare lo stato della periferica prima di eseguire effettivamente le operazioni che sono state preparate. Possiamo chiamare questo stato ``Contesto di esecuzione'' in quanto la stessa configurazione dell'hardware permette di eseguire diverse azioni in funzione del contesto che viene configurato.
 
-I contesti disponibili sono elencati nella tabella~\ref{tab:dw-contexts}.
+I contesti disponibili sono elencati nella \cref{tab:dw-contexts}.
 
 \begin{table}[ht]
     \centering
@@ -190,7 +190,7 @@ I registri di configurazione sono mappati da un indice come descritto dalla tabe
     \caption[]{Tabella descrittiva dell'associazione degli indici ai registri elementari\cite{site:dw-reverse-engeneering}}\label{tab:dw-regs-idx}
 \end{table}
 
-Le operazioni di lettura e scrittura dei registri avvengono mediante l'invio di pacchetti come definito dalle figure~\ref{fig:dw-reg-wrt}~e~\ref{fig:dw-reg-rd}
+Le operazioni di lettura e scrittura dei registri avvengono mediante l'invio di pacchetti come definito dalle \cref{fig:dw-reg-wrt,fig:dw-reg-rd}
 
 \begin{figure}[ht]
 
@@ -232,14 +232,14 @@ Le operazioni di lettura e scrittura dei registri avvengono mediante l'invio di 
 \subsubsection{Comandi compositi}
 
 DebugWire permette di leggere e scrivere la memoria SRAM mediante una combinazione di comandi elementari.
-Grazie a questa funzionalità è possibile leggere e scrivere sia la memoria dati che i registri di configurazione delle periferiche e i registri ``general purpose'' come viene evidenziato dalla figura~\ref{fig:avr-sram-alloc}.
+Grazie a questa funzionalità è possibile leggere e scrivere sia la memoria dati che i registri di configurazione delle periferiche e i registri ``general purpose'' come viene evidenziato dalla \cref{fig:avr-sram-alloc}.
 
 L'algoritmo per la scrittura dei registri (r0-r31) consiste in quanto segue\cite{site:dw-reverse-engeneering}:
 \begin{enumerate}
     \item Context: SRAM R/W
     \item Scrittura del registro iniziale nel registro PC
     \item Scrittura del registro finale nel registro HWBP
-    \item Selezione modalità (Comando C2 seguito dall'indice dell'operazione come descritto nella tabella~\ref{tab:dw-ops})
+    \item Selezione modalità (Comando C2 seguito dall'indice dell'operazione come descritto nella \cref{tab:dw-ops})
     \item GO SRAM R/W
     \item (Se scrittura) Invio dei byte da scrivere.\\(Se lettura) Ricezione dei byte letti.
 \end{enumerate}
@@ -259,7 +259,7 @@ L'algoritmo per la scrittura dei registri (r0-r31) consiste in quanto segue\cite
     \caption[]{Tabella descrittiva dell'associazione degli indici alle modalità di operazione sulle memorie\cite{site:dw-reverse-engeneering}}\label{tab:dw-ops}
 \end{table}
 
-Di seguito, alla figura~\ref{fig:dw-reg-rw-com}, viene riportata la traccia di comunicazione per questo algoritmo.
+Di seguito, alla \cref{fig:dw-reg-rw-com}, viene riportata la traccia di comunicazione per questo algoritmo.
 
 Analogamente è possibile leggere e scrivere la memoria SRAM e leggere la memoria FLASH con il seguente algoritmo:
 \begin{enumerate}
@@ -299,7 +299,7 @@ Analogamente è possibile leggere e scrivere la memoria SRAM e leggere la memori
     \caption[]{Comunicazione inviata dal debugger per leggere/scrivere le memorie. In caso di scrittura viene seguita da \textit{len} byte, altrimenti la stessa quantità di byte viene ricevuta.}\label{fig:dw-mem-rw-com}
 \end{figure}
 
-Alla figura~\ref{fig:dw-mem-rw-com}, viene riportata la traccia di comunicazione per questo algoritmo.
+Alla \cref{fig:dw-mem-rw-com}, viene riportata la traccia di comunicazione per questo algoritmo.
 
 È possibile eseguire direttamente un'istruzione senza scriverla nella memoria Flash. In questo caso è sufficiente scrivere nel registro IR l'opcode dell'operazione ed eseguire il comando di flow control (0x23 o 0x33). Si noti che non è possibile eseguire istruzioni di 32 bit.
 

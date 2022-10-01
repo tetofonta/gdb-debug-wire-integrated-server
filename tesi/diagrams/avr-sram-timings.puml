@@ -1,6 +1,7 @@
 @startuml avr-sram-timings
 mode compact
 hide time-axis
+
 clock "Clock" as clk with period 30
 concise "Address" as addr
 concise "Data" as data

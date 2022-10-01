@@ -68,4 +68,37 @@ wrt_buf:
     out EECR, r29 ; EEPE
 \end{lstlisting}
 
+\newappendix{Libreria implementante la funzionalità di terminale in tempo reale (RTT)}\label{app:rtt-lib}
+
+\begin{lstlisting}[style=C]
+    #include <string.h>
+
+    #ifdef BUILD_TYPE
+    #if BUILD_TYPE == Debug
+
+    volatile rtt_data rtt __attribute__((section(".dbgdata")));
+
+    void rtt_log(const char *buffer, uint8_t size){
+        if (!rtt.enabled)
+            return;
+            
+        size &= 0x3F;
+        rtt.size = size;
+
+        while(size--)
+            *(rtt.data + size) = *(buffer + size);
+            
+        rtt.available = 1;
+        asm volatile("break");
+    }
+
+    void rtt_init(void){
+        rtt.available = 0;
+        rtt.size = 0;
+    }
+
+    #endif
+    #endif
+\end{lstlisting}
+
 \addtocontents{toc}{\protect\setcounter{tocdepth}{3}}
