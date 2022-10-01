@@ -453,12 +453,12 @@ Sia \(address\) l'indirizzo dell'istruzione da sostituire (word address), \(page
 \begin{enumerate}
     \item Salvataggio dei registri come definito in \cref{fig:dw-wrt-seq} per l'azione \texttt{FLASH\_W} (14 byte)
     \item Poniamo l'indirizzo di pagina, utilizzando 2 byte, come \[pageaddr = \left\lfloor\frac{address}{pagelen}\right\rfloor pagelen\] 
-    \item Iniziamo la scrittura di una pagina e, per ogni indirizzo da \(pageaddr\) a \(address\) (escluso), leggiamo in una variabile temporanea (2 byte) il valore della memoria flash a quell'indirizzo e aggiungiamo al buffer di scrittura presente nell'integrato.
-    \item Scriviamo del buffer l'istruzione BREAK.\@ 
-    \item Per ogni indirizzo da \(address + 1\) a \(pageaddr + pagelen - 1\) popoliamo il buffer con quanto letto. 
-    \item Eseguiamo l'azione Page Clear all'indirizzo \(pageaddr\)
-    \item Eseguiamo l'azione di programmazione della pagina.
-    \item Ripristiniamo lo stato dei registri invertendo quanto eseguito al punto 1.
+    \item Si inizi la scrittura di una pagina e, per ogni indirizzo da \(pageaddr\) a \(address\) (escluso), si legga in una variabile temporanea (2 byte) il valore della memoria flash a quell'indirizzo e si aggiunga al buffer di scrittura presente nell'integrato.
+    \item Si scriva nel buffer l'opcode corrispondente all'istruzione BREAK.\@ 
+    \item Per ogni indirizzo da \(address + 1\) a \(pageaddr + pagelen - 1\) si popoli il buffer con quanto letto. 
+    \item Si esegua l'azione Page Clear all'indirizzo \(pageaddr\)
+    \item Si esegua l'azione di programmazione della pagina.
+    \item Si ripristini lo stato dei registri invertendo quanto eseguito al punto 1.
 \end{enumerate}
 
 Quanto riportato, seppur una soluzione valida, causa un deterioramento della memoria flash e innalza notevolmente i tempi di debug, inserendo attese notevoli tra il posizionamento di un breakpoint e un altro.
@@ -482,9 +482,11 @@ Un breakpoint software viene definito con la struttura presentata nel \cref{lst:
 
 In particolare si ha che è necessario eseguire un'azione in memoria se i due flag sono discordanti: se un breakpoint è stato abilitato ma non è stato scritto in memoria sarà necessario sostituire l'istruzione presente all'indirizzo \(address\), mentre se un breakpoint è salvato (\texttt{stored} = 1) ma disabilitato sarà necessario ripristinare \(opcode\) all'indirizzo specificato.
 
-Nel caso di aggiunta o rimozione di un breakpoint l'indirizzo viene ricercato all'interno della lista di breakpoint precedentemente definiti comparando l'indirizzo. Se il breakpoint era stato precedentemente definito allora il riferimento viene modificato impostando la variabile \texttt{active} al valore consono. In caso contrario viene creato un nuovo riferimento in coda.
+Nel caso di aggiunta o rimozione di un breakpoint l'indirizzo viene ricercato all'interno della lista di breakpoint precedentemente definiti comparando l'indirizzo. Se il breakpoint era stato precedentemente definito allora il riferimento viene modificato impostando la variabile \texttt{active} al valore consono mentre in caso contrario viene creato un nuovo riferimento in coda.
 
-Prima della ripresa dell'esecuzione la lista di breakpoint viene ordinata mediante insertion sort secondo in seguenti criteri:
+Prima della ripresa dell'esecuzione la lista di breakpoint viene ordinata mediante insertion sort secondo i criteri elencati a seguire e vengono rimossi i riferimenti con indicatori \textit{stored} e \textit{active} disabilitati.
+
+I criteri di ordinamento sono i seguenti:
 \begin{itemize}
     \item se due riferimenti sono entrambi non salvati e inattivi non viene effettuata l'inversione e sono considerati uguali ignorando l'indirizzo.
     \item se il primo riferimento è inattivo e non salvato mentre il secondo è o salvato o attivato, allora viene eseguita l'inversione
@@ -561,8 +563,8 @@ Sia l'operazione di scrittura richiesta definita dalle variabili \(addr\) e \(le
 \begin{enumerate}
     \item Se \(is\_mem\_wrt\) è attiva, ovvero se è già in corso un'operazione di scrittura, si vada al passo~\ref{step:wrt_bytes}
     \item \(last\_addr = addr\)
-    \item\label{step:wrt_bytes} Se \(addr > last\_address + 1\), leggere e ripopolare la stessa pagina di memoria per l'intervallo \(\left[last\_address + 1, addr\right)\)
-    \item Popolare la pagina per l'intervallo \(\left[addr, addr + min\left\{PAGEEND, len\}\right)\)
+    \item\label{step:wrt_bytes} Se \(addr > last\_address + 1\), leggere e ripopolare la stessa pagina di memoria per l'intervallo \(\left[last\_address + 1, addr\right[\)
+    \item Popolare la pagina per l'intervallo \(\left[addr, addr + \min\left\{PAGEEND, len\right\}\right[ \)
     \item Se si è giunti a fine della pagina da programmare eseguire la procedura di cancellazione e programmazione
     \item Se il comando successivo non è un comando di memoria, eseguire la procedura di cancellazione e programmazione per poi terminare la sessione disattivando \(is\_mem\_wrt\)
 \end{enumerate}
@@ -642,3 +644,6 @@ Bisogna ora configurare il compilatore per posizionare la struttura di controllo
 La struttura di controllo viene posta in testa alla sezione \texttt{.data} in quanto essa è la prima sezione della mappatura delle variabili in indirizzi SRAM, permettendo di mantenere la struttura \texttt{rtt\_data} ad un indirizzo noto (\mbox{\texttt{RAM\_BASE}}).
 
 L'utilizzo della sezione data implica un'inizializzazione da parte della libreria \textit{avr-libc}. Tale operazione viene impedita impostando l'indirizzo di inizio della seziona data a seguire della sezione logica \texttt{dbgdata}. 
+
+Affinché il server GDB abiliti il terminale rtt è necessario inviare il comando \texttt{monitor rtt enable}.
+I comandi \texttt{monitor} costituiscono il metodo di gestione di comandi personalizzati all'interno del protocollo GDB.\@
