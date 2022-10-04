@@ -4,9 +4,9 @@ In questo capitolo saranno discusse le funzionalità e le possibilità offerte d
 
 La difficoltà principale che un programmatore si trova ad affrontare nell'intraprendere un percorso di apprendimento della programmazione embedded consiste nel ritrovarsi in un mondo completamente diverso di gestione del software e ambienti di sviluppo. Vi è poi l'assoluta differenza del processo di programmazione e debug da un comune applicativo per calcolatore.
 
-Sebbene l'approccio a una nuova piattaforma hardware con differenti specifiche e funzionalità e, spesso, con un \textit{instruction set} limitato e non famigliare possa sembrare un ostacolo impegnativo, la verità è che, grazie a strumenti quali compilatori come \textit{gcc} e \textit{rustc}, è possibile scrivere notevoli porzioni di codice completamente indipendente dall'architettura del dispositivo finale.
+Sebbene l'approccio a una nuova piattaforma hardware con differenti specifiche e funzionalità e, spesso, con un \textit{instruction set} limitato e non famigliare possa sembrare un ostacolo impegnativo, nella realtà, grazie a strumenti quali compilatori come \textit{gcc} e \textit{rustc}, è possibile scrivere notevoli porzioni di codice completamente indipendenti dall'architettura del dispositivo finale.
 
-La difficoltà principale per lo sviluppatore per approcciarsi allo sviluppo di una piattaforma embedded è di fatto l'adattarsi ad un nuovo ambiente e strumenti spesso proprietari e male o per nulla documentati.
+La difficoltà principale per lo sviluppatore nell'approcciarsi allo sviluppo di una piattaforma embedded è di fatto l'adattarsi ad un nuovo ambiente e strumenti spesso proprietari e male o per nulla documentati.
 
 Un'ulteriore difficoltà che limita l'accesso di nuovi sviluppatori verso il mondo embedded è la necessità di strumenti proprietari e costosi per programmare e \textit{debuggare} hardware, oltre al costo fisico di schede per la prototipazione.
 
@@ -16,7 +16,7 @@ L'ecosistema Arduino è la scelta adottata dalla maggior parte di hobbisti e cor
 
 Non vi è dubbio sulla versatilità e la facilità di apprendimento della programmazione embedded AVR tramite la piattaforma.
 
-Date le motivazioni e l'obiettivo dell'azienda d'Ivrea, è possibile osservare come la piattaforma e gli strumenti software con le loro  capacità non siano ottimali per uno sviluppo professionale o più complesso e ottimizzato: l'ambiente di sviluppo, mostrato in \cref{fig:arduino-ide}, è notevolmente semplificato causando una mancanza di strumenti essenziali.
+Date le motivazioni e l'obiettivo dell'azienda d'Ivrea, è possibile osservare come la piattaforma e gli strumenti software non siano ottimali per uno sviluppo professionale o più complesso e ottimizzato.
 
 \begin{figure}
     \centering
@@ -24,9 +24,9 @@ Date le motivazioni e l'obiettivo dell'azienda d'Ivrea, è possibile osservare c
     \caption[Immagine del software Arduino IDE v2]{Finestra di programmazione dell'ambiente di sviluppo Arduino IDE v2}\label{fig:arduino-ide}
 \end{figure}
 
-Come è possibile osservare l'ambiente di sviluppo presenta un insieme notevolmente limitato di funzioni e un'interfaccia fortemente semplificata. È anche possibile osservare la presenza di un indicatore di debug: questo è solo disponibile con schede ARM a 32 bit più prestazionali. La funzionalità di debug non è presente sulle schede AVR.\@
+Come è possibile osservare l'ambiente di sviluppo \textit{Arduino IDE} mostrato in~\cref{fig:arduino-ide} presenta un insieme notevolmente limitato di funzioni e un'interfaccia fortemente semplificata. È però possibile osservare la presenza di un indicatore di debug: questo è solo disponibile con schede ARM a 32 bit più prestazionali. La funzionalità di debug non è presente sulle schede AVR.\@
 
-Data l'assenza del \textit{debugger}, gli utenti sono obbligati all'utilizzo di logging tramite connessione seriale per analizzare il flusso del codice, pratica fortemente inefficiente per motivi prestazionali e per problemi di codifica dell'informazione.
+Data l'assenza del \textit{debugger} per la piattaforma AVR, gli utenti sono obbligati all'utilizzo di logging tramite connessione seriale per analizzare il flusso del codice, pratica fortemente inefficiente per motivi prestazionali e per problemi di codifica dell'informazione.
 
 L'utilizzo del server GDB sviluppato nel corso di questo elaborato garantirebbe nuove possibilità e efficienza, risultano però complesso e poco intuitivo in quanto dotato di sola interfaccia testuale come mostrato dalla~\cref{fig:gdb-cli}
 
@@ -36,13 +36,13 @@ L'utilizzo del server GDB sviluppato nel corso di questo elaborato garantirebbe 
     \caption[]{Immagine di una sessione di debug da linea di comando}\label{fig:gdb-cli}
 \end{figure}
 
-Risulta quindi necessario sviluppare un insieme di componenti che possano essere integrate nella maggior parte degli ambienti di sviluppo senza difficoltà, permettendo così di superare una delle limitazioni sopra descritte, ovvero la difficoltà di adottare un ambiente di sviluppo nuovo e mal documentato, permettendo l'utilizzo di una piattaforma nota e configurabile.
+Risulta quindi necessario sviluppare un insieme di strumenti che possano essere integrati nella maggior parte degli ambienti di sviluppo senza difficoltà, permettendo così di superare una delle limitazioni sopra descritte, ovvero la difficoltà di adottare un ambiente di sviluppo nuovo e mal documentato, permettendo l'utilizzo di una piattaforma nota e configurabile.
 
 \section{CMAKE}\label{s:cmake}
 
 Al fine di rendere la compilazione una procedura universale e generica è stato deciso l'utilizzo di un software di automazione del processo di compilazione altamente integrabile. Tale software è \textit{CMAKE}.
 
-Esso permette di descrivere gli output della compilazione (obiettivi) e di impostare alcune variabili di configurazione per poi generare una procedura di compilazione in funzione dei pacchetti e delle caratteristiche disponibili sulla macchina, astraendo così dalla scrittura di codice interoperabile.
+Esso permette di descrivere ad un livello più astratto gli obiettivi della compilazione e di impostare alcune variabili di configurazione per poi generare una procedura di compilazione in funzione delle librerie disponibili e delle caratteristiche dell'\textit{host}, semplificando la scrittura di codice interoperabile.
 
 Inoltre, al fine di garantire interoperabilità tra ambienti di sviluppo, è stato deciso di affidare tutte le azioni di upload del codice a processi esterni che CMAKE permette di lanciare come degli obiettivi personalizzati.
 
@@ -77,7 +77,7 @@ target_link_libraries(main-elf rtt)
     \end{lstlisting}
 \end{minipage}
 
-In particolare sia \(main\) il nome generico assegnato al target avr in sviluppo. La procedura di compilazione generata da CMAKE conterrà tre target nominati
+In particolare sia \(main\) il nome generico assegnato all'obiettivo avr in sviluppo. La procedura di compilazione generata da CMAKE conterrà tre sotto obiettivi nominati
 \begin{itemize}
     \item \textbf{main-elf}: obiettivo di compilazione effettivo dove il compilatore (\textit{avr-gcc}) verrà impiegato e genererà un file contenente codice eseguibile e informazioni di debug
     \item \textbf{main-bin}: obiettivo di utilità che estrarrà dal file \textit{build/main-elf} i file in formato \textit{ihex}\footnote{Intel Hexadecimal Format} per la programmazione delle memorie persistenti. Tali file sono una rappresentazione compressa del formato esadecimale\cite{site:ihex} e rappresentano le memorie bit per bit.
@@ -89,9 +89,9 @@ In particolare sia \(main\) il nome generico assegnato al target avr in sviluppo
 
 Per quanto riguarda l'ambiente di sviluppo, verrà commentata a seguire una configurazione di \textit{Visual Studio Code}.
 
-La scelta di questo editor di testo è data dalla sua grande diffusione con una crescita di \SI{2.6}{milioni} di utenti in un mese\cite{site:vscode-connect-2017} e dalla sua facilità di estensione tramite un sistema di plugin, con i quali diviene di fatto un ambiente di sviluppo integrato (IDE).
+La scelta di questo editor di testo è data dalla sua grande diffusione\cite{site:vscode-connect-2017} e dalla sua facilità di estensione tramite un sistema di plugin, con i quali diviene di fatto un ambiente di sviluppo integrato (IDE).
 
-Inoltre, lo sviluppo dell'applicativo tramite la piattaforma \textit{Electron}\cite{site:vscode-about}, garantisce la compatibilità con una fetta notevolmente estesa di dispositivi per la programmazione oltre che alla possibilità di proporre l'applicativo tramite interfaccia web\cite{site:electron}. 
+Inoltre, lo sviluppo dell'applicativo tramite la piattaforma \textit{Electron}\cite{site:vscode-about}, garantisce la compatibilità con una fetta notevolmente estesa di dispositivi oltre che alla possibilità di proporre l'applicativo tramite interfaccia web\cite{site:electron}. 
 
 Grazie alla scelta discussa nella~\cref{s:cmake}, al fine di implementare un processo di lavoro interamente integrato nell'ambiente di sviluppo, è sufficiente configurare un plugin per il supporto al software di automazione CMAKE come mostrato dalla~\cref{fig:vscode-cmake-plugin}.\@
 
@@ -101,9 +101,9 @@ Grazie alla scelta discussa nella~\cref{s:cmake}, al fine di implementare un pro
     \caption[Immagine del software Visual Studio Code]{Visual Studio Code con il plugin CMake installato}\label{fig:vscode-cmake-plugin}
 \end{figure}
 
-Nella figura mostrata è possibile identificare la lista di obiettivi rilevati dal file di configurazione (\texttt{CMakeFile.txt}) come mostrati dalla~\cref{s:cmake}. Nel riquadro presente nella parte bassa dell'immagine è possibile osservare l'output del comando di caricamento.
+Nella figura mostrata è possibile identificare la lista di obiettivi rilevati dal file di configurazione (\texttt{CMakeFile.txt}) come mostrati dalla~\cref{s:cmake}. Nel riquadro presente nella parte inferiore dell'immagine è possibile osservare l'output del comando di caricamento nella memoria flash del target del firmware compilato.
 
-Grazie ad un'altra serie di plugin sviluppata direttamente da Microsoft è possibile implementare il supporto al linguaggio di programmazione integrando anche uno strumento di assistenza alla scrittura con la possibilità di visualizzare suggerimenti inerenti a quanto viene scritto.
+Grazie ad un'altra serie di plugin sviluppata direttamente da Microsoft è possibile implementare il supporto al linguaggio di programmazione integrando anche uno strumento di assistenza alla scrittura del codice con la possibilità di visualizzare suggerimenti inerenti a quanto viene scritto.
 
 È anche possibile configurare l'ambiente di lavoro per l'utilizzo di un linguaggio compilato come Rust\cite{site:avrrust}, grazie all'utilizzo di librerie di astrazione dell'hardware\cite{site:arduino-hal-rust} e il supporto al compilatore avr-gcc.
 
@@ -121,6 +121,6 @@ Una volta completata la configurazione è possibile utilizzare le piene potenzia
     \caption[Immagine del software Visual Studio Code]{Visual Studio Code in modalità di debugging}\label{fig:vscode-debug}
 \end{figure}
 
-È possibile osservare come, abilitando il plugin di debug, sia disponibile un riquadro dedicato alla visualizzazione delle informazioni ottenute dal client GDB sul lato sinistro, mentre è identificabile nella parte sottostante l'output del terminale RTT (\cref{s:rtt}) evidenziato in colore magenta.
+È possibile osservare come, abilitando il plugin di debug, sia disponibile un riquadro dedicato alla visualizzazione delle informazioni ottenute dal client GDB sul lato sinistro, mentre è identificabile nella parte sottostante l'output del terminale RTT (\cref{s:rtt}) evidenziato in colore blu.
 
 Infine è osservabile la decorazione del codice durante il processo di debug come descritto dalla~\cref{ss:code-decoration}

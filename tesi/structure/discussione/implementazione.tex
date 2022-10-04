@@ -1,12 +1,12 @@
 \chapter{Implementazione}
 
-Di seguito vengono riportate le fasi di implementazione del firmware per ATMega16U2 per l'implementazione del server GDB.\@ 
+In questo capitolo verranno discussi gli sviluppi relativi al firmware sostitutivo programmato sull'ATMega16U2 della scheda \textit{Arduino UNO R3} illustrando livello per livello le soluzioni adottate e le relative motivazioni.
 
 \section{Modifiche hardware alla scheda}\label{s:dw-board-mod}
 
-Come discusso nell'introduzione la scheda \textit{Arduino UNO R3} non presenta alcun supporto al debugging o ad estensioni per tale funzione.
+Come discusso nell'introduzione la scheda \textit{Arduino UNO R3} non presenta alcun supporto al debugging o a estensioni per tale funzione.
 
-Questo comporta la necessità di sviluppare una nuova scheda derivata dall'architettura di \textit{Arduino UNO} --- il cui sviluppo comporterebbe un dispendio di energie e tempo non indifferenti e alte possibilità di errore --- oppure la modifica hardware e firmware di un esemplare della stessa.
+Questo comporta la necessità di sviluppare una nuova scheda derivata dall'architettura di \textit{Arduino UNO} --- il cui sviluppo comporterebbe un dispendio di energie e tempo non indifferenti e alte possibilità di errore --- oppure la modifica hardware e firmware di un esemplare della stessa al fine di introdurre tale funzionalità.
 
 Affinché sia possibile utilizzare l'interfaccia di debugging DebugWire è necessaria una connessione con pull-up diretta con il pin i reset dell'integrato.
 
@@ -25,9 +25,8 @@ Come è possibile osservare dall'allegato~\ref{app:r3-schematic}, L'integrato \t
     \caption[]{Procedimento di rimozione del condensatore \texttt{C5}. Il condensatore viene rimosso (b) e successivamente la connessione viene ripristinata (c)}\label{fig:remove-c5}
 \end{figure}
 
-Tale modifica rende inoperabile il firmware presente sul controllore ATMega16U2 in quanto così facendo la linea di reset rimarrebbe asserita al livello logico 0 durante la durata della connessione con l'\texttt{host}.
-
-Questa modifica comporta però il collegamento i componenti \texttt{RN2D} e \texttt{RN1D} i quali vanno a costituire un partitore di tensione che porrebbe la linea di reset ad un livello logico indefinito ad una tensione di 0.45V. Per questo motivo si rende necessaria una seconda modifica: è necessario isolare la resistenza \texttt{RN2D} tagliando la traccia come mostrato in \cref{fig:cut-rnd2}
+Tale modifica rende inoperabile il firmware presente sul controllore ATMega16U2 in quanto così facendo la linea di reset rimarrebbe asserita al livello logico 0 durante la durata della connessione con l'\texttt{host} impedendone il funzionamento sia da un punto di vista logico che fisico, in quanto il cambiamento comporta il collegamento dei componenti \texttt{RN2D} e \texttt{RN1D}. Questi costituiscono così un partitore di tensione che imporrebbe la linea di reset ad un livello logico insufficiente ad una tensione di \SI{450}{\milli\volt}. 
+Per questa motivazione si rende necessaria una seconda modifica isolando la resistenza \texttt{RN2D} tagliando la traccia che la collega alla linea di reset come mostrato in \cref{fig:cut-rnd2}
 
 \begin{figure}[b]
     \centering
@@ -35,7 +34,7 @@ Questa modifica comporta però il collegamento i componenti \texttt{RN2D} e \tex
     \caption[]{Isolamento del componente \texttt{RN2D} tagliando la traccia evidenziata.}\label{fig:cut-rnd2}
 \end{figure}
 
-Questa modifica si ripercuote negativamente sulla possibilità di eseguire il bootloader sull'ATMega16U2, in quanto è necessario che il pin 13 sia posto a 0V perchè esso possa essere caricato. Vi sono quindi tre possibilità:
+Questa modifica si ripercuote negativamente sulla possibilità di eseguire il bootloader sull'ATMega16U2, in quanto è necessario che il pin 13 sia posto a \SI{0}{\volt} perché esso possa essere caricato\cite[sec 23.6.3]{avr:m16u2}. Vi sono quindi tre possibilità:
 \begin{enumerate}
     \item Caricare il firmware personalizzato antecedentemente alle modifiche hardware.
     \item Utilizzare un programmatore esterno tramite l'header di programmazione \texttt{ICSP1}
@@ -44,7 +43,7 @@ Questa modifica si ripercuote negativamente sulla possibilità di eseguire il bo
 
 \subsection{Riutilizzo del pulsante di reset}
 
-La connessione per il debugging, trattasi di una linea seriale open drain, comporta che il punsante di reset presente sulla scheda non sia più funzionante, in quanto le funzionalità originali del pin di reset vengono disattivate con l'attivazione della periferica DebugWire.
+La connessione per il debugging, trattasi di una linea seriale open drain, comporta che il pulsante di reset presente sulla scheda non sia più funzionante, in quanto le funzionalità originali del pin di reset vengono disattivate con l'attivazione della periferica DebugWire.
 
 La soluzione adottata consiste nell'implementazione di un soft-reset gestito dal microcontrollore ATMega16U2: La connessione del pulsante viene modificata in modo che esso sia un input letto dal firmware modificato del micro-controllore adattatore, il quale si occuperà di resettare il \textit{target} mediante l'invio di una sequenza di comandi descritta dall'algoritmo seguente:
 \begin{enumerate}
@@ -53,7 +52,34 @@ La soluzione adottata consiste nell'implementazione di un soft-reset gestito dal
     \item Ripresa dell'esecuzione (0x30)
 \end{enumerate}
 
-A tal fine è necessario installare una connessione ausiliaria tramite un filo e tagliare la traccia di connessione del pulsante come mostrato dalla \cref{fig:rst-rewire}
+A tal fine è necessario installare una connessione ausiliaria tramite un filo e tagliare la traccia di connessione del pulsante come mostrato dalla \cref{fig:rst-rewire}. Il valore del pulsante sarà letto dal pin \texttt{PINB6} il quale viene configurato come input con pull-up abilitato, filtrando in seguito il segnale tramite una procedura di \textit{debouncing} illustrata dal~\cref{lst:debounce}
+
+\noindent\begin{minipage}{\textwidth}
+    \begin{lstlisting}[style=C, caption={Routine di interrupt di TIMER0 per la gestione del debounce}, label=lst:debounce]
+    ISR(TIMER0_OVF_vect){
+        if(connection_evt) {
+            GDB_LED_OFF();
+            connection_evt = 0;
+        }
+    
+        if(usr_pshbtn_debounce_counter++ == 16) global_debounce = 0;
+    }
+
+    void usr_btn_task(user_button_state_t * btn){
+        if((*btn->pin_register) & (1 << btn->pin)){
+            btn->last_state = 1;
+        } else {
+            if(btn->last_state && !global_debounce){
+                usr_btn_event(btn);
+                global_debounce = 1;
+                usr_pshbtn_debounce_counter = 0;
+                TCNT0 = 0;
+            }
+            btn->last_state = 0;
+        }
+    }
+    \end{lstlisting}
+\end{minipage}
 
 \begin{figure}[h]
     \centering
@@ -68,11 +94,9 @@ A tal fine è necessario installare una connessione ausiliaria tramite un filo e
 
 Come riportato nella \cref{ss:dw-phy}, l'interfaccia tra debug server, l'ATMega16U2, e il controllore target è costituita da una linea seriale open drain.
 
-Si rende necessario quindi implementare tale interfaccia in modo efficiente al fine di permettere al server GDB di interfacciarsi con il \textit{target} tramite DebugWire
+Si rende necessario quindi implementare tale interfaccia in modo efficiente al fine di permettere al server GDB di interfacciarsi con il \textit{target} tramite DebugWire.
 
-L'implementazione inizialmente progettata in fase di ideazione, ancora prima che fosse stabilita la piattaforma hardware, sfruttava la periferica UART presente sul controllore ATMega16U2\cite[chap. 18]{avr:m16u2}.
-
-Al fine di implementare l'accesso alla linea open drain si rende necessario l'utilizzo di un componente aggiuntivo come mostrato nella \cref{fig:od-impl}, la quale mostra due alternative di implementazione utilizzando un diodo o un transistor. 
+L'implementazione inizialmente progettata in fase di ideazione, ancora prima che fosse stabilita la piattaforma hardware, sfruttava una periferica UART.\@ Al fine di implementare l'accesso della periferica --- la quale fa affidamento a due line \textit{point-to-point} tra i due attori della comunicazione --- alla linea open drain si rende necessario l'utilizzo di un componente aggiuntivo come mostrato nella \cref{fig:od-impl}, la quale mostra due alternative di implementazione utilizzando un diodo o un transistor. 
 
 \begin{figure}[t]
     \centering
@@ -81,7 +105,7 @@ Al fine di implementare l'accesso alla linea open drain si rende necessario l'ut
         \begin{circuitikz}
             \draw (0, 0) node[label={[font=\footnotesize]above:rxd}] {} to[short, *-] (2, 0) to[short, -] (2, 1) to[R={\(R_{pullup}\)}] (2, 2) to [short, -] (2, 2.5) to [short, -] (2.5, 2.5) to [short, -] (2.5, 3);
             \draw (2.5, 2.5) to[short, -] (3, 2.5) to[short, -] (3, 2) to[R={\(R1\)}] (3, 1);
-            \draw (3,-1) node [npn,xscale=-1,anchor=B] (npn) {\reflectbox{\(Q1\)}} (npn.collector);
+            \draw (3,-1) node [npn,xscale=-1,anchor=B] (npn) {\reflectbox{Q1}} (npn.collector);
             \draw (3, 1) to[short, -] (3, -1);
             \draw (2, 0) to[short, *-*] (4, 0) node[label={[font=\footnotesize]above:target}] {};
             \draw (0, -2) node[label={[font=\footnotesize]above:txd}] {} to[short, *-]  (2.16, -2) to[short, -] (2.16, -1.75);
@@ -94,20 +118,20 @@ Al fine di implementare l'accesso alla linea open drain si rende necessario l'ut
             \draw (0, 0) node[label={[font=\footnotesize]above:rxd}] {} to[short, *-] (2, 0) to[short, -] (2, 1) to[R={\(R_{pullup}\)}] (2, 2) to [short, -] (2, 3);
             \draw (1.5, 3) -- node[anchor=south,align=center] {VCC} (2.5, 3);
             \draw (2, 0) to[short, *-*] (4, 0) node[label={[font=\footnotesize]above:target}] {};
-            \draw (2, 0) to[short, -] (2, -0.5) to[D={\(D1\)}] (2, -1.5) to[short, -] (2, -2)  to [short, -*] (0, -2) node[label={[font=\footnotesize]above:txd}] {};
+            \draw (2, 0) to[short, -] (2, -0.5) to[D={D1}] (2, -1.5) to[short, -] (2, -2)  to [short, -*] (0, -2) node[label={[font=\footnotesize]above:txd}] {};
         \end{circuitikz}
     }
     \caption[]{L'immagine mostra due possibili circuiti per l'adattamento della periferica UART dell'ATMega16U2 alla linea seriale open drain.}\label{fig:od-impl}
 \end{figure}
 
-Il principio di funzionamento dei circuiti in \cref{fig:od-impl} è pressoché identico: Il valore del pin txd viene replicato sulla linea di connessione con un livello logico 0 ``forte'' e un livello logico 0 ``debole'' dato dalla resistenza \(R_{pullup}\) e in entrambi i casi il pin txd viene utilizzato come collettore di corrente.
+Il principio di funzionamento dei circuiti in \cref{fig:od-impl} è pressoché identico: Il valore del pin \textit{txd} viene replicato sulla linea di connessione con un livello logico 0 ``forte'' e un livello logico 1 ``debole'' dato dalla resistenza \(R_{pullup}\) e in entrambi i casi il pin \textit{txd} viene utilizzato come collettore di corrente.
 La differenza consiste nella quantità di componenti aggiuntivi e nelle prestazioni.
 
-Il circuito (a) permette, tramite il pin \textit{txd}, di porre la differenza di potenziale \(V_{be}\) tra base ed emettitore del transistor a circa 5V --- ignorando la caduta di tensione irrilevante sulla resistenza R1 --- permettendo una corrente di base sufficiente a mandare il transistor in saturazione. Questo manda il transistor in conduzione, ed essendo in saturazione, porta la differenza di potenziale \(V_{ce}\) a circa 0.2V imponendo così la tensione sulla connessione verso il target.
+Il circuito (a) permette, tramite il pin \textit{txd}, di porre la differenza di potenziale \(V_{be}\) tra base ed emettitore del transistor a circa \SI{5}{\volt} --- ignorando la caduta di tensione irrilevante sulla resistenza \texttt{R1} --- permettendo una corrente di base sufficiente a mandare il transistor in saturazione permettendo una differenza di potenziale \(V_{ce}\) irrilevante imponendo così la tensione sulla connessione verso il target a livello logico 0.
 
-Contrariamente il circuito (b) sfrutta il diodo D1 per ottenere lo stesso risultato. La differenza consta nel fatto che nel circuito (a) il transistor permette di avere una caduta di tensione minore essendo in saturazione, cosa che avviene quando il segnale \textit{txd} è zero.
+Contrariamente il circuito (b) sfrutta il diodo \texttt{D1} per ottenere lo stesso risultato. La differenza consta nel fatto che nel circuito (a) il transistor permette di avere una caduta di tensione minore essendo in saturazione, cosa che avviene quando il segnale \textit{txd} è zero, mentre il diodo \texttt{D1} causa una caduta di tensione dell'ordine di \SI{700}{\milli\volt}.
 
-I circuiti sopra mostrati sono verificati dalle simulazioni i cui risultati sono mostrati in \cref{graph:sim}. In aggiunta a quanto esibito, il circuito (b) è stato simulato con un diodo schottky 1N5817 con capacitanza di 125pF per valutarne il comportamento.
+I circuiti sopra introdotti sono verificati dalle simulazioni i cui risultati sono riportati in \cref{graph:sim}. In aggiunta a quanto esibito, il circuito (b) è stato simulato con un diodo schottky 1N5817 con capacitanza di \SI{125}{\pico\farad} per valutarne il comportamento.
 
 \begin{figure}
     \centering
@@ -135,23 +159,22 @@ I circuiti sopra mostrati sono verificati dalle simulazioni i cui risultati sono
                 \legend{$tgt (pn)$,$txd$}
             \end{axis}
         \end{tikzpicture}
-    \caption[]{Risultati della simulazione dei circuiti in \cref{fig:od-impl} con tempo di bit pari a 8\(\mu\)S}\label{graph:sim}
+    \caption[]{Risultati della simulazione dei circuiti in \cref{fig:od-impl} con tempo di bit pari a \SI{8}{\text{\mu}\second} (\SI{125}{\kilo\hertz}). Parametri della simulazione: \(C_{pn}, C_{par} = \SI{5}{\pico\farad}\), \(C_{schottky} = \SI{125}{\pico\farad}\)}\label{graph:sim}
 \end{figure}
 
-Come è possibile notare nel secondo caso la tensione della linea \textit{tgt} non è mai inferiore a 0.7V per la giunzione \textit{pn} mentre nel caso della giunzione metallo-semiconduttore la tensione associata al livello logico 0 è pari a circa 0.15V. Bisogna però sottolineare come nel caso di un diodo schottky l'alta capacitanza causa una lentezza di commutazione non indifferente, essendo che il segnale non raggiunge mai i 5V. 
+Come è possibile notare nel secondo caso la tensione della linea \textit{tgt} non è mai inferiore a \SI{700}{\milli\volt} per la giunzione \textit{pn} mentre nel caso della giunzione metallo-semiconduttore del diodo schottky la tensione associata al livello logico 0 è pari a circa \SI{150}{\milli\volt}. Risulta necessario sottolineare come nel secondo caso l'alta capacitanza causa una lentezza di commutazione non indifferente in quanto il segnale simulato non raggiunge mai il valore di \SI{5}{\volt}
 
-
-Sfruttando la periferica UART dell'ATMega16U2 risulta quindi notevolmente semplificata l'implementazione della comunicazione DebugWire, oltre a rendere possibile un approccio ad interrupt per la scrittura del firmware.
+Sfruttando la periferica UART risulta quindi banale l'implementazione della comunicazione DebugWire, oltre a rendere possibile un approccio ad interrupt per la scrittura del firmware.
 
 \subsection{Implementazione effettiva}
 
-Data la scelta di riutilizzare modificando la scheda \textit{Arduino UNO R3}, si è reso necessario l'utilizzo di un solo pin (pin 13) in quanto già collegato al pin di reset dopo le modifiche apportate descritte dalla \cref{s:dw-board-mod}.
+Data la scelta di riutilizzare modificando la scheda \textit{Arduino UNO R3}, si è reso necessario l'utilizzo di un solo pin non appartenente alla periferica UART dell'ATMega16U2\cite{avr:m16u2} (pin 13) in quanto, dopo le modifiche apportate descritte dalla \cref{s:dw-board-mod}, collegato al pin di reset (si veda il documento~\ref{app:r3-schematic}).
 
 Di conseguenza si è reso necessario scrivere un'implementazione software del protocollo seriale tramite un solo pin.
 
-La prima difficoltà di impleentazione riguarda la gestione del pin per l'utilizzo OpenDrain: la piattaforma AVR non supporta nativamente in hardware tale funzione, rendendo necessaria la gestione dello stato del pin a livello software.
+La prima difficoltà di implementazione riguarda la gestione del pin per l'utilizzo OpenDrain: la piattaforma AVR non supporta nativamente in hardware tale funzione, rendendo necessaria la gestione dello stato del pin a livello software.
 
-Vi sono tre registri di gesione di un pin nell'architettura AVR:\ \texttt{PORTx, DDRx e PINx}. A ogni bit di questi registri è associato un pin fisico e il relativo stato.
+Vi sono tre registri di gestione di un pin nell'architettura AVR:\ \texttt{PORTx, DDRx e PINx}. A ogni bit di questi registri è associato un pin fisico e il relativo stato.
 
 Attraverso quanto è rappresentato nella \cref{fig:avr-pin} possiamo valutare le varie condizioni nelle quali il pin fisico può trovarsi in funzione dello stato dei bit relativi ai tre registri elencati in precedenza.
 
@@ -161,23 +184,21 @@ Attraverso quanto è rappresentato nella \cref{fig:avr-pin} possiamo valutare le
     \caption[Immagine ottenuta dal documento\cite{avr:m16u2}, fig. 12-2]{Diagramma funzionale dell'hardware relativo a un generico pin della famiglia AVR\cite[fig. 12-2]{avr:m16u2}}\label{fig:avr-pin}
 \end{figure}
 
-Alla scrittura del registro DDRx viene asserita la linea WDx, la quale salva lo stato del bit associato al pin nel flipflop pilotato da essa. Questo stato pilota un buffer che stabilisce se il pin stesso debba essere un input o un output.
+Alla scrittura del registro DDRx viene asserita la linea WDx, la quale salva lo stato del bit associato al pin nel flipflop pilotato da essa. Questo stato controlla un buffer che stabilisce se il pin stesso debba essere in configurazione di input o output.
 
 In particolare, se lo stato salvato nel primo flipflop è 1, il pin sarà pilotato con livello logico pari allo stato salvato nel secondo flipflop in modo ``forte''.
 
-Se invece lo stato del pin viene posto come input, ossia lo stato del primo flipflop è 0, è possibile pilotare il FET che alimenta la linea di pullup del pin. Questo accade perchè il segnale che rappresenta la direzione del pin è input negato della porta AND che controlla lo stato del pullup; per questo motivo, lo stato 0 permette alla porta di avere risultato 1 se lo stato del secondo flipflop è pari a 1, in quanto tale segnale sarebbe ignorato perchè il buffer di controllo è disabilitato.
+Se invece lo stato del pin viene posto come input, ossia lo stato del primo flipflop è 0, è possibile pilotare il FET che alimenta la linea di pull-up del pin. Questo accade perché il segnale che rappresenta la direzione del pin è input negato della porta AND che controlla lo stato del pull-up; per questo motivo, il valore 0 permette alla porta di avere risultato 1 se lo stato del secondo flipflop è pari a 1, in quanto tale segnale sarebbe ignorato essendo che il buffer di controllo è disabilitato.
 
 La lettura dello stato del pin può avvenire in qualunque momento tramite la lettura del registro PINx, il quale asserisce la linea RPx e riporta lo stato salvato nello stadio di sincronizzazione.
 
-La scrittura di tale registro viene reindirizzata al controllo del multiplexer in modo da poter invertire lo stato del pin senza averlo precedentemente letto, dimezzando la quantità di operazioni necessarie all'inversione dello stato.
+La scrittura di tale registro viene reindirizzata al controllo del multiplexer in modo da poter invertire lo stato del pin senza averlo precedentemente letto, dimezzando la quantità di operazioni necessarie all'inversione dello stato, rendendo non necessaria la lettura del valore per calcolarne l'inverso.
 
-Risulta quindi necessario stabilire due sequenze di operazioni per portare il pin da livello logico basso ``forte'' a livello logico alto ``debole''. In particolare la transizione da livello logico alto a livello logico basso deve avvenire precedentemente alla configurazione della direzione del pin. Questo garantisce che non vi siano possibilità di conflitti potenzialmente catastrofici, considerando il fatto che il segnale che determina l'attivazione del pullup è anche responsabile dello stato del pin. Questo problema risulta evitabile utilizzando un pullup esterno.
+Risulta quindi necessario stabilire due sequenze di operazioni per portare il pin da livello logico basso ``forte'' a livello logico alto ``debole''. In particolare la transizione da livello logico alto a livello logico basso deve avvenire precedentemente alla configurazione della direzione del pin. Questo garantisce che non vi siano possibilità di conflitti potenzialmente catastrofici, considerando il fatto che il segnale che determina l'attivazione del pull-up è anche responsabile dello stato del pin.
 
 Analogamente per la conversione da livello logico basso a livello logico alto il cambio di stato dovrà avvenire successivamente al cambio di direzione.
 
-Così facendo si riducono le possibilità di guasto e si minimizzano i tempi di incertezza --- considerando l'assenza di un pullup esterno --- i quali si limitano al tempo intercorso tra i due cambi di configurazione: ci sarà sempre un intervallo di tempo dove lo stato del pin sarà posto a livello logico basso e il pin posto in configurazione di input, lasciando così la connessione flottante.
-
-In questi casi, data la durata di natura molto breve della commutazione e del periodo di incertezza, la capacitanza parassita della connessione permetterà di mantenere un livello logico costante.
+Così facendo si riducono le possibilità di guasto e si minimizzano i tempi di incertezza dove il pin è in configurazione di input ma il pull-up è disabilitato, i quali si limitano al tempo intercorso tra i due cambi di configurazione: Al fine di sopprimere tali periodi di incertezza è possibile utilizzare un resistore di pull-up esterno sulla linea.
 
 \subsubsection{Implementazione del protocollo di comunicazione}
 
@@ -187,13 +208,12 @@ L'implementazione si basa sull'utilizzo del timer TIMER1, un timer a 16 bit in g
 
 Il concetto sul quale si basa il funzionamento consiste nel mantenere il timer in esecuzione ed eventualmente resettarne il conteggio nel caso si renda necessario una re-sincronizzazione in ricezione.
 
-Entrambe le azioni di trasmissione e ricezione vengono implementate come una macchina a stati la quale iterazione è controllata dall'interrupt di comparazione di TIMER1.
+Entrambe le azioni di trasmissione e ricezione vengono implementate come una macchina a stati la quale iterazione è controllata dall'interrupt di comparazione di TIMER1 e avvitata da un evento quale una chiamata alla funzione di invio o dalla ricezione di uno \textit{start bit} UART.\@
 
-Entrambe le funzionalità sono divide in due domini di esecuzione: l'esecuzione invocata dall'utente e la macchina a stati relativa eseguita con l'interrupt. 
+Entrambe le funzionalità sono divise in due domini di esecuzione: l'esecuzione invocata dall'utente o da un evento esterno (\textit{start bit}) dove avviene la configurazione e la preparazione dei dati e l'esecuzione la macchina a stati ad ogni interrupt di comparazione. 
 
-La funzionalità di invio è implementata tramite un meccanismo di accodamento per due processi producer/consumer: alla prima invocazione della funzione di invio il byte viene salvato nella coda e viene abilitata la macchina a stati mostrata in \cref{fig:phy-state-tx} tramite il flag \texttt{\_OD\_UART\_BUSY} la quale consumerà il dato al primo interrupt di comparazione, mentre nella seconda invocazione un secondo byte verrà inserito nella coda e la funzione potrà ritornare liberamente. 
-
-È compito della macchina a stati riconoscere che un secondo byte è stato aggiunto alla coda \texttt{OD\_UART\_TX\_FULL} e di conseguenza essa inizierà una nuova trasmissione invece che andare allo stato \texttt{IDLE}.
+La funzionalità di invio è implementata tramite un meccanismo di accodamento per due processi produttore-consumatore: alla prima invocazione della funzione di invio il byte viene salvato nella coda e viene abilitata la macchina a stati mostrata in \cref{fig:phy-state-tx} tramite il flag \texttt{\_OD\_UART\_BUSY} la quale consumerà il dato con il successivo interrupt di comparazione del TIMER1.
+Nel caso di aggiunta di un secondo byte alla coda durante l'invio del dato, verrà lasciata alla macchina a stati la gestione dell'avvio di un nuovo invio una volta terminato il ciclo corrente invece che tornare allo stato \texttt{IDLE}. 
 
 \begin{figure}[t]
     \centering
@@ -201,10 +221,8 @@ La funzionalità di invio è implementata tramite un meccanismo di accodamento p
     \caption[]{Macchina a stati per l'implementazione della trasmissione seriale}\label{fig:phy-state-tx}
 \end{figure}
 
-Il comportamento sopra descritto viene riassunto dalla \cref{fig:phy-tx-timing}. Si noti come i cambiamenti di stato e il calcolo dei valori avvenga nell'iterazione precedente all'attuazione.
-Inoltre l'immagine mostra come un eventuale aggiunta di un dato alla coda persista e venga indicata dal flag \texttt{OD\_UART\_TX\_FULL}.
-
-Una volta terminata l'esecuzione dell'invio del dato, essendoci un ulteriore byte in coda, viene ripresa l'esecuzione immediatamente.
+Il comportamento sopra descritto viene riassunto dalla \cref{fig:phy-tx-timing}. Si noti come i cambiamenti di stato e il calcolo dei valori avvenga nell'iterazione precedente all'attuazione per permettere il rispetto delle tempistiche.
+Inoltre l'immagine mostra come un eventuale aggiunta di un dato alla coda durante l'invio venga indicato dal flag \texttt{OD\_UART\_TX\_FULL}, il quale causa, una volta terminata l'esecuzione del ciclo di invio del byte attuale, la ripresa della procedura senza fare ritorno allo stato \texttt{IDLE}.
 
 \begin{figure}[p]
     \checkoddpage%
@@ -222,12 +240,11 @@ Una volta terminata l'esecuzione dell'invio del dato, essendoci un ulteriore byt
 \end{figure}
 
 
+La parte di ricezione viene implementata con una seconda macchina a stati mostrata in \cref{fig:phy-rx-state} dove il primo passaggio di stato, da Idle a StartBit avviene alla ricezione di un interrupt relativo al cambiamento di livello logico da 1 a 0 del bus seriale.
 
-La parte di ricezione viene implementata con una seconda macchina a stati mostrata in \cref{fig:phy-rx-state} ma il primo passaggio di stato, da Idle a StartBit avviene alla ricezione di un interrupt relativo al cambiamento di stato del bus.
+La ragione per cui questo passaggio debba avvenire all'avvenimento di un interrupt consiste nel fatto che il \textit{target} può inviare una risposta in qualsiasi istante temporale (in quanto la comunicazione è asincrona).
 
-La ragione per cui questo passaggio debba avvenire all'avvenimento di un interrupt consiste nel fatto che il \textit{target} può inviare una risposta in qualsiasi istante temporale.
-
-Risulta quindi necessario l'utilizzo di una struttura FIFO per il salvataggio dei dati ricevuti dalla quale poi l'utente potrà attingere durante l'esecuzione del software. In particolare il flag \texttt{\_OD\_UART\_AVAIL} indicherà la presenza di dati non ancora letti nel buffer.
+Risulta necessario l'utilizzo di una struttura FIFO per il salvataggio dei dati ricevuti dalla quale poi l'utente potrà attingere durante l'esecuzione del software. In particolare il flag \texttt{\_OD\_UART\_AVAIL} indicherà la presenza di dati non ancora confermati nel buffer.
 
 Si rende quindi necessario poter ripristinare il conteggio del TIMER1 al fine di re-sincronizzare il clock di campionamento del bus al centro del bit per i motivi descritti nella \cref{ss:uart}, in particolare facendo riferimento all'\cref{eq:uart-period-receive-delay}. Questo comportamento è riassunto dalla \cref{fig:phy-rx-timing}.
 
@@ -266,21 +283,19 @@ __attribute__((optimize("-Ofast"))) ISR(INT7_vect){
     \end{lstlisting}
 \end{minipage}
 
-È possibile osservare come nella compilazione dell'handler dell'interrupt venga privilegiata la velocità di esecuzione anziché lo spazio occupato dal compilato, e come il TIMER1 venga impostato a 0. Così facendo il campionamento avverrà verso l'inizio del bit inviato anziché alla metà del tempo di bit. 
-
-Questo non è da considerarsi un problema data la bassa frequenza dell'insieme.
+È possibile osservare come nella compilazione dell'handler dell'interrupt venga privilegiata la velocità di esecuzione anziché lo spazio occupato dal compilato (linea 1), e come il TIMER1 venga impostato a 0 permettendo di eseguire il campionamento nel del tempo di bit successivo. 
 
 È inoltre necessario impostare \texttt{TCNT1 = OCR1A >\textcompwordmark> 2} nel caso si voglia utilizzare frequenze vicine a 125000 bit per secondo in quanto vanno considerati i tempi di esecuzione del codice e di reazione del timer. Questo valore è stato trovato sperimentalmente mediante l'uso di un analizzatore logico.
 
 \section{DebugWire}
 
-Grazie alla possibilità di eseguire istruzioni arbitrarie tramite l'interfaccia di debug, è possibile creare delle funzionalità non previste dal protocollo stesso ma di notevole importanza per la gestione del debug.
+Grazie alla possibilità di eseguire istruzioni arbitrarie tramite l'interfaccia di debug, è possibile creare delle funzionalità non previste dal protocollo stesso ma di notevole importanza per l'ergonomia dei processi di analisi e \textit{debugging}.
 
 \subsection{Riconoscimento del target}
 
 Durante l'inizializzazione il debugger leggerà il registro SIGNATURE DebugWire per identificare il componente.
 
-Una sezione di memoria flash è stata dedicata al salvataggio di una struttura dati contenente le informazioni necessarie al debugging di un integrato, per cui è sufficiente cercare sequenzialmente la coincidenza del valore del registro signature rispetto al campo id.
+Una sezione di memoria flash del firmware presente sull'ATMega16U2 è stata dedicata al salvataggio di una struttura dati contenente le informazioni necessarie al debugging dei dispositivi supportati, per cui è sufficiente cercare sequenzialmente la coincidenza del valore del registro signature rispetto al campo id per ottenere i parametri specifici del microcontrollore \textit{target}.
 
 La struttura salvata contenente gli indirizzi e le dimensioni viene mostrata con il \cref{lst:struct-dw-dev}
 
@@ -288,15 +303,11 @@ La struttura salvata contenente gli indirizzi e le dimensioni viene mostrata con
     \begin{lstlisting}[style=C, caption={Strutture utilizzate nel codice finale per il salvataggio e la ricerca dei parametri associati al target connesso}, label=lst:struct-dw-dev]
     typedef struct dw_device_definition{
         uint16_t signature;
-
         uint16_t sram_base;         //first sram address after extended io
         uint16_t sram_end;          //first sram address after extended io
-
         uint8_t flash_page_end;     //words per page
         uint16_t flash_end;         //last flash valid word
-
         uint16_t eeprom_end;        //first eeporom address after io and extended io
-
         uint8_t reg_spmcsr;
         uint8_t reg_dwdr;
         uint8_t reg_eearl;
@@ -313,23 +324,23 @@ La struttura salvata contenente gli indirizzi e le dimensioni viene mostrata con
 
 \subsection{Programmazione delle memorie non volatili}
 
-In particolare il protocollo DebugWire non permette di accedere in scrittura alle memorie non volatili, impedendone così la programmazione tramite tale interfaccia.
+Il protocollo DebugWire non permette di accedere in scrittura alle memorie non volatili, impedendone così la programmazione tramite tale interfaccia.
 
 Prendendo spunto da quanto riportato sul datasheet della maggior parte dei dispositivi AVR\cite[34]{avr:m328p}\cite[sec 26.2.5]{avr:m328p}, è possibile ideare una breve routine eseguibile passo-passo dal debugger per la scrittura di tali memorie.
 
 Bisogna però trovare un modo per inviare il dato, o i dati, da scrivere nella memoria.
 
-Una possibile soluzione potrebbe essere quella di scrivere il byte o la pagina in RAM e utilizzare così istruzioni \texttt{ld}, ma questo approccio richiederebbe troppe istruzioni e causerebbe lunghi tempi di programmazione.
+Una possibile soluzione potrebbe essere quella di scrivere il byte o la pagina in RAM e utilizzare così istruzioni \texttt{ld}, ma questo approccio richiederebbe un numero elevato di  istruzioni e causerebbe lunghi tempi di programmazione.
 
-La soluzione adottata è quella di leggere o scrivere il registro \texttt{DWDR}. Dati i test eseguiti, una scrittura del registro tramite i comandi sopra descritti (il registro si trova ad un indirizzo noto) richiede un ulteriore byte inviato sulla linea seriale che verrà salvato in tale registro\cite{site:dw-reverse-engeneering}. Analogamente la sua lettura comporta un ulteriore byte inviato dal target rappresentate il valore salvato\cite{site:dw-reverse-engeneering}.
+La soluzione adottata è quella di leggere o scrivere il registro \texttt{DWDR}. Dati i test eseguiti, una scrittura del registro tramite i comandi descritti alla~\cref{sss:dw-mem-io} (il registro si trova ad un indirizzo noto) richiede un ulteriore byte inviato sulla linea seriale che verrà salvato in tale locazione\cite{site:dw-reverse-engeneering}. Analogamente la sua lettura comporta un ulteriore byte inviato dal target rappresentate il valore salvato\cite{site:dw-reverse-engeneering}.
 
-Sono stati elaborati due frammenti di codice eseguibili dal debugger per la programmazione delle memorie non volati. Essi sono consultabili nell'appendice come documento~\ref{app:dw-flash-prog} e documento~\ref{app:dw-eeprom-prog}.
+I documenti~\ref{app:dw-flash-prog}~e~\ref{app:dw-eeprom-prog} riportano l'implementazione di codice eseguibile dal debugger per la programmazione delle memorie non volati.
 
-Da tali documenti possiamo osservare come il codice sia fortemente dipendente dal debugger per la preparazione del contesto, ovvero necessita che prima dell'esecuzione siano eseguite certe istruzioni di preparazione quali salvataggio dello stato dei registri e preparazione delle costanti e indirizzi nei registri utilizzati.
+Da tali documenti possiamo osservare come il codice sia fortemente dipendente dal debugger per la preparazione del contesto, ovvero necessita che, prima dell'esecuzione, siano eseguite certe istruzioni di preparazione quali salvataggio dello stato dei registri e preparazione delle costanti e indirizzi nei registri utilizzati.
 
-Inoltre la scrittura dell'algoritmo di programmazione della memoria flash è stata fatta facendo sì che non sia necessario istanziare un buffer contenente l'intera pagina da programmare precedentemente alla chiamata, bensì è possibile scrivere il buffer temporaneo a blocchi di dimensione indefinita purché venga completato prima di procedere.
+Inoltre la scrittura dell'algoritmo di programmazione della memoria flash è stata sviluppata evitando la dipendenza da un buffer contenente l'intera pagina da programmare precedentemente alla chiamata, bensì, grazie all'algoritmo implementato, è possibile popolare il buffer temporaneo a blocchi di dimensione indefinita prima della programmazione della memoria flash.
 
-Questo permette di scrivere codice a bassissimo impatto sulla quantità di memoria SRAM utilizzata per buffer temporanei, condizione necessaria per lo sviluppo su ATMega16U2 in quanto la memoria SRAM totale disponibile non supera i 512byte\cite{avr:m16u2}.
+Questo permette di scrivere codice a bassissimo impatto sulla quantità di memoria SRAM utilizzata per buffer temporanei, condizione necessaria per lo sviluppo su ATMega16U2 in quanto la memoria SRAM totale disponibile non supera i \SI{512}{byte}\cite{avr:m16u2}.
 
 \subsection{Salvataggio stato di esecuzione}
 
@@ -440,19 +451,26 @@ L'aggiunta della possibilità di scrivere la memoria flash consente l'implementa
 
 Un breakpoint è un indicatore associato a un indirizzo di memoria dove il codice è in esecuzione con il fine di interrompere l'esecuzione dell'algoritmo e passare il controllo al debugger per effettuare le operazioni di analisi e ispezione.
 
-Questi consistono nella sovrascrittura di un'istruzione con l'opcode corrispondente a \texttt{BREAK} causando così l'halt della cpu e l'intervento del debugger prima dell'esecuzione della stessa.
+Questi consistono nella sovrascrittura di un'istruzione con l'opcode corrispondente all'istruzione \texttt{break} causando così l'halt della CPU e l'intervento del debugger prima dell'esecuzione della stessa.
 Alla ripresa dell'esecuzione il debugger caricherà in memoria l'istruzione originale e riprenderà il flusso del codice.
 
 Un primo approccio per la scrittura del codice relativo a questa feature consiste nell'aggiornare la memoria flash scrivendo un'istruzione BREAK\footnote{0x0000} non appena possibile e salvare in una struttura dati la coppia \[<indirizzo>:<opcode>\]
 
-Un possibile algoritmo viene esibito di seguito. Questo algoritmo ha un impatto sull'utilizzo della memoria SRAM di 18 byte facendo uso del fatto che è possibile riempire il buffer di scrittura prima della cancellazione della pagina.
+Un possibile algoritmo viene esibito di seguito. Questo algoritmo ha un impatto sull'utilizzo della memoria SRAM di 18 byte facendo uso del fatto che è possibile riempire il buffer di scrittura prima della cancellazione della pagina\cite{avr:m328p}.
 
 Sia \(address\) l'indirizzo dell'istruzione da sostituire (word address), \(pagelen\) il numero di word in una pagina.
 
+L'algoritmo di aggiornamento è definito secondo i passi a seguire:
+
 \begin{enumerate}
     \item Salvataggio dei registri come definito in \cref{fig:dw-wrt-seq} per l'azione \texttt{FLASH\_W} (14 byte)
-    \item Poniamo l'indirizzo di pagina, utilizzando 2 byte, come \[pageaddr = \left\lfloor\frac{address}{pagelen}\right\rfloor pagelen\] 
-    \item Si inizi la scrittura di una pagina e, per ogni indirizzo da \(pageaddr\) a \(address\) (escluso), si legga in una variabile temporanea (2 byte) il valore della memoria flash a quell'indirizzo e si aggiunga al buffer di scrittura presente nell'integrato.
+    \item Poniamo l'indirizzo di pagina, utilizzando 2 byte, come definito dall'~\cref{eqn:page-address}.
+    
+    \begin{equation}\label{eqn:page-address}
+    pageaddr = \left\lfloor\frac{address}{pagelen}\right\rfloor pagelen
+    \end{equation}
+
+    \item Si inizi la scrittura di una pagina e, per ogni indirizzo da \(pageaddr\) a \(address\) (escluso), si legga in una variabile temporanea (2 byte) il valore della memoria flash a quell'indirizzo e si aggiunga al buffer di scrittura presente nell'integrato (si veda il documento~\ref{app:dw-flash-prog}).
     \item Si scriva nel buffer l'opcode corrispondente all'istruzione BREAK.\@ 
     \item Per ogni indirizzo da \(address + 1\) a \(pageaddr + pagelen - 1\) si popoli il buffer con quanto letto. 
     \item Si esegua l'azione Page Clear all'indirizzo \(pageaddr\)
@@ -460,10 +478,10 @@ Sia \(address\) l'indirizzo dell'istruzione da sostituire (word address), \(page
     \item Si ripristini lo stato dei registri invertendo quanto eseguito al punto 1.
 \end{enumerate}
 
-Quanto riportato, seppur una soluzione valida, causa un deterioramento della memoria flash e innalza notevolmente i tempi di debug, inserendo attese notevoli tra il posizionamento di un breakpoint e un altro.
+Quanto riportato, seppur una soluzione valida, causa un deterioramento della memoria flash e innalza notevolmente i tempi di debug, inserendo attese notevoli tra il posizionamento di un breakpoint e un altro in quanto per ogni breakpoint avviene la riprogrammazione dell'intera pagina dove esso è collocato.
 
 L'algoritmo finale risolve queste problematiche adottando una gestione ``\textit{lazy}'' dei breakpoint e accorpando modifiche alle pagine di memoria flash solo al momento precedente all'esecuzione.
-Questo permette di evitare tutte le riscritture date dall'eventuale indecisione del programmatore o errori di puntamento.
+Questo permette di evitare tutte le riscritture date dall'eventuale indecisione del programmatore o errori di inserimento.
 
 Un breakpoint software viene definito con la struttura presentata nel \cref{lst:dw-swbp-struct}. I flag \texttt{active} e \texttt{stored} permettono di identificare le azioni da intraprendere al momento dell'applicazione delle modifiche in memoria.
 
@@ -472,14 +490,13 @@ Un breakpoint software viene definito con la struttura presentata nel \cref{lst:
     typedef struct dw_sw_brkpt{
         uint16_t address;
         uint16_t opcode;
-
         uint8_t active : 1;
         uint8_t stored : 1;
     } dw_sw_brkpt_t;
     \end{lstlisting}
 \end{minipage}
 
-In particolare si ha che è necessario eseguire un'azione in memoria se i due flag sono discordanti: se un breakpoint è stato abilitato ma non è stato scritto in memoria sarà necessario sostituire l'istruzione presente all'indirizzo \(address\), mentre se un breakpoint è salvato (\texttt{stored} = 1) ma disabilitato sarà necessario ripristinare \(opcode\) all'indirizzo specificato.
+In particolare si ha che è necessario eseguire un'azione in memoria se i due flag sono discordanti: se un breakpoint è stato abilitato ma non è stato scritto in memoria sarà necessario sostituire l'istruzione presente all'indirizzo \(address\), mentre se un breakpoint è salvato (\texttt{stored} = 1) ma disabilitato sarà necessario ripristinare \texttt{opcode} all'indirizzo specificato.
 
 Nel caso di aggiunta o rimozione di un breakpoint l'indirizzo viene ricercato all'interno della lista di breakpoint precedentemente definiti comparando l'indirizzo. Se il breakpoint era stato precedentemente definito allora il riferimento viene modificato impostando la variabile \texttt{active} al valore consono mentre in caso contrario viene creato un nuovo riferimento in coda.
 
@@ -502,9 +519,9 @@ Sarebbe possibile rendere la ricerca e l'ordinamento più efficiente utilizzando
 
 L'implementazione del server GDB è la seconda parte fondamentale del progetto proposto.
 
-Come descritto in precedenza nella \cref{fig:gdb-server-tunnels} la comunicazione con l'\textit{host} avviene tramite USB.\@ Tale comunicazione viene implementata dalla libraria LUFA\cite{git:lufa} per semplificare lo sviluppo.
+Come descritto in precedenza nella \cref{fig:gdb-server-tunnels} la comunicazione con l'\textit{host} avviene tramite USB.\@ Tale comunicazione viene implementata dalla libreria LUFA\cite{git:lufa} per semplificare lo sviluppo.
 
-La gestione della comunicazione avviene mediante un'implementazione a flussi, limitando la quantità di dati salvata in SRAM a \SI{64}{Byte} prima di eseguire le operazioni. Questo perchè, come mostrato nell'\cref{eq:gdb-checksum} il checksum può essere calcolato durante la lettura senza la necessità di fare riferimento ad altri dati se non al'ultimo byte letto.
+La gestione della comunicazione avviene mediante un'implementazione a flussi, limitando la quantità di dati salvata in SRAM a \SI{64}{Byte} prima di eseguire le operazioni. Questo perché, come mostrato nell'\cref{eq:gdb-checksum} il checksum può essere calcolato durante la lettura senza la necessità di fare riferimento ad altri dati se non al'ultimo byte letto.
 
 Una volta ottenuto il comando, sarà compito della funzione implementante di leggere eventuali dati aggiuntivi necessari quando richiesto.
 
@@ -523,11 +540,11 @@ Un esempio di questa architettura lo si ha nell'implementazione della scrittura 
     \caption[]{Comando GDB di scrittura registri\cite{site:gdbproto}}\label{fig:Gcmd}
 \end{figure}
 
-Sorge quindi il problema di comandi pacchettizati: La scrittura della memoria flash avviene inviando pacchetti multipli di dimensione limitata contenenti i dati da scrivere senza tenere conto della divisione in pagine\footnote{Il protocollo permette di definire un limite massimo ai pacchetti, per cui scritture di dati di lunghezza maggiore di quanto impostato vengono divise in più comandi. La lunghezza dei pacchetti può non essere multipla della lunghezza delle pagine.}. È dunque necessario mantenere una ``sessione'' di scrittura dove le pagine vengono programmate in successione, tenendo traccia dell'ultimo indirizzo scritto per riprendere la popolazione del buffer con dati validi.
+Sorge quindi il problema di comandi pacchettizzati: La scrittura della memoria flash avviene inviando pacchetti multipli di dimensione limitata contenenti i dati da scrivere ad un dato indirizzo senza tenere conto della divisione in pagine\footnote{Il protocollo permette di definire un limite massimo ai pacchetti, per cui scritture di dati di lunghezza maggiore di quanto impostato vengono divise in più comandi. La lunghezza dei pacchetti può non essere multipla della lunghezza delle pagine.}. È dunque necessario mantenere una ``sessione'' di scrittura tenendo traccia dell'ultimo indirizzo scritto e della pagina corrente per riprendere il riempimento del buffer temporaneo sul dispositivo \textit{target} con dati validi.
 
 Il generico pacchetto di scrittura della memoria è definito dalla \cref{fig:Mcmd}.
 
-La memoria di destinazione viene definita in funzione dell'offset dell'indirizzo come descritto dalla \cref{tab:gdb-mem-addr}. L'indirizzo reale dell'operazione è definito come l'indirizzo inviato sottratto del valore dell'inizio dell'intervallo.
+Per permettere la scrittura delle diverse memorie, esse sono identificate dell'offset dell'indirizzo del quale viene effettuato come descritto dalla \cref{tab:gdb-mem-addr}. L'indirizzo reale dell'operazione è definito come l'indirizzo inviato sottratto del valore dell'inizio dell'intervallo.
 
 \begin{figure}
     \centering
@@ -558,17 +575,19 @@ La memoria di destinazione viene definita in funzione dell'offset dell'indirizzo
 
 La scrittura della memoria flash avviene secondo il seguente algoritmo:
 Sia \(last\_addr\) l'ultimo indirizzo scritto dalla precedente esecuzione di scrittura e \(is\_mem\_wrt\) la variabile di stato per la procedura.
-Sia l'operazione di scrittura richiesta definita dalle variabili \(addr\) e \(len\) ed infine sia \(PAGEEND\) la quantità di byte in una pagina per il dispositivo.
+Sia l'operazione di scrittura richiesta definita dalle variabili \(addr\) e \(len\). Sia \(PAGEEND\) la quantità di byte in una pagina per il dispositivo ed infine \(page\_address\) la quantità definita dall'~\cref{eqn:page-address}.
+
 \begin{enumerate}
     \item Se \(is\_mem\_wrt\) è attiva, ovvero se è già in corso un'operazione di scrittura, si vada al passo~\ref{step:wrt_bytes}
-    \item \(last\_addr = addr\)
-    \item\label{step:wrt_bytes} Se \(addr > last\_address + 1\), leggere e ripopolare la stessa pagina di memoria per l'intervallo \(\left[last\_address + 1, addr\right[\)
-    \item Popolare la pagina per l'intervallo \(\left[addr, addr + \min\left\{PAGEEND, len\right\}\right[ \)
-    \item Se si è giunti a fine della pagina da programmare eseguire la procedura di cancellazione e programmazione
-    \item Se il comando successivo non è un comando di memoria, eseguire la procedura di cancellazione e programmazione per poi terminare la sessione disattivando \(is\_mem\_wrt\)
+    \item Si ponga \(last\_addr = addr\)
+    \item\label{step:wrt_bytes} Se \(addr > last\_address\), leggere e ripopolare la stessa pagina di memoria per l'intervallo \(\left[last\_address + 1, addr\right[\)
+    \item\label{step:populate} Popolare la pagina per l'intervallo \[\left[addr, addr + \min\left\{PAGEEND - address + page\_address, len\right\}\right[ \]
+    \item Se \(page\_address < len\) si ponga \(len = len - PAGEEND + addr - page\_address\), si ponga \(addr = addr + PAGEEND\) e si ritorni al punto~\ref{step:populate}
+    \item Se si è giunti a fine della pagina da programmare eseguire la procedura di cancellazione e programmazione~\ref{chap:dw}
+    \item Se il comando successivo non è un comando di memoria e la pagina corrente non è ancora stata scritta, eseguire la procedura di cancellazione e programmazione per poi terminare la sessione disattivando \(is\_mem\_wrt\). In caso contrario si ritorni al punto 1.
 \end{enumerate}
 
-Vi è un effetto collaterale: affinchè tutti i dati siano programmati è necessario terminare la scrittura al limite di una pagina oppure è possibile inviare un comando scorrelato (e.g.\ lettura di un byte dalla memoria) per forzare la programmazione.
+Vi è un effetto collaterale: affinché tutti i dati siano programmati è necessario terminare la scrittura al limite di una pagina oppure è possibile inviare un comando non correlato (e.g.\ lettura di un byte dalla memoria) per forzare la programmazione.
 
 \section{Real Time Terminal}\label{s:rtt}
 
@@ -578,18 +597,16 @@ Nei capitoli precedenti è stata discussa l'implementazione di un server GDB per
 
 Affiancata alla pratica del debugging possiamo classificare un altro metodo diagnostico: il \textit{logging}.
 
-Questa seconda pratica --- spesso usata in modo scorretto per analizzare un problema in una porzione di codice --- consente di generare messaggi analizzabili successivamente a fine di \textit{auditing}; con ciò si intende l'analisi di messaggi di log passati per individuare malfunzionamenti o vulnerabilità inattesi e imprevisti.
+Questa seconda pratica --- spesso usata in modo scorretto per analizzare un problema algoritmico in una porzione di codice limitata--- consente di generare messaggi analizzabili successivamente a fine di \textit{auditing}; con ciò si intende l'analisi di messaggi di log raccolti nel periodo precedente passati per individuare malfunzionamenti o vulnerabilità inattesi e imprevisti occorsi durante la normale esecuzione del codice.
 
 I messaggi di log sono anche utili per individuare in quale macro area del codice si trova un possibile baco per poi indagare l'effettivo comportamento inatteso tramite debugger una volta identificata la causa scatenante.
 
-L'attenzione si sposta dunque su come implementare tale funzionalità sulla piattaforma AVR.\@ La maggior parte dei progetti e delle piattaforme utilizza la periferica UART del target al fine di comunicare con l'host, impedendone così l'utilizzo da parte del programmatore per comunicare con altre periferiche. Alcune piattaforme hanno ottimizzato questo utilizzo dedicando la linea seriale anche alla programmazione, riducendo però lo spazio disponibile nella memoria flash in quanto tale operazione deve essere svolta da un programmatore. 
+L'attenzione si sposta dunque su come implementare tale funzionalità sulla piattaforma AVR.\@ La maggior parte dei progetti e delle piattaforme utilizza la periferica UART del target al fine di interagire con l'host, impedendone così l'utilizzo da parte del programmatore per comunicare con altre periferiche. Alcune piattaforme hne anno ottimizzato l'utilizzo dedicando la linea seriale anche alla programmazione, riducendo però lo spazio disponibile nella memoria flash in quanto tale operazione deve essere svolta da un bootloader dedicato e collocato nella memoria flash del \textit{target}. 
 
-Tale funzionalità viene implementata %da tetino
-mediante la collaborazione del server GDB il quale mascherà tali eventi alle procedure di debug.
+In questo progetto tale funzionalità viene implementata %da tetino
+mediante la collaborazione del server GDB il quale maschererà tali eventi alle procedure di debug.
 
-Così facendo avverranno due tipologie di BREAK da parte del \textit{target}: questi avverranno quando un breakpoint viene raggiunto o quando il \textit{target} vuole inviare un messaggio. La distinzione avviene leggendo lo stato di una struttura posta in principio alla memoria SRAM definita tramite l'ausilio di un linker script.
-
-Tale struttura è definita secondo quanto riportato dal \cref{lst:rtt-struct}.
+Così facendo è possibile identificare due tipologie di interruzioni da parte del \textit{target}: Interruzioni causate al raggiungimento di un breakpoint oppure interruzioni relative all'invio di un messaggio. Tale distinzione avviene leggendo lo stato di una struttura, definita dal~\cref{lst:rtt-struct} posta in principio alla memoria SRAM del \textit{target}.
 
 \noindent\begin{minipage}{\textwidth}
     \begin{lstlisting}[style=C, caption={Struttura utilizzata per il salvataggio dei riferimenti ai breakpoint software}, label=lst:rtt-struct]
@@ -602,15 +619,15 @@ Tale struttura è definita secondo quanto riportato dal \cref{lst:rtt-struct}.
     \end{lstlisting}
 \end{minipage}
 
-La variabile \texttt{rtt\_data.enabled} non viene mai scritta dal \textit{target}. La variabile è in stato non inizializzato all'avvio del \textit{target} ma viene immediatamente posta a valore nullo con l'inizializzazione dell'interfaccia DebugWire. Così facendo si ha la certezza di avere il controllo assoluto di tale variabile tramite il debugger, evitando così disallineamento tra il server GDB e il \textit{target} in stato di debug.
+Si noti che la variabile \texttt{rtt\_data.enabled} non viene mai scritta dal \textit{target}. La variabile all'avvio è in stato non inizializzato ma viene immediatamente posta a valore nullo grazie all'intervento del firmware sviluppato per l'ATMega16U2. Così facendo si ha la certezza di avere il controllo assoluto di tale variabile impedendo il disallineamento sull'abilitazione della funzionalità RTT tra target e server GDB.\@
 
-A livello di libreria, come mostrato dall'allegato~\ref{app:rtt-lib} alle righe 9 e 10, l'esecuzione dell'istruzione \texttt{break} avviene solo se la variabile \texttt{rtt.enable} è posta a 1. In tal caso vengono impostate le variabili \texttt{rtt.available} e \texttt{rtt.size} prima di asserire la linea di debug per segnalare l'interruzione.
+A livello di libreria, come mostrato dall'allegato~\ref{app:rtt-lib} alle righe 9 e 10, l'esecuzione dell'istruzione \texttt{break} avviene solo se la variabile \texttt{rtt.enable} è posta a 1, ovvero se il server GDB ha precedentemente abilitato la funzionalità in questione. In tal caso vengono impostate le variabili \texttt{rtt.available} e \texttt{rtt.size} prima di asserire la linea di debug per segnalare l'interruzione.
 
 Si noti inoltre che la libreria viene completamente eliminata in caso di compilazione di una versione di rilascio (righe 3 e 4).
 
-La \cref{fig:rtt-gdbsrv} mostra la procedura di gestione di un'interruzuione da parte del server GDB.\@ Si può notare come, nel caso la funzionalità RTT sia abilitata anche nel debugger, vengano eseguite più operazioni per la gestione dell'interruzione.
+La \cref{fig:rtt-gdbsrv} mostra la procedura di gestione di un'interruzione da parte del server GDB.\@ Si può notare come, nel caso la funzionalità RTT sia abilitata, vengano eseguite più operazioni per la gestione dell'interruzione.
 
-Nel caso RTT sia abilitato il server GDB, prima di comunicare l'esecuzione al client GDB, leggerà dalla memoria del target la variabile \texttt{rtt.available}. Se tale variabile risultasse vera, verrebbe effettuata la lettura di \texttt{rtt.size} byte dal buffer e comunicata tale stringa correttamente formattata al client tramite il comando GDB \texttt{O} per poi riprendere l'esecuzione. Nel caso contrario si deduce che l'interruzione è avvenuta per il raggiungimento di un breakpoint e di conseguenza di comunica l'interruzione.
+Nel caso RTT sia abilitato il server GDB, prima di comunicare l'interruzione all'\textit{host}, leggerà dalla memoria del target la variabile \texttt{rtt.available}. Se tale variabile risultasse vera, verrebbe effettuata la lettura di \texttt{rtt.size} byte dal buffer e comunicata tale stringa correttamente formattata al client tramite il comando GDB `\texttt{O}'\cite{site:gdbproto} per poi riprendere l'esecuzione. Nel caso contrario si deduce che l'interruzione è avvenuta per il raggiungimento di un breakpoint e di conseguenza di comunicata l'interruzione.
 
 Tale funzionalità è detta \textit{Proxy}, ovvero le comunicazioni tra \textit{target} e server vengono intercettate ed eventualmente modificate o scartate.
 
@@ -620,7 +637,7 @@ Tale funzionalità è detta \textit{Proxy}, ovvero le comunicazioni tra \textit{
     \caption[]{Diagramma di attività descrivente il procedimento di gestione di un'interruzione da parte del target}\label{fig:rtt-gdbsrv}
 \end{figure}
 
-Bisogna ora configurare il compilatore per posizionare la struttura di controllo \texttt{rtt\_data}. A tale scopo è stato modificato lo script di linking, mostrato nel \cref{lst:link-rtt}, utilizzato comunemente dal compilatore \textit{gcc}: viene apportata una modifica alla sezione data includendo in essa una sezione logica \texttt{.dbgdata} nella quale viene posta la struttura di controllo come evidente dalla dichiarazione della riga 6 dell'allegato~\ref{app:rtt-lib}.
+Successivamente è necessario configurare il compilatore per posizionare la struttura di controllo \texttt{rtt\_data}. A tale scopo è stato modificato lo script di linking originale di \textit{avr-gcc}, del quale un dettaglio è mostrato nel \cref{lst:link-rtt}, apportando una modifica alla sezione \texttt{.data} includendo in principio ad essa una sezione logica \texttt{.dbgdata} nella quale viene posta la struttura di controllo, come evidente dalla dichiarazione della riga 6 dell'allegato~\ref{app:rtt-lib}.
 
 \noindent\begin{minipage}{\textwidth}
     \begin{lstlisting}[label=lst:link-rtt, caption={Sezione del linker script modificato per la compilazione della libraria rtt.}]
@@ -640,9 +657,7 @@ Bisogna ora configurare il compilatore per posizionare la struttura di controllo
     \end{lstlisting}
 \end{minipage}
 
-La struttura di controllo viene posta in testa alla sezione \texttt{.data} in quanto essa è la prima sezione della mappatura delle variabili in indirizzi SRAM, permettendo di mantenere la struttura \texttt{rtt\_data} ad un indirizzo noto (\mbox{\texttt{RAM\_BASE}}).
-
-L'utilizzo della sezione data implica un'inizializzazione da parte della libreria \textit{avr-libc}. Tale operazione viene impedita impostando l'indirizzo di inizio della seziona data a seguire della sezione logica \texttt{dbgdata}. 
+È necessario osservare che la sezione \texttt{.data} viene inizializzata grazie all codice standard di \textit{avr-libc}. Tale operazione viene impedita impostando l'indirizzo di inizio della seziona a seguire della sezione logica \texttt{.dbgdata} (linea 6). 
 
 Affinché il server GDB abiliti il terminale rtt è necessario inviare il comando \texttt{monitor rtt enable}.
 I comandi \texttt{monitor} costituiscono il metodo di gestione di comandi personalizzati all'interno del protocollo GDB.\@

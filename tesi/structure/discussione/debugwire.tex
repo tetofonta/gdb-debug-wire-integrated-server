@@ -1,4 +1,4 @@
-\chapter{DebugWire}
+\chapter{DebugWire}\label{chap:dw}
 \section{Descrizione del protocollo e fondamentali}
 
 Parte fondamentale del core AVR, omessa dal diagramma in \cref{fig:avr-arch}, è il sistema di \textit{debugging} on chip ``\textit{DebugWire}''.
@@ -168,7 +168,7 @@ Esistono comandi di ``GO'' per le varie operazioni composite quali la lettura e 
 
 Se il bit 5 è settato allora il target effettuerà il reset della sessione inviando un BREAK seguito da 0x55 al termine dell'esecuzione.
 
-\subsubsection{Memory R/W}
+\subsubsection{Memory R/W}\label{sss:dw-mem-io}
 
 Questi sono i comandi fondamentali per la scrittura e lettura dei registri PC, IR, HWBP e SIGNATURE (sola lettura).
 
