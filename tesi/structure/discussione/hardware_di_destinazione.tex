@@ -2,15 +2,15 @@
     
 Come precedentemente scritto nell'introduzione, la scheda \textit{Arduino Uno R3} è stata scelta per velocizzare lo sviluppo e per permettere al progetto di essere accessibile a un considerevole numero di utenti tenendo in considerazione le capacità e le competenze del segmento di pubblico al quale la scheda è rivolta.
 
-\begin{figure}[b]
-    \centering
-    \includegraphics[width=.5\textwidth]{arduino-uno.png}
-    \caption[]{Foto di una scheda Arduino Uno R3\cite{img:arduino-uno-r3}}\label{fig:arduino-uno-r3}
-\end{figure}
-
 La scheda, mostrata in \cref{fig:arduino-uno-r3}, presenta una serie di connettori posti ai lati, collegati direttamente ai pin del controllore principale in posizione centrale, utili per l'interconnessione del dispositivo con i circuiti in sviluppo.
 L'hardware addizionale presente sul lato sinistro, invece, permette di alimentare la scheda da una sorgente esterna non regolata tramite il connettore cilindrico nero e di collegare il controllore principale a un computer mediante la porta USB presente in alto a sinistra la quale consente una connessione seriale.
 È inoltre possibile effettuare il reset manuale del target tramite il pulsante presente vicino alla presa USB.\@
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=.6\textwidth]{arduino-uno.png}
+    \caption[]{Foto di una scheda Arduino Uno R3\cite{img:arduino-uno-r3}}\label{fig:arduino-uno-r3}
+\end{figure}
 
 Il controllore, presente al centro della scheda, in un involucro DIP-28\footnote{Dual in-line package, 28 pin}, è un ATMega328P-PU\cite{site:arduino-uno-doc}. La scelta di un involucro ingombrante, in controtendenza con i processi di miniaturizzazione dell'industria elettronica, è causata dal fatto che, per mantenere una dinamica ``\textit{user friendly}'', rende possibile sostituire il controllore in caso di guasto in modo semplice --- essendo il controllore locato in uno zoccolo invece che essere saldato direttamente sulla scheda --- permettendo così di non dover cestinare l'intera scheda elettronica.\cite{site:arduino-uno-doc}
 
@@ -76,9 +76,9 @@ Infatti l'architettura AVR utilizza in modo marcato il concetto di MMIO\footnote
     \caption[Immagine ottenuta dal documento~\cite{avr:m328p}, fig. 8-3]{Settorizzazione della memoria SRAM del controllore ATMega328P\cite[fig 8-3]{avr:m328p}}\label{fig:avr-sram-alloc}
 \end{figure}
 
-Come è possibile osservare dalla \cref{fig:avr-sram-alloc}, i primi 128 byte dello spazio degli indirizzi della memoria SRAM sono in realtà registri di uso generale (\texttt{r0}-\texttt{r31}) o registri di controllo delle periferiche.
+Come è possibile osservare dalla \cref{fig:avr-sram-alloc}, i primi 256 byte dello spazio degli indirizzi della memoria SRAM sono in realtà registri di uso generale (\texttt{r0}-\texttt{r31}) o registri di controllo delle periferiche.
 
-Questi vengono identificati da un indirizzo nella memoria SRAM ma sono in realtà periferiche e hardware dislocato nelle varie periferiche che essi controllano.
+Questi vengono identificati da un indirizzo nella memoria SRAM ma sono in realtà registri e connessioni dislocati nelle varie periferiche che essi controllano\cite[fig 14-2]{avr:m328p}.
 
 La scrittura di tali locazioni di memoria causa effetti collaterali in funzione della periferica alla quale è associata. Questa sezione si divide in tre blocchi: i primi 32 byte sono i registri \textit{general purpose} i quali sono interconnessi e interagiscono con l'ALU.\@ Essi vengono utilizzati per l'elaborazione e il salvataggio di dati temporanei.
 
@@ -173,3 +173,4 @@ Al momento della disconnessione il condensatore causerà un picco positivo nella
 
 La programmazione dell'integrato \textit{target} non avviene secondo i metodi tradizionali ma attraverso un bootloader pre-caricato\cite[bootloaders/atmega/ATmegaBOOT\_168.c]{git:arduinocore}. 
 Una volta forzato il reset tramite l'asserzione della linea \texttt{DTR} il bootloader viene attivato e, in caso di ricezione di comandi di programmazione, esso inizia la programmazione tramite l'istruzione \texttt{spm}.
+

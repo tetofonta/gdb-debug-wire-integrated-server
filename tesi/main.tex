@@ -23,17 +23,16 @@
 
 \usepackage{blindtext}
 
-\includeonly{
-%    structure/bibliografia,%
-%    structure/introduzione,%
-%    structure/discussione/hardware_di_destinazione,% chapt 1
-%    structure/discussione/architettura_di_sistema,% chapt 2
-%    structure/discussione/debugwire,% chapt 3
-%    structure/discussione/implementazione,%
-   structure/discussione/ambiente_di_sviluppo,%
-   structure/bibliografia,%
-%    attachments/attachments,%
-}
+%\includeonly{
+%%    structure/introduzione,%
+%%    structure/discussione/hardware_di_destinazione,% chapt 1
+%%    structure/discussione/architettura_di_sistema,% chapt 2
+%%    structure/discussione/debugwire,% chapt 3
+%%    structure/discussione/implementazione,%
+%%    structure/discussione/ambiente_di_sviluppo,%
+%%    structure/bibliografia,%
+%%    attachments/attachments,%
+%}
 
 \begin{document}
 
@@ -59,11 +58,10 @@
     
     \include{structure/bibliografia}
 
-    \appendix
-    \pagenumbering{alph}
+    \appendix    
     \include{attachments/attachments}
 
-    \pagenumbering{gobble}
+    \pagestyle{empty}
     \include{structure/ringraziamenti}
     
 \end{document}

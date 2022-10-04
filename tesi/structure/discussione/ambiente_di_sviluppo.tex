@@ -21,7 +21,7 @@ Date le motivazioni e l'obiettivo dell'azienda d'Ivrea, è possibile osservare c
 \begin{figure}
     \centering
     \includegraphics[width=.6\textwidth]{arduino-ide.png}
-    \caption[Immagine di arduino IDE v2]{Finestra di programmazione dell'ambiente di sviluppo Arduino IDE v2}\label{fig:arduino-ide}
+    \caption[Immagine del software Arduino IDE v2]{Finestra di programmazione dell'ambiente di sviluppo Arduino IDE v2}\label{fig:arduino-ide}
 \end{figure}
 
 Come è possibile osservare l'ambiente di sviluppo presenta un insieme notevolmente limitato di funzioni e un'interfaccia fortemente semplificata. È anche possibile osservare la presenza di un indicatore di debug: questo è solo disponibile con schede ARM a 32 bit più prestazionali. La funzionalità di debug non è presente sulle schede AVR.\@
@@ -38,7 +38,7 @@ L'utilizzo del server GDB sviluppato nel corso di questo elaborato garantirebbe 
 
 Risulta quindi necessario sviluppare un insieme di componenti che possano essere integrate nella maggior parte degli ambienti di sviluppo senza difficoltà, permettendo così di superare una delle limitazioni sopra descritte, ovvero la difficoltà di adottare un ambiente di sviluppo nuovo e mal documentato, permettendo l'utilizzo di una piattaforma nota e configurabile.
 
-\section{CMAKE}
+\section{CMAKE}\label{s:cmake}
 
 Al fine di rendere la compilazione una procedura universale e generica è stato deciso l'utilizzo di un software di automazione del processo di compilazione altamente integrabile. Tale software è \textit{CMAKE}.
 
@@ -85,3 +85,42 @@ In particolare sia \(main\) il nome generico assegnato al target avr in sviluppo
 \end{itemize}
 
 
+\section{Ambiente di programmazione}
+
+Per quanto riguarda l'ambiente di sviluppo, verrà commentata a seguire una configurazione di \textit{Visual Studio Code}.
+
+La scelta di questo editor di testo è data dalla sua grande diffusione con una crescita di \SI{2.6}{milioni} di utenti in un mese\cite{site:vscode-connect-2017} e dalla sua facilità di estensione tramite un sistema di plugin, con i quali diviene di fatto un ambiente di sviluppo integrato (IDE).
+
+Inoltre, lo sviluppo dell'applicativo tramite la piattaforma \textit{Electron}\cite{site:vscode-about}, garantisce la compatibilità con una fetta notevolmente estesa di dispositivi per la programmazione oltre che alla possibilità di proporre l'applicativo tramite interfaccia web\cite{site:electron}. 
+
+Grazie alla scelta discussa nella~\cref{s:cmake}, al fine di implementare un processo di lavoro interamente integrato nell'ambiente di sviluppo, è sufficiente configurare un plugin per il supporto al software di automazione CMAKE come mostrato dalla~\cref{fig:vscode-cmake-plugin}.\@
+
+\begin{figure}
+    \centering
+    \includegraphics[width=.8\textwidth]{vscode-cmake.png}
+    \caption[Immagine del software Visual Studio Code]{Visual Studio Code con il plugin CMake installato}\label{fig:vscode-cmake-plugin}
+\end{figure}
+
+Nella figura mostrata è possibile identificare la lista di obiettivi rilevati dal file di configurazione (\texttt{CMakeFile.txt}) come mostrati dalla~\cref{s:cmake}. Nel riquadro presente nella parte bassa dell'immagine è possibile osservare l'output del comando di caricamento.
+
+Grazie ad un'altra serie di plugin sviluppata direttamente da Microsoft è possibile implementare il supporto al linguaggio di programmazione integrando anche uno strumento di assistenza alla scrittura con la possibilità di visualizzare suggerimenti inerenti a quanto viene scritto.
+
+È anche possibile configurare l'ambiente di lavoro per l'utilizzo di un linguaggio compilato come Rust\cite{site:avrrust}, grazie all'utilizzo di librerie di astrazione dell'hardware\cite{site:arduino-hal-rust} e il supporto al compilatore avr-gcc.
+
+In quest'ultimo caso il linguaggio e l'infrastruttura della community permette di fare affidamento su svariate librerie disponibili tramite l'utilizzo di un package-manager (\texttt{cargo}\cite{site:cargo-book})
+
+È evidente come l'impiego di un singolo applicativo fortemente utilizzato possa offrire una vastità di scelte inimmaginabile riguardo la composizione del progetto mantenendo costantemente l'utente vicino al proprio \textit{modus operandi} con il quale abitualmente sviluppa software, garantendo elevata efficienza ed ergonomicità.
+
+Osservando la costituzione dell'applicativo più in generale possiamo sottolineare come sia possibile configurare un processo di compilazione personalizzato pur mantenendo la compatibilità con il sistema progettato semplicemente integrando e supportando la possibilità di \textit{debuggare} il codice tramite GDB e avendo gli strumenti necessari per generare un file binario per la programmazione. 
+
+Una volta completata la configurazione è possibile utilizzare le piene potenzialità dell'ambiente di sviluppo integrato come mostrato in~\cref{fig:vscode-debug}.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=.8\textwidth]{vscode-dbg.png}
+    \caption[Immagine del software Visual Studio Code]{Visual Studio Code in modalità di debugging}\label{fig:vscode-debug}
+\end{figure}
+
+È possibile osservare come, abilitando il plugin di debug, sia disponibile un riquadro dedicato alla visualizzazione delle informazioni ottenute dal client GDB sul lato sinistro, mentre è identificabile nella parte sottostante l'output del terminale RTT (\cref{s:rtt}) evidenziato in colore magenta.
+
+Infine è osservabile la decorazione del codice durante il processo di debug come descritto dalla~\cref{ss:code-decoration}

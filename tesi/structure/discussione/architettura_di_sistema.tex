@@ -10,13 +10,11 @@ Risulta quindi necessaria una visione di insieme dell'intero sistema invece che 
     \caption[]{Diagramma dei componenti del sistema di assistenza alla programmazione e debugging}\label{fig:sys-arch}
 \end{figure}
 
-Come osservabile dalla \cref{fig:sys-arch}, il sistema sviluppato si basa su tre livelli fisici collegati a cascata, in modo tale da adattare le azioni ad alto livello scelte dall'utente ai comandi di debug a basso livello che permettono di interagire con il controllore \textit{target}. 
+Come osservabile dalla \cref{fig:sys-arch}, il sistema sviluppato si basa su tre livelli fisici collegati a cascata da protocolli (indicati in blu nella figura), in modo tale da adattare le azioni ad alto livello scelte dall'utente ai comandi di debug a basso livello che permettono di interagire con il controllore \textit{target}. 
 
 Il primo livello, ovvero il livello di interfaccia con lo sviluppatore, consiste nel software utilizzato per lo sviluppo del firmware contenente tutti gli strumenti di supporto alla programmazione C. Questi software, anche noti come IDE\footnote{Integrated Development Environment}, hanno il compito di accorpare svariate funzionalità mediante integrazione di software esterni allo scopo di favorire lo sviluppo fornendo un ambiente unico e integrato allo sviluppatore, dal quale effettuare tutte le operazioni quali sviluppo, compilazione, debugging e upload.
 
-Enfasi particolare viene posta sull'integrazione da parte dell'IDE del software GDB.\@
-
-Questo server viene utilizzato da un componente ormai fondamentale degli IDE il quale costituirà parte di maggiore interesse per la presente analisi detto ``\textit{debugger}''.
+Enfasi particolare viene posta sull'integrazione da parte dell'IDE del software GDB, il quale svolge il compito di processo \textit{debugger}, ovvero il processo responsabile della gestione delle richieste al server di debug per controllare il comportamento e il flusso di esecuzione di un processo \textit{target} nominato ``processo \textit{debuggee}''.
 
 Il \textit{debugging} è una delle pratiche ormai fondamentali della programmazione che permette una comprensione agevolata del flusso di esecuzione del codice e permette di ispezionarne i vari stati.
 
@@ -57,16 +55,21 @@ Possiamo vedere come la concezione di separazione tra applicativo di controllo e
         \draw[fill=red!50] (0,1) rectangle (4,2) node[pos=.5] {CDC}; %cdc
         \draw[fill=blue!50] (0,0) rectangle (4,1) node[pos=.5] {USB PHY}; %usb_phy
         
-        \draw[fill=purple!50] (5,3) rectangle (9,4) node[pos=.5] {GDB server}; %GDB_SERVER
-        \draw[fill=yellow!50] (5,2) rectangle (8,3) node[pos=.5] {GDB proto}; %gdb_proto
-        \draw[fill=red!50] (5,1) rectangle (8,2) node[pos=.5] {CDC}; %cdc
-        \draw[fill=blue!50] (5,0) rectangle (8,1) node[pos=.5] {USB PHY}; %usb_phy
-        \draw[fill=gray!50] (8,0) rectangle (9,3) node[pos=.5] {dW}; %dw
+        \draw[fill=purple!50,purple!50,text=black] (5,3) rectangle (9,4) node[pos=.5] {GDB server}; %GDB_SERVER
+        \draw[fill=purple!50,purple!50] (7.5,2) rectangle (9,3); 
+        \draw (5,3) -- (5,4) -- (9,4) -- (9,2);
 
-        \draw[fill=cyan!50] (10,1) rectangle (14,2) node[pos=.5] {Target}; %AVR
-        \draw[fill=gray!50] (10,0) rectangle (14,1) node[pos=.5] {dW}; %dw
+        \draw[fill=yellow!50] (5,2) rectangle (7.5,3) node[pos=.5] {GDB proto}; %gdb_proto
+        \draw[fill=red!50] (5,1) rectangle (7.5,2) node[pos=.5] {CDC}; %cdc
+        \draw[fill=blue!50] (5,0) rectangle (7.5,1) node[pos=.5] {USB PHY}; %usb_phy
+        \draw[fill=gray!50] (7.5,1) rectangle (9,2) node[pos=.5] {dW}; %dw
+        \draw[fill=orange!50] (7.5,0) rectangle (9,1) node[pos=.5] {UART}; %uart
 
-        \draw[black, thick] (2, 0) -- (2, -0.5) -- (6.5, -0.5) -- (6.5, 0);
+        \draw[fill=cyan!50] (10,2) rectangle (14,3) node[pos=.5] {Target Process}; %AVR
+        \draw[fill=gray!50] (10,1) rectangle (14,2) node[pos=.5] {dW}; %dw
+        \draw[fill=orange!50] (10,0) rectangle (14,1) node[pos=.5] {UART (O.D.)}; %UART
+
+        \draw[black, thick] (2, 0) -- (2, -0.5) -- (6.25, -0.5) -- (6.25, 0);
         \draw[black, thick] (8.5,0) -- (8.5, -0.5) -- (12, -0.5) -- (12, 0);
 
         \node (5) at (2, 4.5) {Host};
@@ -79,9 +82,9 @@ Possiamo vedere come la concezione di separazione tra applicativo di controllo e
 In particolare, la figura rappresenta la scelta intrapresa per lo sviluppo del sistema in esame. È possibile notare come il software GDB si interfacci al relativo server presente sull'adattatore (firmware presente sull'ATMega16U2) tramite il protocollo GDB appoggiandosi al protocollo USB-CDC per l'invio dei pacchetti di comunicazione e venga trasmesso sul bus seriale differenziale.
 Questi pacchetti vengono quindi convertiti dal server precedentemente menzionato il quale esegue le azioni richieste sul \textit{target} tramite la connessione DebugWire.
 
-\subsection{Integrazione con ambienti di sviluppo}
+\subsection{Integrazione con ambienti di sviluppo}\label{ss:code-decoration}
 
-L'integrazione con gli ambienti di sviluppo avviene sfruttando la standardizzazione dei comandi che GDB definisce[todo cite]. Siccome GDB implementa un'interfaccia da linea di comando dove tutti gli input e output sono ben definiti secondo uno standard, risulta di facile implementazione un software in grado di dialogare con il \textit{debugger} il cui fine è di introdurre un'interfaccia grafica per agevolare lo sviluppatore. Inoltre le informazioni tratte dallo stream (stdin/stdout) possono essere mostrate in modo effettivo nell'IDE andando a decorare il codice, ovvero ad aggiungere informazioni ``tra le righe'' permettendo allo sviluppatore di focalizzarsi sullo sviluppo come da \cref{fig:vscode-dbg-dec}.
+L'integrazione con gli ambienti di sviluppo avviene sfruttando la standardizzazione dei comandi che GDB definisce. Siccome GDB implementa un'interfaccia da linea di comando dove tutti gli input e output sono ben definiti secondo uno standard, risulta di facile implementazione un software in grado di dialogare con il \textit{debugger} il cui fine è di introdurre un'interfaccia grafica per agevolare lo sviluppatore. Inoltre le informazioni tratte dallo stream (stdin/stdout) possono essere mostrate in modo effettivo nell'IDE andando a decorare il codice, ovvero ad aggiungere informazioni ``tra le righe'' permettendo allo sviluppatore di focalizzarsi sullo sviluppo come da \cref{fig:vscode-dbg-dec}.
 
 \begin{figure}[t]
     \centering

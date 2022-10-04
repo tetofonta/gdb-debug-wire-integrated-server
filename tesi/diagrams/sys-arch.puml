@@ -2,14 +2,14 @@
 
 skinparam nodesep 60
 skinparam ranksep 10
-'skinparam linetype polyline
+skinparam linetype ortho
 
 actor "Utente" as user
 
 node "Computer" as pc{
 
     rectangle "IDE" as ide
-    rectangle "GDB" as gdb
+    rectangle "GDB Debugger" as gdb
 
     ide <--left--> gdb #FF0000 : stdio 
 
@@ -23,13 +23,15 @@ node "ATMega16U2" as srv {
     gdbsrv --right--> dw: Usa
 }
 
-node "AVR Target" as avr
+node "AVR Target" as avr {
+    rectangle "Debuggee" as dbgee
+}
 
 user --down--> ide: Utilizza
 
 pc <--down--> srv #0000FF: USB CDC
 gdb <-down-> gdbsrv: GDB Server Protocol
 srv <--> avr #0000FF: DebugWire
-dw --> avr: Debug
-gdbsrv <-down-> avr: RTT
+dw --> dbgee: Debug
+gdbsrv <-down-> dbgee: RTT
 @enduml
