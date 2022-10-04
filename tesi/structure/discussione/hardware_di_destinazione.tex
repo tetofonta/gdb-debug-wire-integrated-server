@@ -1,8 +1,8 @@
 \chapter{Hardware di destinazione}
     
-Come precedentemente scritto nell'introduzione, la scheda \textit{Arduino Uno R3} è stata scelta per velocizzare lo sviluppo e per permettere al progetto di essere accessibile a un considerevole numero di utenti tenendo in considerazione le capacità e le competenze del segmento di pubblico al quale la scheda è rivolta.
+Come precedentemente scritto nell'introduzione, la scelta di utilizzare la scheda \textit{Arduino Uno R3} è stata compiuta per velocizzare lo sviluppo e per permettere al progetto di essere accessibile a un considerevole numero di utenti data la diffusione della piattaforma tenendo in considerazione le capacità e le competenze del segmento di pubblico al quale la scheda è rivolta.
 
-La scheda, mostrata in \cref{fig:arduino-uno-r3}, presenta una serie di connettori posti ai lati, collegati direttamente ai pin del controllore principale in posizione centrale, utili per l'interconnessione del dispositivo con i circuiti in sviluppo.
+La scheda, mostrata in \cref{fig:arduino-uno-r3}, presenta una serie di connettori posti ai lati, collegati direttamente ai pin del controllore principale, detto \textit{target}, in posizione centrale, utili per l'interconnessione del dispositivo con i circuiti in sviluppo.
 L'hardware addizionale presente sul lato sinistro, invece, permette di alimentare la scheda da una sorgente esterna non regolata tramite il connettore cilindrico nero e di collegare il controllore principale a un computer mediante la porta USB presente in alto a sinistra la quale consente una connessione seriale.
 È inoltre possibile effettuare il reset manuale del target tramite il pulsante presente vicino alla presa USB.\@
 
@@ -12,7 +12,7 @@ L'hardware addizionale presente sul lato sinistro, invece, permette di alimentar
     \caption[]{Foto di una scheda Arduino Uno R3\cite{img:arduino-uno-r3}}\label{fig:arduino-uno-r3}
 \end{figure}
 
-Il controllore, presente al centro della scheda, in un involucro DIP-28\footnote{Dual in-line package, 28 pin}, è un ATMega328P-PU\cite{site:arduino-uno-doc}. La scelta di un involucro ingombrante, in controtendenza con i processi di miniaturizzazione dell'industria elettronica, è causata dal fatto che, per mantenere una dinamica ``\textit{user friendly}'', rende possibile sostituire il controllore in caso di guasto in modo semplice --- essendo il controllore locato in uno zoccolo invece che essere saldato direttamente sulla scheda --- permettendo così di non dover cestinare l'intera scheda elettronica.\cite{site:arduino-uno-doc}
+Il controllore, presente al centro della scheda, in un involucro DIP-28\footnote{Dual in-line package, 28 pin}, è un ATMega328P-PU\cite{site:arduino-uno-doc}. La scelta di un involucro ingombrante, in controtendenza con i processi di miniaturizzazione dell'industria elettronica, è causata dal fatto che, per mantenere una dinamica ``\textit{user friendly}'', rende possibile sostituire il controllore in caso di guasto in modo semplice senza dover sostituire l'intera scheda essendo il controllore posto in uno zoccolo invece che saldato direttamente alle connessioni\cite{site:arduino-uno-doc}.
 
 \section{La famiglia AVR}
 
@@ -20,7 +20,7 @@ Il controllore ATMega328P-PU presente sulla scheda di sviluppo è un membro dell
 
 Come è possibile identificare dalla \cref{fig:avr-arch} l'architettura del processore della famiglia AVR è di tipo Harvard: è evidente la dicotomia tra memoria del programma (nell'immagine ``\textit{Flash Program Memory}'') e SRAM\cite{harvard-arch}. Questa suddivisione consente di ottimizzare separatamente le due diverse tecnologie di memorie intrinsecamente diverse.
 
-È possibile osservare che la grandezza del bus dati è di 8 bit: conseguentemente è possibile dedurre che l'intera architettura si basa sull'unità fondamentale del byte.
+È inoltre possibile osservare che la grandezza del bus dati è di 8 bit: conseguentemente è possibile dedurre che l'intera architettura si basa sull'unità fondamentale del byte.
 
 La maggior parte delle istruzioni viene eseguita in un solo ciclo di clock\cite[sec 7.6]{avr:m328p} --- essendo un processore con pipeline a due stadi --- ad esclusione delle operazioni sulle memorie le quali ``stallano'' il processore per questioni di tempi di accesso/scrittura, di istruzioni che coinvolgono dati di lunghezza maggiore di 8 bit oppure istruzioni che implicano il ripristino della pipeline come le istruzioni di salto.
 
@@ -58,9 +58,9 @@ Essendo inoltre una memoria ``di programma'', essa non richiede prestazioni note
 
 La memoria EEPROM\footnote{Electrically Erasable and Programmable Read-Only Memory} è considerata una memoria di utilità in quanto non necessariamente essenziale alla vita del codice in esecuzione. Essa permette di salvare dati in modo non volatile nell'eventualità di una mancanza di alimentazione.
 
-Si tratta di una memoria ``lenta'' (tempi di programmazione di 3.4ms\cite[tab 8-1]{avr:m328p}) ma in grado di essere letta e scritta con un'unità fondamentale di 8 bit\cite[sec 8.4]{avr:m328p} e presenta una vita dieci volte più duratura in termini di scritture rispetto alla memoria flash.
+Si tratta di una memoria ``lenta'' (tempi di programmazione di 3.4ms\cite[tab 8-1]{avr:m328p}) ma in grado di essere letta e scritta con un'unità fondamentale di 8 bit\cite[sec 8.4]{avr:m328p} e garantisce una vita dieci volte più duratura in termini di scritture rispetto alla memoria flash\cite[sec 8.2, sec 8.4]{avr:m328p}.
 
-Il vantaggio che si presenta con l'integrazione di tale memoria all'interno dell'micro-controllore consiste nell'eliminazione di un ulteriore componente sul circuito stampato nel caso essa sia necessaria, oltre al non utilizzo di una periferica di comunicazione dedicata a tale scopo.
+Il vantaggio che si presenta con l'integrazione di tale memoria all'interno dell'micro-controllore consiste nell'eliminazione di un ulteriore componente sul circuito stampato e una riduzione dei costi nel caso essa sia necessaria, oltre al non utilizzo di una periferica di comunicazione dedicata a tale scopo.
 
 L'interazione con la memoria avviene tramite la scrittura e lettura dei registri \texttt{EECR} \texttt{EEDR} \texttt{EEAR} (EEPROM Control, Data e Address Registers)\cite[34]{avr:m328p}.
 
@@ -78,11 +78,11 @@ Infatti l'architettura AVR utilizza in modo marcato il concetto di MMIO\footnote
 
 Come è possibile osservare dalla \cref{fig:avr-sram-alloc}, i primi 256 byte dello spazio degli indirizzi della memoria SRAM sono in realtà registri di uso generale (\texttt{r0}-\texttt{r31}) o registri di controllo delle periferiche.
 
-Questi vengono identificati da un indirizzo nella memoria SRAM ma sono in realtà registri e connessioni dislocati nelle varie periferiche che essi controllano\cite[fig 14-2]{avr:m328p}.
+Questi vengono identificati da un indirizzo nella memoria SRAM ma sono in realtà registri e connessioni dislocati nelle varie periferiche che essi controllano il cui accesso avviene sfruttando le linee di controllo per la scrittura della memoria SRAM\cite[fig 14-2]{avr:m328p}.
 
 La scrittura di tali locazioni di memoria causa effetti collaterali in funzione della periferica alla quale è associata. Questa sezione si divide in tre blocchi: i primi 32 byte sono i registri \textit{general purpose} i quali sono interconnessi e interagiscono con l'ALU.\@ Essi vengono utilizzati per l'elaborazione e il salvataggio di dati temporanei.
 
-A seguire sono presenti due zone di memoria: \textit{I/O} ed \textit{Extended I/O} contenenti i registri di controllo delle periferiche. A tal fine, dato che le scritture e le letture possono causare cambiamenti alla periferica (e.g.\ la lettura di un flag \textit{busy} per attendere il completamento di un'operazione prima di eseguirne una seconda) questi indirizzi vengono dichiarati mediante la keyword \texttt{volatile}\footnote{Keyword del compilatore C per impedire l'ottimizzazione delle letture e scritture ad un dato indirizzo}. La differenza tra le due sezioni consiste nella possibilità della prima di essere acceduta in un solo ciclo di clock tramite le istruzioni di \textit{I/O} \texttt{in}, \texttt{out}, ecc\ldots
+A seguire sono presenti due zone di memoria: \textit{I/O} ed \textit{Extended I/O} contenenti i registri di controllo delle periferiche. A tal fine, dato che le scritture e le letture possono causare cambiamenti alla periferica (e.g.\ la lettura di un flag \textit{busy} per attendere il completamento di un'operazione prima di eseguirne una seconda) questi indirizzi vengono dichiarati mediante la keyword \texttt{volatile}\footnote{Keyword del compilatore C per impedire l'ottimizzazione delle letture e scritture ad un dato indirizzo}. La differenza tra le due sezioni consiste nella possibilità della prima di essere acceduta in un solo ciclo di clock tramite le istruzioni di \textit{I/O}\cite[sec 8.5]{avr:m328p} quali \texttt{in}, \texttt{out}, ecc\ldots
 
 È possibile notare dalla \cref{fig:avr-sram-timings} come le istruzioni di accesso alla ram impieghino due cicli di clock: l'indicizzazione della ram da parte di alcune istruzioni è effettuata utilizzando il valore composto da una coppia di registri\footnote{r26-r27, r28-r29, r30-r31} al momento dell'esecuzione. 
 
@@ -116,7 +116,7 @@ In particolare, un uso comune delle istruzioni di accesso alla memoria viene mos
 Il codice presentato dal \cref{lst:store-example}, mostra nelle linee 1-4 l'azzeramento dei registri r0, r26 e r27 (dove gli ultimi due elencati vengono definiti nel codice dal meta-registro X) e in seguito definisce un ciclo dove viene salvato il contenuto di r24 all'indirizzo puntato dal registro X con successivo incremento; segue l'istruzione \texttt{cpse}\footnote{Compare and Skip if Equal} la quale compara rispetto alla costante 0 il valore di r24 una volta decrementato. Nel caso in cui la comparazione risulti veritiera, viene incrementato il program counter di due \textit{word}, terminando quindi l'esecuzione nel ciclo di \textit{hold}.
 
 \section{La scheda}
-Come detto ad inizio capitolo, la scheda utilizzata nello sviluppo del sistema è \textit{Arduino Uno R3}.
+Come menzionato ad inizio capitolo, la scheda utilizzata nello sviluppo del sistema è \textit{Arduino Uno R3}.
 
 È possibile notare come nello schema elettronico della scheda (\ref{app:r3-schematic}) siano presenti due distinti componenti principali e tre sezioni funzionali diverse.
 
@@ -124,7 +124,7 @@ Come detto ad inizio capitolo, la scheda utilizzata nello sviluppo del sistema �
 
 Il circuito di gestione dell'alimentazione della scheda si occupa di fornire la tensione adeguata al funzionamento dei due micro-controllori e di utilizzare la sorgente più adatta.
 
-Le due sorgenti di alimentazione della scheda si identificano nel componente \texttt{X1} e nella porta USB \texttt{X2}. Data la presenza di due possibili sorgenti delle quali la prima presenta un input non regolato --- in quanto il componente \texttt{X1} consiste in una presa di alimentazione cilindrica collegata al pin 3 di un regolatore di tensione con intervallo di funzionamento dell'ingresso da 7V a 20V\cite{onsemi:ncp111750} --- si rende necessario un circuito di selezione mostrato dalla \cref{fig:r3-schematic-pwr-sel-detail}.
+Le due sorgenti di alimentazione della scheda si identificano nel componente \texttt{X1} e nella porta USB \texttt{X2}. Data la presenza di due possibili sorgenti delle quali la prima presenta un input non regolato --- in quanto il componente \texttt{X1} consiste in una presa di alimentazione cilindrica collegata al pin 3 di un regolatore di tensione con intervallo di funzionamento dell'ingresso da \SI{7}{\volt} a \SI{20}{\volt}\cite{onsemi:ncp111750} --- si rende necessario un circuito di selezione mostrato dalla \cref{fig:r3-schematic-pwr-sel-detail}.
 
 \begin{figure}[t]
     \centering
@@ -134,25 +134,24 @@ Le due sorgenti di alimentazione della scheda si identificano nel componente \te
 
 Per analizzare il circuito presentato dalla \cref{fig:r3-schematic-pwr-sel-detail} è necessario ipotizzare diversi scenari iniziali.
 
-Ipotizzando il caso in cui la scheda venga collegata ad una sorgente di alimentazione esterna maggiore di 7V tramite il connettore \texttt{X1}, si ha che il collegamento \texttt{USBVCC} avrà tensione pari a 0V.
+Ipotizzando il caso in cui la scheda venga collegata ad una sorgente di alimentazione esterna maggiore di \SI{7}{\volt} tramite il connettore \texttt{X1}, si ha che il collegamento \texttt{USBVCC} avrà tensione pari a \SI{0}{\volt}.
 L'ingresso, inoltre, alimenterà il componente \texttt{U1} (non mostrato in figura) che regolerà la tensione e alimenterà la linea \texttt{+5V}, la quale alimenterà il componente \texttt{U2} che, a sua volta, alimenterà la linea \texttt{+3V3}.
-Il comparatore (\texttt{U5A}) avrà uscita a 5V se \texttt{VIN} --- collegato direttamente alla sorgente esterna tramite un diodo (\texttt{D1}) --- è superiore a 6.6V: l'uscita del comparatore pilota il gate del mosfet a canale P \texttt{P1} non avendo però alcun effetto in quanto, come detto precedentemente, \texttt{USBVCC} è posto a 0V.
+Il comparatore (\texttt{U5A}) avrà uscita a \SI{5}{\volt} se \texttt{VIN} --- collegato direttamente alla sorgente esterna tramite un diodo (\texttt{D1}) --- è superiore a \SI{6.6}{\volt}: l'uscita del comparatore pilota il gate del mosfet a canale P \texttt{T1} non avendo però alcun effetto in quanto, come detto precedentemente, \texttt{USBVCC} è posto a \SI{0}{\volt}.
 
-Ipotizzando ora il caso in cui la scheda è solamente collegata a un computer tramite la porta USB.\@ In questo caso la connessione \texttt{VIN} avrà potenziale 0V.
+Ipotizzando ora il caso in cui la scheda è solamente collegata a un computer tramite la porta USB si avrà che la connessione \texttt{VIN} avrà potenziale \SI{0}{\volt}.
 
-\texttt{USBVCC} avrà potenziale 5V da specifica USB.\@ In una fase iniziale la linea \texttt{+5V} avrà quindi potenziale pari a 4.3V considerando la caduta di tensione del diodo presente all'interno del componente \texttt{T1}; tensione sufficiente ad alimentare il comparatore \texttt{U5A} e il regolatore di tensione \texttt{U2}.
-Essendo \texttt{VIN} posta a 0V, l'uscita del comparatore sarà anch'essa posta a 0V --- essendo il componente LMV358 un amplificatore operazionale \textit{rail-to-rail}\cite{ti:lmv358} ---
-stabilendo una differenza di potenziale tra il gate e il source di 5V abbattendo così la resistenza equivalente e portando la linea di alimentazione a 5V effettivi\cite{onsemi:fdn340p}.
+\texttt{USBVCC} avrà potenziale \SI{5}{\volt} da specifica USB\cite{usb2.0specs}.\@ In una fase iniziale la linea \texttt{+5V} avrà quindi potenziale pari a \SI{4.3}{\volt} considerando la caduta di tensione del diodo presente all'interno del componente \texttt{T1}; tensione sufficiente ad alimentare il comparatore \texttt{U5A} e il regolatore di tensione \texttt{U2}.
+Essendo \texttt{VIN} posta a \SI{0}{\volt}, l'uscita del comparatore sarà anch'essa posta a tale tensione --- essendo il componente LMV358 un amplificatore operazionale \textit{rail-to-rail}\cite{ti:lmv358} --- stabilendo una differenza di potenziale tra il gate e il source di \SI{5}{\volt} abbattendo così la resistenza equivalente del mosfet \texttt{T1} e portando la linea di alimentazione a \SI{5}{\volt} effettivi\cite{onsemi:fdn340p}.
 
-Ipotizzando infine che, data la condizione stabile precedentemente descritta, l'utente colleghi la scheda a una seconda sorgente (tramite \texttt{X1}) contemporaneamente all'alimentazione USB.\@ In questo caso, se la tensione VIN è superiore a 6.6V, l'uscita del comparatore \texttt{U5A} incrementerà a 5V, causando così una differenza di potenziale gate-source per il componente \texttt{T1} di 0V e di conseguenza la ``disconnessione'' del carico da \texttt{USBVCC}.
+Ipotizzando infine che, data la condizione stabile precedentemente descritta, l'utente colleghi la scheda a una seconda sorgente (tramite \texttt{X1}) contemporaneamente all'alimentazione USB, se la tensione VIN è superiore a \SI{6.6}{\volt}, l'uscita del comparatore \texttt{U5A} incrementerà a \SI{5}{\volt}, causando così una differenza di potenziale gate-source per il componente \texttt{T1} di \SI{0}{\volt} e di conseguenza la ``disconnessione'' del carico da \texttt{USBVCC}.
 
 \subsection{Comunicazione con l'host}
 
-Il caricamento e la comunicazione tra \textit{target} e \textit{Host} avvengono tramite una linea seriale UART.\@ Ne consegue il problema di adattare un'interfaccia seriale TTL non presente su un computer \textit{consumer grade} a una presente sulle comuni piattaforme di elaborazione.
+Il caricamento e la comunicazione tra \textit{target} e \textit{Hhost} avvengono tramite una linea seriale UART.\@ Ne consegue il problema di adattare un'interfaccia seriale TTL, non presente su un computer \textit{consumer grade}, a una presente sulle comuni piattaforme di elaborazione.
 
 Questa funzionalità viene svolta dal componente \texttt{U3} dello schema allegato (\ref{app:r3-schematic}). Esso è un microcontrollore della famiglia AVR con il supporto USB.\@
 
-In particolare si tratta di un \texttt{ATMega16U2} con caricato un firmware che implementa la classe CDC del protocollo USB, rendendo il dispositivo una periferica RS232 virtuale.
+In particolare si tratta di un \texttt{ATMega16U2} con caricato un firmware implementante la classe CDC del protocollo USB, rendendo il dispositivo una periferica RS232 virtuale.
 Il firmware si occupa di ricevere i dati dall'\textit{host} e di replicarli sulla linea seriale (pin 8 e 9) e vice versa.\cite[firmwares/atmegaxxu2/arduino-usbserial/]{git:arduinocore}.
 
 \begin{figure}[t]
@@ -162,12 +161,17 @@ Il firmware si occupa di ricevere i dati dall'\textit{host} e di replicarli sull
 \end{figure}
 
 
-Oltre alle connessioni relative alla comunicazione seriale tra \textit{target} e ATMega16U2 è presente una terza connessione che pilota la linea di reset del primo. Il pin 13 dell'ATMega16U2 è connesso, tramite \texttt{C5} alla linea di reset del \textit{target}.
+Oltre alle connessioni relative alla comunicazione seriale tra \textit{target} e l'ATMega16U2 (\texttt{M8TXD} e \texttt{M8RXD}) è presente una terza connessione che pilota la linea di reset del primo. Il pin 13 dell'ATMega16U2 è connesso, tramite \texttt{C5} alla linea di reset del \textit{target}.
 
-Secondo la specifica RS-232, oltre alle due linee seriali (TXD e RXD), sono presenti anche delle line di ``\textit{flow control}'', tra le quali possiamo notare la linea \texttt{DTR}.
+Secondo la specifica RS-232, oltre alle due linee seriali, sono presenti anche delle line di ``\textit{flow control}'', tra le quali possiamo notare la linea attiva a livello logico 0 nominata \texttt{``DTR''}.
 
-Questa linea è asserita dalla maggior parte dei driver seriali (e seriali virtuali) al momento della connessione al dispositivo o del collegamento. Così facendo, grazie a \texttt{C5} è possibile avere un impulso sulla linea di reset prima che il circuito ritorni all'equilibrio: Inizialmente il condensatore \texttt{C5} si trova in equilibrio con la linea DTR posta a 5V e la linea di RESET posta a +5V per mezzo della resistenza di pull'up. Al momento dell'asserzione, la linea DTR viene posta a 0V: il condensatore \texttt{C5} si carica causando un calo nella linea di reset fino a 0V, la quale poi evolverà secondo il modo del sistema dato dal prodotto tra la resistenza e la capacità di \texttt{RN1D} e \texttt{C5}.
-Al momento della disconnessione il condensatore causerà un picco positivo nella linea di reset fino a circa 10V che viene però soppresso dalla presenza di \texttt{D2}.
+Questa linea è asserita dalla maggior parte dei driver seriali (e seriali virtuali) al momento della connessione al dispositivo o del collegamento. Così facendo, grazie a \texttt{C5} è possibile avere un impulso sulla linea di reset prima che il circuito ritorni all'equilibrio: Inizialmente il condensatore \texttt{C5} si trova in equilibrio con la linea DTR posta a \SI{5}{\volt} e la linea di RESET posta a \SI{5}{\volt} per mezzo della resistenza di pull'up. Al momento dell'asserzione la linea DTR viene posta a \SI{0}{\volt} e conseguentemente il condensatore \texttt{C5} si carica causando un calo nella linea di reset fino a \SI{0}{\volt}, la quale poi evolverà secondo il modo del sistema dato dal prodotto tra la resistenza e la capacità di \texttt{RN1D} e \texttt{C5} equivalente a quanto riportato nell'~\cref{eq:rcstrrst}.
+
+\begin{equation}\label{eq:rcstrrst}
+    \tau_{reset} = \frac{1}{\text{RN1D} \cdot \text{C5}} = \SI{1}{\milli\second}
+\end{equation}
+
+Al momento della disconnessione il condensatore causerà un picco positivo nella linea di reset fino a circa \SI{10}{\volt} che verrà però soppresso dalla presenza di \texttt{D2} limitandolo a \SI{5.7}{\volt}.
 
 \subsection{Programmazione}
 
