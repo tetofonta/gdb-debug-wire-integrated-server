@@ -65,7 +65,7 @@ Infine, se la velocità di trasmissione fosse misurata in \textit{bit per second
 Da quanto è possibile dedurre dall'\cref{eq:baud-from-bit-rate}, l'effettivo bit rate di trasmissione della linea UART differisca di un fattore di \(\frac{N_{data}}{N_{data} + N_{parity} + N_{stop} + 1}\) rispetto al bitrate grezzo di trasmissione \(v_{uart}\)
 
 
-\subsection{Funzionamento}
+\subsection{Funzionamento}\label{sec:dwworkings}
 
 Tutte le comunicazioni che avvengono sul bus DebugWire non hanno alcun tipo di verifica dell'integrità del dato (Serial 8N1). La comunicazione può avvenire in qualsiasi momento.
 
