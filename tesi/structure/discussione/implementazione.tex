@@ -25,7 +25,7 @@ Come è possibile osservare dall'allegato~\ref{app:r3-schematic}, L'integrato \t
     \caption[]{Procedimento di rimozione del condensatore \texttt{C5}. Il condensatore viene rimosso (b) e successivamente la connessione viene ripristinata (c)}\label{fig:remove-c5}
 \end{figure}
 
-Tale modifica rende inoperabile il firmware presente sul controllore ATMega16U2 in quanto così facendo la linea di reset rimarrebbe asserita al livello logico 0 durante la durata della connessione con l'\texttt{host} impedendone il funzionamento sia da un punto di vista logico che fisico, in quanto il cambiamento comporta il collegamento dei componenti \texttt{RN2D} e \texttt{RN1D}. Questi costituiscono così un partitore di tensione che imporrebbe la linea di reset ad un livello logico insufficiente ad una tensione di \SI{450}{\milli\volt}. 
+Tale modifica rende inoperabile il firmware presente sul controllore ATMega16U2 in quanto così facendo la linea di reset rimarrebbe asserita al livello logico 0 durante la durata della connessione con l'\texttt{host} impedendone il funzionamento sia da un punto di vista logico che fisico, essendo che il cambiamento comporterebbe il collegamento dei componenti \texttt{RN2D} e \texttt{RN1D}. Questi costituiscono così un partitore di tensione che imporrebbe la linea di reset ad un livello logico insufficiente ad una tensione di \SI{450}{\milli\volt}. 
 Per questa motivazione si rende necessaria una seconda modifica isolando la resistenza \texttt{RN2D} tagliando la traccia che la collega alla linea di reset come mostrato in \cref{fig:cut-rnd2}
 
 \begin{figure}[b]
@@ -131,7 +131,7 @@ Il circuito (a) permette, tramite il pin \textit{txd}, di porre la differenza di
 
 Contrariamente il circuito (b) sfrutta il diodo \texttt{D1} per ottenere lo stesso risultato. La differenza consta nel fatto che nel circuito (a) il transistor permette di avere una caduta di tensione minore essendo in saturazione, cosa che avviene quando il segnale \textit{txd} è zero, mentre il diodo \texttt{D1} causa una caduta di tensione dell'ordine di \SI{700}{\milli\volt}.
 
-I circuiti sopra introdotti sono verificati dalle simulazioni i cui risultati sono riportati in \cref{graph:sim}. In aggiunta a quanto esibito, il circuito (b) è stato simulato con un diodo schottky 1N5817 con capacitanza di \SI{125}{\pico\farad} per valutarne il comportamento.
+I circuiti sopra introdotti sono verificati dalle simulazioni i cui risultati sono riportati in \cref{graph:sim}. In aggiunta a quanto esibito, il circuito (b) è stato simulato con un diodo schottky 1N5817 con capacitanza di giunzione pari a \SI{125}{\pico\farad} per valutarne il comportamento.
 
 \begin{figure}
     \centering
@@ -184,15 +184,16 @@ Attraverso quanto è rappresentato nella \cref{fig:avr-pin} possiamo valutare le
     \caption[Immagine ottenuta dal documento\cite{avr:m16u2}, fig. 12-2]{Diagramma funzionale dell'hardware relativo a un generico pin della famiglia AVR\cite[fig. 12-2]{avr:m16u2}}\label{fig:avr-pin}
 \end{figure}
 
-Alla scrittura del registro DDRx viene asserita la linea WDx, la quale salva lo stato del bit associato al pin nel flipflop pilotato da essa. Questo stato controlla un buffer che stabilisce se il pin stesso debba essere in configurazione di input o output.
+Alla scrittura del registro \texttt{DDRx} viene asserita la linea WDx, la quale salva lo stato del bit associato al pin nel flipflop pilotato da essa. Questo stato controlla un buffer che stabilisce se il pin stesso debba essere in configurazione di input o output.
 
 In particolare, se lo stato salvato nel primo flipflop è 1, il pin sarà pilotato con livello logico pari allo stato salvato nel secondo flipflop in modo ``forte''.
 
-Se invece lo stato del pin viene posto come input, ossia lo stato del primo flipflop è 0, è possibile pilotare il FET che alimenta la linea di pull-up del pin. Questo accade perché il segnale che rappresenta la direzione del pin è input negato della porta AND che controlla lo stato del pull-up; per questo motivo, il valore 0 permette alla porta di avere risultato 1 se lo stato del secondo flipflop è pari a 1, in quanto tale segnale sarebbe ignorato essendo che il buffer di controllo è disabilitato.
+Se invece lo stato del pin viene posto come input, ossia lo stato del primo flipflop è 0, è possibile pilotare il FET che alimenta la linea di pull-up del pin. Questo accade perché il segnale che rappresenta la direzione del pin è input negato della porta AND che controlla lo stato del pull-up; per questo motivo, il valore 0 permette alla porta di avere risultato 1 se lo stato del secondo flipflop è pari a 1.
+Tale condizione non ha ripercussioni fisiche in quanto tale segnale sarebbe ignorato essendo che il buffer di controllo è disabilitato.
 
-La lettura dello stato del pin può avvenire in qualunque momento tramite la lettura del registro PINx, il quale asserisce la linea RPx e riporta lo stato salvato nello stadio di sincronizzazione.
+La lettura dello stato del pin può avvenire in qualunque momento tramite la lettura del registro \texttt{PINx}, la quale asserirà la linea \texttt{RPx} e riporterà lo stato salvato nello stadio di sincronizzazione.
 
-La scrittura di tale registro viene reindirizzata al controllo del multiplexer in modo da poter invertire lo stato del pin senza averlo precedentemente letto, dimezzando la quantità di operazioni necessarie all'inversione dello stato, rendendo non necessaria la lettura del valore per calcolarne l'inverso.
+La scrittura del registro \texttt{PINx}, illogica dal punto di vista funzionale in quanto esso rappresenta lo stato corrente del pin, viene reindirizzata al controllo del multiplexer in modo da poter invertire lo stato del pin senza averlo precedentemente letto, dimezzando la quantità di operazioni necessarie all'inversione dello stato, rendendo non necessaria la lettura del valore per calcolarne l'inverso.
 
 Risulta quindi necessario stabilire due sequenze di operazioni per portare il pin da livello logico basso ``forte'' a livello logico alto ``debole''. In particolare la transizione da livello logico alto a livello logico basso deve avvenire precedentemente alla configurazione della direzione del pin. Questo garantisce che non vi siano possibilità di conflitti potenzialmente catastrofici, considerando il fatto che il segnale che determina l'attivazione del pull-up è anche responsabile dello stato del pin.
 
@@ -213,7 +214,7 @@ Entrambe le azioni di trasmissione e ricezione vengono implementate come una mac
 Entrambe le funzionalità sono divise in due domini di esecuzione: l'esecuzione invocata dall'utente o da un evento esterno (\textit{start bit}) dove avviene la configurazione e la preparazione dei dati e l'esecuzione la macchina a stati ad ogni interrupt di comparazione. 
 
 La funzionalità di invio è implementata tramite un meccanismo di accodamento per due processi produttore-consumatore: alla prima invocazione della funzione di invio il byte viene salvato nella coda e viene abilitata la macchina a stati mostrata in \cref{fig:phy-state-tx} tramite il flag \texttt{\_OD\_UART\_BUSY} la quale consumerà il dato con il successivo interrupt di comparazione del TIMER1.
-Nel caso di aggiunta di un secondo byte alla coda durante l'invio del dato, verrà lasciata alla macchina a stati la gestione dell'avvio di un nuovo invio una volta terminato il ciclo corrente invece che tornare allo stato \texttt{IDLE}. 
+Nel caso di aggiunta di un secondo byte alla coda durante l'invio di un dato, verrà lasciata alla macchina a stati la gestione dell'avvio di un nuovo ciclo una volta terminato l'invio corrente invece che tornare allo stato \texttt{IDLE}. 
 
 \begin{figure}[t]
     \centering
@@ -242,7 +243,7 @@ Inoltre l'immagine mostra come un eventuale aggiunta di un dato alla coda durant
 
 La parte di ricezione viene implementata con una seconda macchina a stati mostrata in \cref{fig:phy-rx-state} dove il primo passaggio di stato, da Idle a StartBit avviene alla ricezione di un interrupt relativo al cambiamento di livello logico da 1 a 0 del bus seriale.
 
-La ragione per cui questo passaggio debba avvenire all'avvenimento di un interrupt consiste nel fatto che il \textit{target} può inviare una risposta in qualsiasi istante temporale (in quanto la comunicazione è asincrona).
+La ragione per cui questo passaggio debba avere luogo all'avvenimento di un interrupt consiste nel fatto che il \textit{target} può inviare una risposta in qualsiasi istante temporale (in quanto la comunicazione è asincrona).
 
 Risulta necessario l'utilizzo di una struttura FIFO per il salvataggio dei dati ricevuti dalla quale poi l'utente potrà attingere durante l'esecuzione del software. In particolare il flag \texttt{\_OD\_UART\_AVAIL} indicherà la presenza di dati non ancora confermati nel buffer.
 
@@ -330,7 +331,7 @@ Prendendo spunto da quanto riportato sul datasheet della maggior parte dei dispo
 
 Bisogna però trovare un modo per inviare il dato, o i dati, da scrivere nella memoria.
 
-Una possibile soluzione potrebbe essere quella di scrivere il byte o la pagina in RAM e utilizzare così istruzioni \texttt{ld}, ma questo approccio richiederebbe un numero elevato di  istruzioni e causerebbe lunghi tempi di programmazione.
+Una possibile soluzione potrebbe essere quella di scrivere il byte o la pagina in RAM e utilizzare istruzioni \texttt{ld}, ma questo approccio richiederebbe un numero elevato di  istruzioni e causerebbe lunghi tempi di programmazione.
 
 La soluzione adottata è quella di leggere o scrivere il registro \texttt{DWDR}. Dati i test eseguiti, una scrittura del registro tramite i comandi descritti alla~\cref{sss:dw-mem-io} (il registro si trova ad un indirizzo noto) richiede un ulteriore byte inviato sulla linea seriale che verrà salvato in tale locazione\cite{site:dw-reverse-engeneering}. Analogamente la sua lettura comporta un ulteriore byte inviato dal target rappresentate il valore salvato\cite{site:dw-reverse-engeneering}.
 
@@ -338,21 +339,21 @@ I documenti~\ref{app:dw-flash-prog}~e~\ref{app:dw-eeprom-prog} riportano l'imple
 
 Da tali documenti possiamo osservare come il codice sia fortemente dipendente dal debugger per la preparazione del contesto, ovvero necessita che, prima dell'esecuzione, siano eseguite certe istruzioni di preparazione quali salvataggio dello stato dei registri e preparazione delle costanti e indirizzi nei registri utilizzati.
 
-Inoltre la scrittura dell'algoritmo di programmazione della memoria flash è stata sviluppata evitando la dipendenza da un buffer contenente l'intera pagina da programmare precedentemente alla chiamata, bensì, grazie all'algoritmo implementato, è possibile popolare il buffer temporaneo a blocchi di dimensione indefinita prima della programmazione della memoria flash.
+Inoltre la scrittura dell'algoritmo di programmazione della memoria flash è stata sviluppata evitando la dipendenza da un buffer contenente l'intera pagina da programmare precedentemente alla chiamata, bensì è possibile popolare il buffer temporaneo a blocchi di dimensione indefinita prima della programmazione della memoria.
 
-Questo permette di scrivere codice a bassissimo impatto sulla quantità di memoria SRAM utilizzata per buffer temporanei, condizione necessaria per lo sviluppo su ATMega16U2 in quanto la memoria SRAM totale disponibile non supera i \SI{512}{byte}\cite{avr:m16u2}.
+Questo permette di scrivere codice a bassissimo impatto sulla quantità di memoria SRAM utilizzata, condizione necessaria per lo sviluppo su ATMega16U2 in quanto la memoria SRAM totale disponibile non supera i \SI{512}{byte}\cite{avr:m16u2}.
 
 \subsection{Salvataggio stato di esecuzione}
 
 Come anticipato in precedenza, l'esecuzione di azioni tramite debug wire comporta la sovrascrittura di alcuni registri al fine di configurare le azioni prima dell'operando GO, come mostrato dalle \cref{fig:dw-reg-rw-com,fig:dw-mem-rw-com}, comportando così una modifica dello stato dei registri inattesa e imprevedibile dal firmware in esecuzione.
 
-Il solo cambio del valore del Program Counter comporterebbe la ripresa dell'esecuzione da un punto arbitrario del codice compilato senza alcun contesto logico.
+Il solo cambio del valore del Program Counter comporterebbe la ripresa dell'esecuzione da un punto inatteso del codice compilato senza alcun contesto logico.
 
 È quindi necessario creare un sistema di salvataggio temporaneo dello stato in SRAM permettendone così il ripristino al termine delle operazioni.
 
 A tal fine è stata identificata l'interdipendenza delle operazioni DebugWire e il loro utilizzo dei registri come mostrato dalla \cref{fig:dw-wrt-deps}
 
-\begin{figure}[h]
+\begin{figure}[hb]
     \centering
 
     \resizebox{.95\textwidth}{!}{%
@@ -415,7 +416,7 @@ A tal fine è stata identificata l'interdipendenza delle operazioni DebugWire e 
 
 La sequenza di salvataggio e ripristino viene mostrata nella la \cref{fig:dw-wrt-seq}. L'immagine mostra una pila di registri per la quale, dato un punto di ingresso comune in funzione dell'azione da eseguire, sarà necessario salvare tutti i registri visitati nella discesa della pila fino al punto di uscita definito da tale operazione. Per esempio, l'azione \texttt{EEPROM\_RW} dovrà salvare i registri \texttt{PC}, \texttt{HWBP}, \texttt{Z (r30, r31)}, \texttt{IR}, \texttt{Y(r26, r27)} e \texttt{r0}. È possibile notare come i registri elencati siano anche quelli utilizzati dal codice presente al documento in appendice~\ref{app:dw-eeprom-prog}
 
-\begin{figure}[h]
+\begin{figure}[ht]
     \centering
     %\resizebox{.95\textwidth}{!}{%
         \begin{tikzpicture}
@@ -451,7 +452,7 @@ L'aggiunta della possibilità di scrivere la memoria flash consente l'implementa
 
 Un breakpoint è un indicatore associato a un indirizzo di memoria dove il codice è in esecuzione con il fine di interrompere l'esecuzione dell'algoritmo e passare il controllo al debugger per effettuare le operazioni di analisi e ispezione.
 
-Questi consistono nella sovrascrittura di un'istruzione con l'opcode corrispondente all'istruzione \texttt{break} causando così l'halt della CPU e l'intervento del debugger prima dell'esecuzione della stessa.
+Questi consistono nella sovrascrittura di un'istruzione con l'opcode corrispondente all'istruzione \texttt{break} causando così l'\texttt{h} della CPU e l'intervento del debugger prima dell'esecuzione della stessa.
 Alla ripresa dell'esecuzione il debugger caricherà in memoria l'istruzione originale e riprenderà il flusso del codice.
 
 Un primo approccio per la scrittura del codice relativo a questa feature consiste nell'aggiornare la memoria flash scrivendo un'istruzione BREAK\footnote{0x0000} non appena possibile e salvare in una struttura dati la coppia \[<indirizzo>:<opcode>\]
@@ -464,7 +465,7 @@ L'algoritmo di aggiornamento è definito secondo i passi a seguire:
 
 \begin{enumerate}
     \item Salvataggio dei registri come definito in \cref{fig:dw-wrt-seq} per l'azione \texttt{FLASH\_W} (14 byte)
-    \item Poniamo l'indirizzo di pagina, utilizzando 2 byte, come definito dall'~\cref{eqn:page-address}.
+    \item Si ponga l'indirizzo di pagina, utilizzando 2 byte, come definito dall'~\cref{eqn:page-address}.
     
     \begin{equation}\label{eqn:page-address}
     pageaddr = \left\lfloor\frac{address}{pagelen}\right\rfloor pagelen

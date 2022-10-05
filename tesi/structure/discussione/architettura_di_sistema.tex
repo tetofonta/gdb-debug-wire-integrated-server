@@ -10,7 +10,7 @@ Risulta quindi necessaria una visione di insieme dell'intero sistema invece che 
     \caption[]{Diagramma dei componenti del sistema di assistenza alla programmazione e debugging}\label{fig:sys-arch}
 \end{figure}
 
-Come osservabile dalla \cref{fig:sys-arch}, il sistema sviluppato si basa su tre livelli fisici collegati a cascata da conessioni fisiche (indicate in blu nella figura), in modo tale da adattare le azioni ad alto livello scelte dall'utente ai comandi di debug a basso livello che permettono di interagire con il controllore \textit{target}, interagendo tra di essi mediante l'ausilio di connessioni logiche. 
+Come osservabile dalla \cref{fig:sys-arch}, il sistema sviluppato si basa su tre livelli fisici collegati a cascata da conessioni fisiche (indicate in blu nella figura), in modo tale da adattare le azioni ad alto livello scelte dall'utente ai comandi di basso livello che permettono di interagire con il controllore \textit{target}, interagendo tra di essi mediante l'ausilio di connessioni logiche di protocolli incapsulati nelle connessioni fisiche. 
 
 Il primo livello, ovvero il livello di interfaccia con lo sviluppatore, consiste nel software utilizzato per lo sviluppo del firmware contenente tutti gli strumenti di supporto alla programmazione. Questi software, anche noti come IDE\footnote{Integrated Development Environment}, hanno il compito di accorpare svariate funzionalità mediante integrazione di software esterni allo scopo di favorire lo sviluppo fornendo un ambiente unico e integrato allo sviluppatore, dal quale effettuare tutte le operazioni quali sviluppo, compilazione, debugging e upload.
 
@@ -27,10 +27,10 @@ Uno dei software più utilizzati per il debugging del codice compilato, è Gnu G
 
 \section{Gnu Debugger}\label{sec:gdb}
 
-Il software GDB è un debugger multiarchitettura\cite{site:gdb} utilizzato per l'ispezione degli stati di esecuzione dei software compilati.
+Il software GDB è un debugger multi-architettura\cite{site:gdb} utilizzato per l'ispezione degli stati di esecuzione dei software compilati.
 In particolare esso presenta un'architettura multipla di funzionamento in funzione della localizzazione del processo da ispezionare.
 
-Generalmente il processo da analizzare è direttamente localizzato sulla stessa macchina nella quale il processo GDB viene istanziato. In questo caso è sufficiente utilizzare delle chiamate di sistema (\textit{syscall}) in grado di accedere e bloccare l'esecuzione del processo.
+Generalmente il processo da analizzare è direttamente localizzato sulla stessa macchina nella quale il processo GDB viene istanziato. In questo caso è sufficiente utilizzare delle chiamate di sistema (\textit{syscall}) in grado di bloccare l'esecuzione del processo e accedere alla memoria a lui dedicata.
 Sarà dunque possibile modificare il contenuto della porzione di memoria in cui è caricato l'eseguibile in modo da sostituire l'istruzione incriminata con un'istruzione di ``\textit{break}''. Questa istruzione causerà, al momento della sua esecuzione, un'eccezione a livello hardware la quale verrà gestita dal kernel e notificherà il processo \textit{debugger} che il processo \textit{debuggee} ha raggiunto un \textit{breakpoint}.
 
 Purtroppo non sempre il processo \textit{debuggee} è in esecuzione sullo stesso processore in cui si trova il processo GDB client. Questo comporta la necessità di scindere in due componenti il programma utilizzato per effettuare il \textit{debug} adottando un'architettura client-server per consentire la dislocazione del server permettendo a quest'ultimo di interagire con il processo \textit{debuggee}.
@@ -58,6 +58,7 @@ Possiamo vedere come la concezione di separazione tra applicativo di controllo e
         \draw[fill=purple!50,purple!50,text=black] (5,3) rectangle (9,4) node[pos=.5] {GDB server}; %GDB_SERVER
         \draw[fill=purple!50,purple!50] (7.5,2) rectangle (9,3); 
         \draw (5,3) -- (5,4) -- (9,4) -- (9,2);
+        \draw[fill=yellow] (7.75,2) rectangle (8.75,2.5) node[pos=.5] {RTT}; %RTT
 
         \draw[fill=yellow!50] (5,2) rectangle (7.5,3) node[pos=.5] {GDB proto}; %gdb_proto
         \draw[fill=red!50] (5,1) rectangle (7.5,2) node[pos=.5] {CDC}; %cdc
@@ -65,7 +66,8 @@ Possiamo vedere come la concezione di separazione tra applicativo di controllo e
         \draw[fill=gray!50] (7.5,1) rectangle (9,2) node[pos=.5] {dW}; %dw
         \draw[fill=orange!50] (7.5,0) rectangle (9,1) node[pos=.5] {UART}; %uart
 
-        \draw[fill=cyan!50] (10,2) rectangle (14,3) node[pos=.5] {Target Process}; %AVR
+        \draw[fill=cyan!50] (10,2) rectangle (14,3) node[pos=.5] {Process}; %AVR
+        \draw[fill=yellow] (12.75,2) rectangle (13.75,2.5) node[pos=.5] {RTT}; %RTT
         \draw[fill=gray!50] (10,1) rectangle (14,2) node[pos=.5] {dW}; %dw
         \draw[fill=orange!50] (10,0) rectangle (14,1) node[pos=.5] {UART (O.D.)}; %UART
 
@@ -96,9 +98,9 @@ L'integrazione con gli ambienti di sviluppo avviene sfruttando la standardizzazi
 
 Il secondo livello è costituito dal firmware presente sull'ATMega16U2 collocato sulla scheda \textit{Arduino Uno R3} (componente \texttt{U3}).
 
-Questo firmare, completamente ripensato rispetto all'originale, si occupa di convertire i comandi inviati dall'\textit{host} tramite una connessione USB simulando un dispositivo seriale e di adattarli al \textit{debugging} tramite DebugWire, implementando un server GDB direttamente all'interno dell'integrato.
+Questo firmware, completamente ripensato rispetto all'originale, si occupa di convertire i comandi inviati dall'\textit{host} tramite una connessione USB simulando un dispositivo seriale e di adattarli al \textit{debugging} tramite DebugWire, implementando un server GDB direttamente all'interno dell'integrato.
 
-Il secondo livello si occuperà di mantenere una connessione compresa di stato con il \textit{debugger}, ``tradurre'' i comandi GDB in modo che possano essere inoltrati al target tramite protocollo DebugWire e garantire funzionalità aggiuntive quali un livello di comunicazione \textit{target-to-host} su connessione di debug nominato Real Time Terminal (RTT).
+Il secondo livello si occuperà di mantenere una connessione avente stato con il \textit{debugger}, ``tradurre'' i comandi GDB in modo che possano essere inoltrati al target tramite protocollo DebugWire e garantire funzionalità aggiuntive quali un livello di comunicazione \textit{target-to-host} su connessione di debug nominato Real Time Terminal (RTT).
 
 Il firmware dell'ATMega16U2 è composto da quattro macro componenti logiche descritte a seguire in questa relazione:
 \begin{enumerate}
@@ -168,7 +170,7 @@ I pacchetti inviati sul canale di comunicazione, come mostrato dalla \cref{fig:g
 \end{figure}
 
 \begin{equation}\label{eq:gdb-checksum}
-    CHKSM = byte2asciihex \left( \sum_{1=0}^{\# cmd} \left(cmd_i\right) \ \bmod{256}\right)
+    CHKSM = byte2asciihex \left( \left(\sum_{1=0}^{\# cmd} cmd_i\right) \ \bmod{256}\right)
 \end{equation}
 
 Questa procedura permette di implementare un parser di comandi a bassissimo impatto sulla memoria SRAM in quanto è possibile calcolare il \textit{checksum} durante la ricezione.
