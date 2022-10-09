@@ -52,25 +52,30 @@ La soluzione adottata consiste nell'implementazione di un soft-reset gestito dal
     \item Ripresa dell'esecuzione (0x30)
 \end{enumerate}
 
-A tal fine è necessario installare una connessione ausiliaria tramite un filo e tagliare la traccia di connessione del pulsante come mostrato dalla \cref{fig:rst-rewire}. Il valore del pulsante sarà letto dal pin \texttt{PINB6} il quale viene configurato come input con pull-up abilitato, filtrando in seguito il segnale tramite una procedura di \textit{debouncing} illustrata dal~\cref{lst:debounce}
+A tal fine è necessario installare una connessione ausiliaria tramite un filo e tagliare la traccia di connessione del pulsante come mostrato dalla \cref{fig:rst-rewire}. Il valore del pulsante sarà letto dal pin \texttt{PINB6} il quale viene configurato come input con pull-up abilitato, filtrando in seguito il segnale tramite una procedura di \textit{debouncing} illustrata dal~\cref{lst:debounce}.
 
 \noindent\begin{minipage}{\textwidth}
     \begin{lstlisting}[style=C, caption={Routine di interrupt di TIMER0 per la gestione del debounce}, label=lst:debounce]
     ISR(TIMER0_OVF_vect){
-        if(connection_evt) {
-            GDB_LED_OFF();
-            connection_evt = 0;
-        }
-    
-        if(usr_pshbtn_debounce_counter++ == 16) global_debounce = 0;
+[...]
+        if(usr_pshbtn_debounce_counter++ == 16) 
+            //Incrementa il contatode per il debuounce.
+            //Se 16 allora termina il periodo di insensibilità
+            global_debounce = 0;
     }
 
     void usr_btn_task(user_button_state_t * btn){
         if((*btn->pin_register) & (1 << btn->pin)){
-            btn->last_state = 1;
+            //Se il segnale è 1 allora salva lo stato
+            btn->last_state = 1; 
         } else {
             if(btn->last_state && !global_debounce){
+                //Se il segnale era uno durante la precedente 
+                // iterazione ed ora è 0 dopo aver trascorso 
+                // il periodo di insensibilità emetti l'evento.
                 usr_btn_event(btn);
+
+                //reset e ripristino
                 global_debounce = 1;
                 usr_pshbtn_debounce_counter = 0;
                 TCNT0 = 0;
@@ -80,6 +85,12 @@ A tal fine è necessario installare una connessione ausiliaria tramite un filo e
     }
     \end{lstlisting}
 \end{minipage}
+
+Il frammento di codice presentato è stato pensato per l'esecuzione secondo il concetto di attività periodica. La variabilità del segnale derivato dalla pressione di un pulsante da parte dell'utente ha tempi notevolmente lunghi rispetto alla frequenza di esecuzione, risultando quindi un'operazione senza alcun tipo di priorità e necessità di esecuzione in tempo reale.
+
+È quindi possibile eseguire periodicamente l'operazione inserendola nel ciclo infinito presente in ogni programma nella funzione main.
+
+Viene quindi deciso un periodo di insensibilità ai cambiamenti del segnale il quale viene gestito dal TIMER0. Questo timer, inizialmente configurato dal firmware per avere un incremento ogni 1024 cicli di clock, genererà un interrupt di \textit{overflow} ogni \SI{16}{\milli\second}, periodo ancora troppo breve in confronto alle durate degli eventi causati dall'utente. Per ovviare a tale problematica un ulteriore contatore è implementato in software al fine di terminare tale periodo di insensibilità dopo circa \SI{250}{\milli\second} come è possibile osservare dalle righe 3-6.\@
 
 \begin{figure}[h]
     \centering
@@ -107,7 +118,7 @@ L'implementazione inizialmente progettata in fase di ideazione, ancora prima che
             \draw (2.5, 2.5) to[short, -] (3, 2.5) to[short, -] (3, 2) to[R={\(R1\)}] (3, 1);
             \draw (3,-1) node [npn,xscale=-1,anchor=B] (npn) {\reflectbox{Q1}} (npn.collector);
             \draw (3, 1) to[short, -] (3, -1);
-            \draw (2, 0) to[short, *-*] (4, 0) node[label={[font=\footnotesize]above:target}] {};
+            \draw (2, 0) to[short, *-*] (4, 0) node[label={[font=\footnotesize]above:tgt}] {};
             \draw (0, -2) node[label={[font=\footnotesize]above:txd}] {} to[short, *-]  (2.16, -2) to[short, -] (2.16, -1.75);
             \draw (2.16, 0) to[short, *-] (2.16, -0.5);
             \draw (2, 3) -- node[anchor=south,align=center] {VCC} (3, 3);
@@ -117,23 +128,23 @@ L'implementazione inizialmente progettata in fase di ideazione, ancora prima che
         \begin{circuitikz}
             \draw (0, 0) node[label={[font=\footnotesize]above:rxd}] {} to[short, *-] (2, 0) to[short, -] (2, 1) to[R={\(R_{pullup}\)}] (2, 2) to [short, -] (2, 3);
             \draw (1.5, 3) -- node[anchor=south,align=center] {VCC} (2.5, 3);
-            \draw (2, 0) to[short, *-*] (4, 0) node[label={[font=\footnotesize]above:target}] {};
+            \draw (2, 0) to[short, *-*] (4, 0) node[label={[font=\footnotesize]above:tgt}] {};
             \draw (2, 0) to[short, -] (2, -0.5) to[D={D1}] (2, -1.5) to[short, -] (2, -2)  to [short, -*] (0, -2) node[label={[font=\footnotesize]above:txd}] {};
         \end{circuitikz}
     }
     \caption[]{L'immagine mostra due possibili circuiti per l'adattamento della periferica UART dell'ATMega16U2 alla linea seriale open drain.}\label{fig:od-impl}
 \end{figure}
 
-Il principio di funzionamento dei circuiti in \cref{fig:od-impl} è pressoché identico: Il valore del pin \textit{txd} viene replicato sulla linea di connessione con un livello logico 0 ``forte'' e un livello logico 1 ``debole'' dato dalla resistenza \(R_{pullup}\) e in entrambi i casi il pin \textit{txd} viene utilizzato come collettore di corrente.
+Il principio di funzionamento dei circuiti in \cref{fig:od-impl} è pressoché identico: Il valore del pin \textit{txd} viene replicato sulla linea di connessione al nodo \textit{tgt} con un livello logico 0 ``forte'' e un livello logico 1 ``debole'' dato dalla resistenza \(R_{pullup}\) e in entrambi i casi il pin \textit{txd} viene utilizzato come collettore di corrente.
 La differenza consiste nella quantità di componenti aggiuntivi e nelle prestazioni.
 
-Il circuito (a) permette, tramite il pin \textit{txd}, di porre la differenza di potenziale \(V_{be}\) tra base ed emettitore del transistor a circa \SI{5}{\volt} --- ignorando la caduta di tensione irrilevante sulla resistenza \texttt{R1} --- permettendo una corrente di base sufficiente a mandare il transistor in saturazione permettendo una differenza di potenziale \(V_{ce}\) irrilevante imponendo così la tensione sulla connessione verso il target a livello logico 0.
+Il circuito (a) permette, tramite il pin \textit{txd}, di porre la differenza di potenziale \(V_{be}\) tra base ed emettitore del transistor a circa \SI{5}{\volt}\footnote{ignorando la caduta di tensione irrilevante sulla resistenza \texttt{R1}}, permettendo una corrente di base sufficiente a mandare il transistor in saturazione imponendo così la tensione sulla connessione verso il target a livello logico 0.
 
 Contrariamente il circuito (b) sfrutta il diodo \texttt{D1} per ottenere lo stesso risultato. La differenza consta nel fatto che nel circuito (a) il transistor permette di avere una caduta di tensione minore essendo in saturazione, cosa che avviene quando il segnale \textit{txd} è zero, mentre il diodo \texttt{D1} causa una caduta di tensione dell'ordine di \SI{700}{\milli\volt}.
 
-I circuiti sopra introdotti sono verificati dalle simulazioni i cui risultati sono riportati in \cref{graph:sim}. In aggiunta a quanto esibito, il circuito (b) è stato simulato con un diodo schottky 1N5817 con capacitanza di giunzione pari a \SI{125}{\pico\farad} per valutarne il comportamento.
+I circuiti sopra introdotti sono verificati dalle simulazioni, allegate al documento~\ref{app:ngspice-bjt}, eseguite con il software \textit{ngspice}\cite{site:ngspice} i cui risultati sono riportati in \cref{graph:sim}. In aggiunta a quanto esibito, il circuito (b) è stato simulato con un diodo schottky 1N5817 con capacitanza di giunzione pari a \SI{125}{\pico\farad} per valutarne il comportamento.
 
-\begin{figure}
+\begin{figure}[hp]
     \centering
         \begin{tikzpicture}
             \begin{axis}[
@@ -154,9 +165,9 @@ I circuiti sopra introdotti sono verificati dalle simulazioni i cui risultati so
                 ylabel={Tensione (V)}
                 ]
                 \addplot table [x=t, y=v(tgt), col sep=comma, mark=none] {sims/phy-sim-diode.csv};
-                \addplot table [x=t, y=v(txd), col sep=comma, mark=none] {sims/phy-sim-diode.csv};
                 \addplot table [x=Time, y=V(NODE1), col sep=comma, mark=none] {sims/phy-sim-schottky.csv};
-                \legend{$tgt (pn)$,$txd$}
+                \addplot table [x=t, y=v(txd), col sep=comma, mark=none] {sims/phy-sim-diode.csv};
+                \legend{$tgt (pn)$,$tgt (schottky)$,$txd$}
             \end{axis}
         \end{tikzpicture}
     \caption[]{Risultati della simulazione dei circuiti in \cref{fig:od-impl} con tempo di bit pari a \SI{8}{\text{\mu}\second} (\SI{125}{\kilo\hertz}). Parametri della simulazione: \(C_{pn}, C_{par} = \SI{5}{\pico\farad}\), \(C_{schottky} = \SI{125}{\pico\farad}\)}\label{graph:sim}
@@ -168,7 +179,7 @@ Sfruttando la periferica UART risulta quindi banale l'implementazione della comu
 
 \subsection{Implementazione effettiva}
 
-Data la scelta di riutilizzare modificando la scheda \textit{Arduino UNO R3}, si è reso necessario l'utilizzo di un solo pin non appartenente alla periferica UART dell'ATMega16U2\cite{avr:m16u2} (pin 13) in quanto, dopo le modifiche apportate descritte dalla \cref{s:dw-board-mod}, collegato al pin di reset (si veda il documento~\ref{app:r3-schematic}).
+Data la scelta di utilizzare la scheda \textit{Arduino UNO R3} modificandola, si è reso necessario l'utilizzo del solo pin 13 per la comunicazione con il target, pin non appartenente alla periferica UART dell'ATMega16U2\cite{avr:m16u2}, essendo esso collegato direttamente al pin di reset dell'ATMega328P(si veda il documento~\ref{app:r3-schematic}).
 
 Di conseguenza si è reso necessario scrivere un'implementazione software del protocollo seriale tramite un solo pin.
 
@@ -180,22 +191,24 @@ Attraverso quanto è rappresentato nella \cref{fig:avr-pin} possiamo valutare le
 
 \begin{figure}[t]
     \centering
-    \includegraphics[width=.85\textwidth]{avr-pin-diag.png}
-    \caption[Immagine ottenuta dal documento\cite{avr:m16u2}, fig. 12-2]{Diagramma funzionale dell'hardware relativo a un generico pin della famiglia AVR\cite[fig. 12-2]{avr:m16u2}}\label{fig:avr-pin}
+    \includegraphics[page=85, width=.85\textwidth,trim={40mm 125mm 35mm 45mm},clip]{../biblio/docs/m328.pdf}    \caption[Immagine ottenuta dal documento\cite{avr:m16u2}, fig. 12-2]{Diagramma funzionale dell'hardware relativo a un generico pin della famiglia AVR\cite[fig. 12-2]{avr:m16u2}}\label{fig:avr-pin}
 \end{figure}
 
-Alla scrittura del registro \texttt{DDRx} viene asserita la linea WDx, la quale salva lo stato del bit associato al pin nel flipflop pilotato da essa. Questo stato controlla un buffer che stabilisce se il pin stesso debba essere in configurazione di input o output.
+Alla scrittura del registro \texttt{DDRx} viene asserita la linea WDx, la quale salva lo stato del bit associato al pin nel relativo registro pilotato da essa. Questo registro controlla, tramite la sua uscita \texttt{Q}, un buffer il quale stabilisce la  configurazione del circuito commutando due stati: input e output.
 
-In particolare, se lo stato salvato nel primo flipflop è 1, il pin sarà pilotato con livello logico pari allo stato salvato nel secondo flipflop in modo ``forte''.
+In particolare, se lo stato salvato nel registro \texttt{DDRx} è 1 il pin sarà pilotato con livello logico `forte'' a valore definito dallo stato dell'uscita \texttt{Q} del registro \texttt{PORTx} controllato dalle linee \texttt{WRx}.
 
-Se invece lo stato del pin viene posto come input, ossia lo stato del primo flipflop è 0, è possibile pilotare il FET che alimenta la linea di pull-up del pin. Questo accade perché il segnale che rappresenta la direzione del pin è input negato della porta AND che controlla lo stato del pull-up; per questo motivo, il valore 0 permette alla porta di avere risultato 1 se lo stato del secondo flipflop è pari a 1.
-Tale condizione non ha ripercussioni fisiche in quanto tale segnale sarebbe ignorato essendo che il buffer di controllo è disabilitato.
+Se, invece, lo stato del pin viene posto come input (\texttt{DDRx} posto a 0), è possibile pilotare il FET che controlla il pull-up dell'uscita. Questo accade perché il segnale che rappresenta la direzione del pin è input negato della porta AND che controlla lo stato del pull-up; per questo motivo, il valore 0 del registro \texttt{DDRx}, nel caso il circuito sia configurato come input, permette alla porta di avere risultato 1 se lo stato del registro \texttt{PORTx} è pari a 1.
+Tale condizione non ha ripercussioni fisiche in quanto il segnale dell'uscita \texttt{Q} del registro \texttt{PORTx} sarebbe ignorato in quanto il buffer di controllo è disabilitato.
 
-La lettura dello stato del pin può avvenire in qualunque momento tramite la lettura del registro \texttt{PINx}, la quale asserirà la linea \texttt{RPx} e riporterà lo stato salvato nello stadio di sincronizzazione.
+L'ottenimento dello stato del pin può avvenire in qualunque momento tramite la lettura del registro \texttt{PINx}, la quale asserirà la linea \texttt{RPx} e riporterà lo stato salvato nello stadio di sincronizzazione.
 
-La scrittura del registro \texttt{PINx}, illogica dal punto di vista funzionale in quanto esso rappresenta lo stato corrente del pin, viene reindirizzata al controllo del multiplexer in modo da poter invertire lo stato del pin senza averlo precedentemente letto, dimezzando la quantità di operazioni necessarie all'inversione dello stato, rendendo non necessaria la lettura del valore per calcolarne l'inverso.
+La scrittura del registro \texttt{PINx}, illogica dal punto di vista funzionale in quanto esso rappresenta lo stato corrente del pin, viene reindirizzata al controllo del multiplexer posto in ingresso al registro \texttt{PORTx}, in modo da poter invertire lo stato del pin senza averlo precedentemente letto.
+Tale funzionalità permette di dimezzare la quantità di operazioni necessarie all'inversione dello stato, rendendo non necessaria la lettura del valore corrente per calcolarne l'inverso.
 
-Risulta quindi necessario stabilire due sequenze di operazioni per portare il pin da livello logico basso ``forte'' a livello logico alto ``debole''. In particolare la transizione da livello logico alto a livello logico basso deve avvenire precedentemente alla configurazione della direzione del pin. Questo garantisce che non vi siano possibilità di conflitti potenzialmente catastrofici, considerando il fatto che il segnale che determina l'attivazione del pull-up è anche responsabile dello stato del pin.
+È possibile osservare la mancanza di uno stato \textit{open drain}.
+
+Risulta quindi necessario stabilire due sequenze di operazioni per portare il pin da livello logico alto ``debole'' a livello logico basso ``forte'' e viceversa. In particolare la transizione da livello logico alto a livello logico basso deve avvenire precedentemente alla configurazione della direzione del pin. Questo garantisce che non vi siano possibilità di conflitti potenzialmente catastrofici, considerando il fatto che il segnale che determina l'attivazione del pull-up è anche responsabile dello stato del pin.
 
 Analogamente per la conversione da livello logico basso a livello logico alto il cambio di stato dovrà avvenire successivamente al cambio di direzione.
 
@@ -226,18 +239,18 @@ Il comportamento sopra descritto viene riassunto dalla \cref{fig:phy-tx-timing}.
 Inoltre l'immagine mostra come un eventuale aggiunta di un dato alla coda durante l'invio venga indicato dal flag \texttt{OD\_UART\_TX\_FULL}, il quale causa, una volta terminata l'esecuzione del ciclo di invio del byte attuale, la ripresa della procedura senza fare ritorno allo stato \texttt{IDLE}.
 
 \begin{figure}[p]
-    \checkoddpage%
-    \ifoddpage%
+    %\checkoddpage%
+    %\ifoddpage%
         \begin{adjustbox}{addcode={\begin{minipage}{\width}}{\caption[]{%
             Diagramma delle tempistiche di esecuzione dell'invio di dati sulla linea seriale implementata via software.}\label{fig:phy-tx-timing}\end{minipage}},rotate=90,center}
             \includegraphics[width=\textheight]{phy-tx-timing.pdf}%
         \end{adjustbox}
-    \else
-        \begin{adjustbox}{addcode={\begin{minipage}{\width}}{\caption[]{%
-            Diagramma delle tempistiche di esecuzione dell'invio di dati sulla linea seriale implementata via software.}\label{fig:phy-tx-timing}\end{minipage}},rotate=-90,center}
-            \includegraphics[width=\textheight]{phy-tx-timing.pdf}%
-        \end{adjustbox}
-    \fi
+    %\else
+    %    \begin{adjustbox}{addcode={\begin{minipage}{\width}}{\caption[]{%
+    %        Diagramma delle tempistiche di esecuzione dell'invio di dati sulla linea seriale implementata via software.}\label{fig:phy-tx-timing}\end{minipage}},rotate=-90,center}
+    %        \includegraphics[width=\textheight]{phy-tx-timing.pdf}%
+    %    \end{adjustbox}
+    %\fi
 \end{figure}
 
 
@@ -333,13 +346,15 @@ Bisogna però trovare un modo per inviare il dato, o i dati, da scrivere nella m
 
 Una possibile soluzione potrebbe essere quella di scrivere il byte o la pagina in RAM e utilizzare istruzioni \texttt{ld}, ma questo approccio richiederebbe un numero elevato di  istruzioni e causerebbe lunghi tempi di programmazione.
 
-La soluzione adottata è quella di leggere o scrivere il registro \texttt{DWDR}. Dati i test eseguiti, una scrittura del registro tramite i comandi descritti alla~\cref{sss:dw-mem-io} (il registro si trova ad un indirizzo noto) richiede un ulteriore byte inviato sulla linea seriale che verrà salvato in tale locazione\cite{site:dw-reverse-engeneering}. Analogamente la sua lettura comporta un ulteriore byte inviato dal target rappresentate il valore salvato\cite{site:dw-reverse-engeneering}.
+La soluzione adottata è quella di leggere o scrivere il registro \texttt{DWDR}, un registro dedicato alla comunicazione tra target e \textit{debugger} tramite la periferica DebugWire, al quale l'utente non ha alcun tipo di accesso.
+
+Dati i test eseguiti, una scrittura del registro tramite i comandi descritti alla~\cref{sss:dw-mem-io} (il registro si trova ad un indirizzo noto) richiede un ulteriore byte inviato sulla linea seriale che verrà salvato in tale locazione\cite{site:dw-reverse-engeneering}. Analogamente la sua lettura comporta un ulteriore byte inviato dal target rappresentate il valore salvato\cite{site:dw-reverse-engeneering}.
 
 I documenti~\ref{app:dw-flash-prog}~e~\ref{app:dw-eeprom-prog} riportano l'implementazione di codice eseguibile dal debugger per la programmazione delle memorie non volati.
 
 Da tali documenti possiamo osservare come il codice sia fortemente dipendente dal debugger per la preparazione del contesto, ovvero necessita che, prima dell'esecuzione, siano eseguite certe istruzioni di preparazione quali salvataggio dello stato dei registri e preparazione delle costanti e indirizzi nei registri utilizzati.
 
-Inoltre la scrittura dell'algoritmo di programmazione della memoria flash è stata sviluppata evitando la dipendenza da un buffer contenente l'intera pagina da programmare precedentemente alla chiamata, bensì è possibile popolare il buffer temporaneo a blocchi di dimensione indefinita prima della programmazione della memoria.
+Inoltre la scrittura dell'algoritmo di programmazione della memoria flash è stata sviluppata evitando la dipendenza da un buffer contenente l'intera pagina da programmare precedentemente alla chiamata, bensì è possibile popolare il buffer temporaneo a blocchi di dimensione variabile prima della programmazione della memoria.
 
 Questo permette di scrivere codice a bassissimo impatto sulla quantità di memoria SRAM utilizzata, condizione necessaria per lo sviluppo su ATMega16U2 in quanto la memoria SRAM totale disponibile non supera i \SI{512}{byte}\cite{avr:m16u2}.
 
@@ -452,12 +467,12 @@ L'aggiunta della possibilità di scrivere la memoria flash consente l'implementa
 
 Un breakpoint è un indicatore associato a un indirizzo di memoria dove il codice è in esecuzione con il fine di interrompere l'esecuzione dell'algoritmo e passare il controllo al debugger per effettuare le operazioni di analisi e ispezione.
 
-Questi consistono nella sovrascrittura di un'istruzione con l'opcode corrispondente all'istruzione \texttt{break} causando così l'\texttt{h} della CPU e l'intervento del debugger prima dell'esecuzione della stessa.
+Questi consistono nella sovrascrittura di un'istruzione con l'opcode corrispondente all'istruzione \texttt{break} causando così l'\textit{halt} della CPU e l'intervento del debugger prima dell'esecuzione della stessa.
 Alla ripresa dell'esecuzione il debugger caricherà in memoria l'istruzione originale e riprenderà il flusso del codice.
 
 Un primo approccio per la scrittura del codice relativo a questa feature consiste nell'aggiornare la memoria flash scrivendo un'istruzione BREAK\footnote{0x0000} non appena possibile e salvare in una struttura dati la coppia \[<indirizzo>:<opcode>\]
 
-Un possibile algoritmo viene esibito di seguito. Questo algoritmo ha un impatto sull'utilizzo della memoria SRAM di 18 byte facendo uso del fatto che è possibile riempire il buffer di scrittura prima della cancellazione della pagina\cite{avr:m328p}.
+Un possibile algoritmo viene esibito di seguito. Questo algoritmo, eseguito dal server GDB presente sull'ATMega16U2, ha un impatto sull'utilizzo della memoria SRAM del controllore di 18 byte, grazie al fatto che è possibile riempire il buffer di scrittura del \textit{target} prima della cancellazione della pagina in programmazione\cite{avr:m328p}.
 
 Sia \(address\) l'indirizzo dell'istruzione da sostituire (word address), \(pagelen\) il numero di word in una pagina.
 
