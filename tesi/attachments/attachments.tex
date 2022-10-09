@@ -16,6 +16,49 @@ visitato il 07-09-2022
         {attachments/Arduino_Uno_Rev3-schematic.pdf}
 \end{center}
 
+\newappendix{File di simulazione ngspice per la simulazione adattamento open drain}\label{app:ngspice-bjt}
+
+\begin{lstlisting}[language=txt]
+.TEMP=25.0
+.OPTIONS ABSTOL=1e-12 GMIN=1e-12 PIVREL=1e-3 ITL1=100 ITL2=50 PIVTOL=1e-13 RELTOL=1e-3 VNTOL=1e-6 CHGTOL=1e-15 ITL4=10 METHOD=TRAP SRCSTEPS=0 TRTOL=7 NODE
+
+R_R1 TGT N_3 10k 
+V_V1 TXD 0 DC 0V AC 0 PULSE(0 5V 4u 1n 1n 8u 16u) 
+R_R2 N_3 N_1 1k 
+Q_Q1 TGT N_1 TXD QNPN 
+V_V2 N_3 0 DC 5V AC 0 
+C_C1 TGT 0 5p 
+.MODEL QNPN NPN
+
+.control
+set filetype=ascii
+TRAN 4.8e-8 2.4e-5 0 4.8e-8 
+write untitled.sch.sim V(TXD) V(TGT)
+.endc
+.END
+\end{lstlisting}
+
+\begin{lstlisting}[language=txt]
+.TEMP=25.0
+
+.OPTIONS ABSTOL=1e-12 GMIN=1e-12 PIVREL=1e-3 ITL1=100 ITL2=50 PIVTOL=1e-13 RELTOL=1e-3 VNTOL=1e-6 CHGTOL=1e-15 ITL4=10 METHOD=TRAP SRCSTEPS=0 TRTOL=7 NODE
+
+R_R1 TGT N_3 10k 
+V_V1 TXD 0 DC 0V AC 0 PULSE(0 5V 4u 1n 1n 8u 16u) 
+V_V2 N_3 0 DC 5V AC 0 
+D_D1 TGT TXD DMOD 
+C_C1 TGT 0 5p 
+.MODEL DMOD D
+
+.control
+set filetype=ascii
+TRAN 4.8e-8 2.4e-5 0 4.8e-8 
+write untitled.sch.sim V(TXD) V(TGT) I(V_V1) I(V_V2)
+.endc
+.END
+\end{lstlisting}
+
+
 \newappendix{Algoritmo di programmazione memoria Flash tramite DebugWire}\label{app:dw-flash-prog}
 
 \begin{lstlisting}[language=AVR]

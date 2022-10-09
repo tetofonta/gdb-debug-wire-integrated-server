@@ -1,27 +1,24 @@
 \chapter*{Conclusioni e Sviluppi Futuri}
 \addcontentsline{toc}{chapter}{Conclusioni e Sviluppi Futuri}
 
-Si è visto che è possibilie sviluppare una serie di strumenti in grado di supportare la programmazione mediante l'introduzione di nuove funzionalità e astrazioni.
+Si è visto che è possibile sviluppare una serie di strumenti in grado di supportare la programmazione mediante l'introduzione di nuove funzionalità e astrazioni.
 
-Grazie alle risorse citate e agli esperimenti performati durante lo sviluppo di questi sistemi è stato possibile ideare un firmware in grado di adattare un protocollo di \textit{debugging} comunemente utilizzato a un set ridotto e non documentato di comandi verso il dispositivo target.
+Grazie alle risorse citate e agli esperimenti eseguiti durante lo sviluppo di questi sistemi è stato possibile ideare un firmware in grado di adattare un protocollo di \textit{debugging} comunemente utilizzato a un set ridotto e non documentato di comandi verso il dispositivo target.
 
-Lo sviluppo di tale firmware ha necessitato continue prove e riformulazioni al fine di ottenere una versione funzionale ed efficiente. Tutt'ora la stabilità del sistema non è assoluta in quanto esistono svariati casi e sequenze per cui è necessario effettuare un rivvio forzato, ma tali controlli e casi eccezionali non sono stati sviluppati in quanto lasciati per futuri sviluppi.
+Lo sviluppo di tale firmware ha necessitato continue prove e riformulazioni al fine di ottenere una versione funzionale ed efficiente. Tutt'ora la stabilità del sistema non è assoluta in quanto esistono svariati casi e sequenze per cui è necessario effettuare un riavvio forzato del controllore, ma tali controlli e casi eccezionali non sono stati sviluppati in quanto lasciati a futuri sviluppi.
 
-Inoltre la dimensione finale del codice compilato raggiunge i 15 KiB, dimensione limite per la memoria di 16 KiB considerando la regione dedicata al bootloader. Il vincolo dato dalla dimensione della memoria è causato dall'adatarsi all'utilizzo della scheda \textit{Arduino UNO} la quale monta il controllore ATMega16U2. Un possibile sviluppo futuro potrebbe consistere nel valutare il passaggio a un ATMega32U2 o ATMega32U4 per sfruttare al meglio le loro potenzialità maggiorate.
+Inoltre la dimensione finale del codice compilato raggiunge i \SI{15}{KiB}, dimensione limite per la memoria di 16 KiB considerando la regione dedicata al bootloader. Il vincolo dato dalla dimensione della memoria è dato dall'adattamento all'utilizzo della scheda \textit{Arduino UNO}, la quale monta il controllore ATMega16U2 con capacità di memoria ridotta. Un possibile sviluppo futuro potrebbe consistere nel valutare il passaggio a un ATMega32U2 o ATMega32U4 per sfruttare al meglio le loro potenzialità maggiorate quali memoria flash di \SI{32}{KiB} e un totale di \SI{2.5}{KiB} di memoria SRAM\cite{avr:m16u4}.
 
-È possibile aggiungere agli sviluppi futuri lo sviluppo di un hardware ``\textit{Arduino Compatibile}'' --- argomento al di fuori del corso di studio --- il quale permetterebbe l'implementazione di una topologia e circuiteria che possa agevolare l'implementazione dei protocolli fisici e ridurre così le dimensioni del compilato.
-Così facendo sarebbe possibile l'implementazione di nuove funzionalità utili alla programmazione.
+Sarà possibile sviluppare un hardware ``\textit{Arduino Compatibile}'' --- argomento al di fuori del corso di studio --- il quale permetterebbe l'implementazione di una topologia e circuiteria che possa agevolare l'implementazione dei protocolli fisici e ridurre così le dimensioni del compilato sfruttando la periferica UART.\@
+Così facendo sarebbe possibile l'implementazione di nuove funzionalità accessorie.
 
-Ulteriori difficoltà sono state superate nello sviluppo dell'interfaccia con l'\textit{host} tramite USB.\@ Il protocollo USB è notevolmente complesso e vasto; lo sviluppo di tale parte del firmware ha necessirato di una quantità considerevole di tempo e prove.
+Ulteriori difficoltà sono state superate nello sviluppo dell'interfaccia con l'\textit{host} tramite USB.\@ Il protocollo USB è notevolmente complesso e vasto; lo sviluppo di tale parte del firmware ha necessitato di una quantità considerevole di tempo e prove al fine di comprendere al meglio le logiche utilizzate dalla libreria LUFA.\@
 
-Infine, grazie alla versione corrente del firmware di adattamento, sarà possibile sviluppare un migliormento di se stesso in quanto tutto il codice è stato sviluppato senza l'ausilio di strumenti di debug.
-La motivazione è data da quanto enunciato nell'introduzione:
+Infine, grazie alla versione corrente del firmware presente sull'ATMega16U2 e dalle sue funzionalità di debug, sarà possibile sviluppare a versione migliorata dello stesso sfruttando le possibilità che questo progetto offre. Si noti che il codice è stato sviluppato senza l'ausilio di strumenti di debug per quanto enunciato nell'introduzione:
 \begin{center}
     \textit{Il sistema ultimato consisterà in un set di strumenti complementari e modifiche apportabili alla scheda sopra descritta in modo che chiunque sia in grado di utilizzarli e applicarli, sviluppato interamente con strumenti e dati disponibili al pubblico tramite la rete internet e senza l'uso di strumenti e hardware proprietari.}
 \end{center}
 
-Al fine di poter pubblicare questa ricerca con licenza open source non sono stati utilizzati strumenti e software sotto licenza con \textit{Microchip} o \textit{Atmel}. Questo comporta l'impossibilità di utilizzare programmatori proprietari in grado di fornire un'interfaccia di debug e di sfruttare le funzionalità di software quali \textit{Atmel Studio} in grado di utilizzare tali trumenti.
+Al fine di poter pubblicare questa ricerca con licenza open source non sono stati utilizzati strumenti e software proprietari \textit{Microchip} o \textit{Atmel}. Questo comporta l'impossibilità di utilizzare programmatori proprietari in grado di fornire un'interfaccia di debug e di sfruttare le funzionalità di software quali \textit{Atmel Studio} in grado di utilizzare al meglio tali strumenti.
 
-Giunti a questo punto dello sviluppo è ora possibile utilizzare una verisone del firmware stesso per ottimizzare le sue funzionalità e correggerne errori logici.
-
-Il software, gli strumenti e le confiurazioni sono state pubblicate sotto licenza \textit{Apache License 2.0}\footnote{https://www.apache.org/licenses/LICENSE-2.0}.
+Il software, gli strumenti e le configurazioni sono state pubblicate sotto licenza \textit{Apache License 2.0}\footnote{https://www.apache.org/licenses/LICENSE-2.0}.
