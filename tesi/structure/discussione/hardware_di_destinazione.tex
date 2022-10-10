@@ -12,7 +12,7 @@ L'hardware addizionale presente sul lato sinistro, invece, permette di alimentar
     \caption[]{Foto di una scheda Arduino Uno R3\cite{img:arduino-uno-r3}}\label{fig:arduino-uno-r3}
 \end{figure}
 
-Il controllore, presente al centro della scheda, in un involucro DIP-28\footnote{Dual in-line package, 28 pin}, è un ATMega328P-PU\cite{site:arduino-uno-doc}. La scelta di un involucro ingombrante, in controtendenza con i processi di miniaturizzazione dell'industria elettronica, è causata dal fatto che, per mantenere una dinamica ``\textit{user friendly}'', rende possibile sostituire il controllore in caso di guasto in modo semplice senza dover sostituire l'intera scheda essendo il controllore posto in uno zoccolo invece che saldato direttamente alle connessioni\cite{site:arduino-uno-doc}.
+Il controllore, presente al centro della scheda, in un involucro DIP-28\footnote{Dual in-line package, 28 pin}, è un ATMega328P-PU\cite{site:arduino-uno-doc}. La scelta di un involucro ingombrante, in controtendenza con i processi di miniaturizzazione dell'industria elettronica, è causata dal fatto che, per mantenere una dinamica ``\textit{user friendly}'', rende possibile sostituire il controllore in caso di guasto in modo semplice senza dover sostituire l'intera scheda essendo questo posto in uno zoccolo invece che saldato direttamente alle connessioni\cite{site:arduino-uno-doc}.
 
 \section{La famiglia AVR}
 
@@ -47,7 +47,7 @@ Dato l'utilizzo generale di sola lettura, essa si presenta come una memoria a le
 
 Si tratta poi di una memoria complessa: per i controllori avanzati, aventi il supporto al bootloader, essa è divisa in due sezioni le quali garantiscono la possibilità di differenziare i privilegi del codice presente nelle due sezioni come descritto nella \cref{ss:advanced-features}.
 
-Essendo inoltre una memoria ``di programma'', essa non richiede prestazioni notevoli in scrittura: questa avviene, come detto precedentemente, a pagine, ossia a blocchi di 512/1024 bit (in funzione del controllore e della dimensione della memoria) e può essere eseguita in tre diverse modalità:
+Essendo inoltre una memoria ``di programma'', essa non richiede prestazioni notevoli in scrittura: questa avviene a pagine, ossia a blocchi di 512/1024 bit (in funzione del controllore e della dimensione della memoria) e può essere eseguita in tre diverse modalità:
 
 \begin{itemize}
     \item ISP\footnote{In System Programming}: In questo caso il controllore è in modalità di programmazione ed esegue i comandi inoltrati da un programmatore esterno --- connesso tramite SPI\footnote{Serial Peripheral Interface} --- mentre la CPU è in stato di \textit{halt}.
@@ -79,11 +79,11 @@ Infatti l'architettura AVR utilizza in modo marcato il concetto di MMIO\footnote
 
 Come è possibile osservare dalla \cref{fig:avr-sram-alloc}, i primi 256 byte dello spazio degli indirizzi della memoria SRAM sono in realtà dedicati all'interazione con registri di controllo delle periferiche.
 
-Questi vengono identificati da un indirizzo nella memoria SRAM ma sono in realtà collocati nelle varie periferiche che essi controllano il cui accesso avviene sfruttando le linee di controllo per la scrittura della memoria SRAM\cite[fig 14-2]{avr:m328p}.
+Questi vengono identificati da un indirizzo nella memoria SRAM ma sono in realtà collocati nelle varie periferiche che essi controllano il cui accesso avviene sfruttando le linee di controllo per la lettura e scrittura della memoria SRAM\cite[fig 14-2]{avr:m328p}.
 
 La scrittura di tali locazioni di memoria causa effetti collaterali in funzione della periferica alla quale è associata. Questa sezione si divide in tre blocchi: i primi 32 byte sono i registri \textit{general purpose} i quali sono interconnessi e interagiscono con l'ALU.\@ Essi vengono utilizzati per l'elaborazione e il salvataggio di dati temporanei.
 
-A seguire sono presenti due zone di memoria: \textit{I/O} ed \textit{Extended I/O} contenenti i registri di controllo delle periferiche. A tal fine, dato che le scritture e le letture possono causare cambiamenti alla periferica (e.g.\ la scrittura di un flag di interrupt per ripristinare lo stato di una periferica) questi indirizzi vengono dichiarati mediante la keyword \texttt{volatile}\footnote{Keyword del compilatore C per impedire l'ottimizzazione delle letture e scritture ad un dato indirizzo}. La differenza tra le due sezioni consiste nella possibilità della prima di essere acceduta in un solo ciclo di clock tramite le istruzioni di \textit{I/O}\cite[sec 8.5]{avr:m328p} quali \texttt{in}, \texttt{out}, ecc\ldots
+A seguire sono presenti due zone di memoria: \textit{I/O} ed \textit{Extended I/O} contenenti i registri di controllo delle periferiche. A tal fine, dato che le scritture e le letture possono causare cambiamenti alla periferica (e.g.\ la scrittura di un flag di interrupt per ripristinare lo stato di una periferica) questi indirizzi vengono dichiarati mediante la keyword \texttt{volatile} nel linguaggio C, stando a significare che la loro lettura e/o scrittura può avere effeti collaterali e non può essere ottimizzata. La differenza tra le due sezioni consiste nella possibilità della prima di essere acceduta in un solo ciclo di clock tramite le istruzioni di \textit{I/O}\cite[sec 8.5]{avr:m328p} quali \texttt{in}, \texttt{out}, ecc\ldots
 
 È possibile notare dalla \cref{fig:avr-sram-timings} come le istruzioni di accesso alla ram impieghino due cicli di clock: l'indicizzazione della ram da parte di alcune istruzioni è effettuata utilizzando il valore composto da una coppia di registri\footnote{r26-r27, r28-r29, r30-r31} al momento dell'esecuzione. 
 
@@ -164,7 +164,7 @@ Il firmware si occupa di ricevere i dati dall'\textit{host} e di replicarli sull
 
 Oltre alle connessioni relative alla comunicazione seriale tra \textit{target} e l'ATMega16U2 (\texttt{M8TXD} e \texttt{M8RXD}) è presente una terza connessione che pilota la linea di reset del primo. Il pin 13 dell'ATMega16U2 è connesso, tramite \texttt{C5} alla linea di reset del \textit{target}.
 
-Secondo la specifica RS-232, oltre alle due linee seriali, sono presenti anche delle line di ``\textit{flow control}'', tra le quali possiamo notare la linea attiva a livello logico 0 nominata \texttt{``DTR''}.
+Secondo la specifica RS-232, oltre alle due linee seriali, sono presenti anche delle line di ``\textit{flow control}'', tra le quali possiamo notare la linea attiva a livello logico 0 nominata ``\texttt{DTR}''.
 
 Questa linea è asserita dalla maggior parte dei driver seriali (e seriali virtuali) al momento della connessione al dispositivo o del collegamento. Così facendo, grazie a \texttt{C5} è possibile avere un impulso sulla linea di reset prima che il circuito ritorni all'equilibrio: Inizialmente il condensatore \texttt{C5} si trova in equilibrio con la linea DTR posta a \SI{5}{\volt} e la linea di RESET posta a \SI{5}{\volt} per mezzo della resistenza di pull'up. Al momento dell'asserzione la linea DTR viene posta a \SI{0}{\volt} e conseguentemente il condensatore \texttt{C5} si carica causando un calo nella linea di reset fino a \SI{0}{\volt}, la quale poi evolverà secondo il modo del sistema dato dal prodotto tra la resistenza e la capacità di \texttt{RN1D} e \texttt{C5} equivalente a quanto riportato nell'~\cref{eq:rcstrrst}.
 
@@ -172,7 +172,7 @@ Questa linea è asserita dalla maggior parte dei driver seriali (e seriali virtu
     \tau_{reset} = \frac{1}{\text{RN1D} \cdot \text{C5}} = \SI{1}{\milli\second}
 \end{equation}
 
-Al momento della disconnessione il condensatore causerà un picco positivo nella linea di reset fino a circa \SI{10}{\volt} che verrà però soppresso dalla presenza di \texttt{D2} limitandolo a \SI{5.7}{\volt} senza eccedere i limiti fisici del pin con il quale è collegato.
+Al momento della disconnessione il condensatore causerà un picco positivo nella linea di reset fino a circa \SI{10}{\volt} che verrà però soppresso dalla presenza di \texttt{D2} limitandolo a \SI{5.7}{\volt} senza eccedere i limiti fisici del pin con il quale è collegato\cite[sec 29.1]{avr:m328p}.
 
 \subsection{Programmazione}
 

@@ -26,7 +26,7 @@ Come è possibile osservare dall'allegato~\ref{app:r3-schematic}, L'integrato \t
 \end{figure}
 
 Tale modifica rende inoperabile il firmware presente sul controllore ATMega16U2 in quanto così facendo la linea di reset rimarrebbe asserita al livello logico 0 durante la durata della connessione con l'\texttt{host} impedendone il funzionamento sia da un punto di vista logico che fisico, essendo che il cambiamento comporterebbe il collegamento dei componenti \texttt{RN2D} e \texttt{RN1D}. Questi costituiscono così un partitore di tensione che imporrebbe la linea di reset ad un livello logico insufficiente ad una tensione di \SI{450}{\milli\volt}. 
-Per questa motivazione si rende necessaria una seconda modifica isolando la resistenza \texttt{RN2D} tagliando la traccia che la collega alla linea di reset come mostrato in \cref{fig:cut-rnd2}
+Per questa motivazione si rende necessaria una seconda modifica la quae comporta l'isolamento della resistenza \texttt{RN2D} tagliando la traccia che la collega alla linea di reset come mostrato in \cref{fig:cut-rnd2}
 
 \begin{figure}[b]
     \centering
@@ -34,7 +34,7 @@ Per questa motivazione si rende necessaria una seconda modifica isolando la resi
     \caption[]{Isolamento del componente \texttt{RN2D} tagliando la traccia evidenziata.}\label{fig:cut-rnd2}
 \end{figure}
 
-Questa modifica si ripercuote negativamente sulla possibilità di eseguire il bootloader sull'ATMega16U2, in quanto è necessario che il pin 13 sia posto a \SI{0}{\volt} perché esso possa essere caricato\cite[sec 23.6.3]{avr:m16u2}. Vi sono quindi tre possibilità:
+Questa modifica si ripercuote negativamente sulla possibilità di eseguire il bootloader sull'ATMega16U2, in quanto è necessario che il pin 13 sia posto a \SI{0}{\volt} perché esso possa essere eseguito\cite[sec 23.6.3]{avr:m16u2}. Vi sono quindi tre possibilità:
 \begin{enumerate}
     \item Caricare il firmware personalizzato antecedentemente alle modifiche hardware.
     \item Utilizzare un programmatore esterno tramite l'header di programmazione \texttt{ICSP1}
@@ -48,11 +48,11 @@ La connessione per il debugging, trattasi di una linea seriale open drain, compo
 La soluzione adottata consiste nell'implementazione di un soft-reset gestito dal microcontrollore ATMega16U2: La connessione del pulsante viene modificata in modo che esso sia un input letto dal firmware modificato del micro-controllore adattatore, il quale si occuperà di resettare il \textit{target} mediante l'invio di una sequenza di comandi descritta dall'algoritmo seguente:
 \begin{enumerate}
     \item Halt del target (BREAK)
-    \item Reset del controllore (0x07)
-    \item Ripresa dell'esecuzione (0x30)
+    \item Reset del controllore (0x07, si veda \cref{dw:cmd-flow-ctrl})
+    \item Ripresa dell'esecuzione (0x30, si veda \cref{dw:cmd-flow-ctrl})
 \end{enumerate}
 
-A tal fine è necessario installare una connessione ausiliaria tramite un filo e tagliare la traccia di connessione del pulsante come mostrato dalla \cref{fig:rst-rewire}. Il valore del pulsante sarà letto dal pin \texttt{PINB6} il quale viene configurato come input con pull-up abilitato, filtrando in seguito il segnale tramite una procedura di \textit{debouncing} illustrata dal~\cref{lst:debounce}.
+A tal fine è necessario installare una connessione ausiliaria tramite un filo e tagliare la traccia di connessione del pulsante alla linea di reset come mostrato dalla \cref{fig:rst-rewire}. Il valore del pulsante sarà letto dal pin \texttt{PINB6} il quale viene configurato come input con pull-up abilitato, filtrando in seguito il segnale tramite una procedura di \textit{debouncing} illustrata dal~\cref{lst:debounce}.
 
 \noindent\begin{minipage}{\textwidth}
     \begin{lstlisting}[style=C, caption={Routine di interrupt di TIMER0 per la gestione del debounce}, label=lst:debounce]
@@ -86,7 +86,7 @@ A tal fine è necessario installare una connessione ausiliaria tramite un filo e
     \end{lstlisting}
 \end{minipage}
 
-Il frammento di codice presentato è stato pensato per l'esecuzione secondo il concetto di attività periodica. La variabilità del segnale derivato dalla pressione di un pulsante da parte dell'utente ha tempi notevolmente lunghi rispetto alla frequenza di esecuzione, risultando quindi un'operazione senza alcun tipo di priorità e necessità di esecuzione in tempo reale.
+Il frammento di codice presentato è stato pensato per l'esecuzione come attività periodica. La variabilità del segnale derivato dalla pressione di un pulsante da parte dell'utente ha tempi notevolmente lunghi rispetto alla frequenza di esecuzione, risultando quindi un'operazione senza alcun tipo di priorità e necessità di esecuzione in tempo reale. È sufficiente un'esecuzione ``soft realtime'' in un tempo limite dall'accadimento dell'evento.
 
 È quindi possibile eseguire periodicamente l'operazione inserendola nel ciclo infinito presente in ogni programma nella funzione main.
 

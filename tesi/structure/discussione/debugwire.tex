@@ -3,7 +3,7 @@
 
 Parte fondamentale del core AVR, omessa dal diagramma in \cref{fig:avr-arch}, è il sistema di \textit{debugging} on chip ``\textit{DebugWire}''.
 
-Esso permette, tramite un tool esterno collegato all'integrato, di interrompere l'esecuzione della cpu e successivamente di effettuare operazioni di lettura e scrittura sulle memorie e sui registri.\cite[sec 25]{avr:m328p}
+Esso permette, tramite un tool esterno collegato all'integrato, di interrompere l'esecuzione della CPU e successivamente di effettuare operazioni di lettura e scrittura sulle memorie e sui registri.\cite[sec 25]{avr:m328p}
 
 Affinché le funzionalità di debugging siano disponibili, è necessario abilitare la periferica DebugWire tramite i bit di configurazione al momento della programmazione del dispositivo\cite[tab 28-7]{avr:m328p}.
 
@@ -76,7 +76,7 @@ Ciò è possibile perché la connessione è un bus open collector: il conflitto 
 
 Il protocollo instaura una connessione a ``\textit{response -- reply if necessary}'', permettendo così di stabilire il diritto di accesso al bus in funzione dello scambio di dati precedentemente avvenuto. Se un dispositivo accede al bus quando non era suo diritto, il secondo attore effettua la procedura sopra indicata per segnalare tale violazione e reinizializzare la comunicazione.
 
-La velocità di comunicazione è invece definita in funzione della frequenza della cpu del target. Nell'hardware della periferica è presente un \textit{prescaler} (il cui valore di default è di 128) e la velocità di comunicazione viene stabilita come \[v_{com} = \frac{f_{cpu} [Hz]}{prescaler}[bps]\]
+La velocità di comunicazione è invece definita in funzione della frequenza della CPU del target. Nell'hardware della periferica è presente un \textit{prescaler} (il cui valore di default è di 128) e la velocità di comunicazione viene stabilita come \[v_{com} = \frac{f_{cpu} [Hz]}{prescaler}[bps]\]
 
 Ad ogni reset della comunicazione il prescaler viene resettato al valore iniziale.
 
@@ -102,7 +102,7 @@ A questo punto è possibile trovare la frequenza di bit dalla quale ricavare il 
 
 \subsection{Comandi e features}
 
-Una volta che la cpu del controllore target è in stato \textit{halt} è possibile interagire con la periferica DebugWire per eseguire le operazioni di debug. A seguito di un BREAK e successiva risposta è possibile interpellare il controllore con i comandi descritti di seguito.
+Una volta che la CPU del controllore target è in stato \textit{halt} è possibile interagire con la periferica DebugWire per eseguire le operazioni di debug. A seguito di un BREAK e successiva risposta è possibile interpellare il controllore con i comandi descritti di seguito.
 
 Vi sono due classi di comandi: comandi basilari e comandi composti.
 I primi sono comandi che svolgono azioni semplici e definite staticamente, quali la scrittura del Program Counter, Instruction register, scrittura del registro di breakpoint hardware e configurazione di flag e comunicazione. Tramite questi comandi è possibile definire i limiti di scrittura/lettura delle memorie e eseguire istruzioni.
@@ -160,11 +160,11 @@ I contesti disponibili sono elencati nella \cref{tab:dw-contexts}.
 
 È possibile inoltre modificare i contesti ponendo il valore del bit 5 a zero per permettere alle periferiche di temporizzazione (timers) di continuare il conteggio durante lo stepping.
 
-\subsubsection{Program Flow Control}
+\subsubsection{Program Flow Control}\label{dw:cmd-flow-ctrl}
 
 Questi comandi sono utilizzati per confermare le operazioni da eseguire.
 
-Esistono comandi di ``GO'' per le varie operazioni composite quali la lettura e scrittura della memoria SRAM (0x20 per indirizzi multipli, 0x21 per un indirizzo singolo), esecuzione di un'istruzione precedentemente caricata in IR senza incrementare il program counter (0x23), ripresa dell'esecuzione (0x30) o single stepping (0x31).
+Esistono comandi di ``GO'' per le varie operazioni composite quali la lettura e scrittura della memoria SRAM (0x20 per indirizzi multipli, 0x21 per un indirizzo singolo), esecuzione di un'istruzione precedentemente caricata in IR senza incrementare il program counter (0x23), ripresa dell'esecuzione (0x30), single stepping (0x31) e reset del controllore (0x07).
 
 Se il bit 5 è settato allora il target effettuerà il reset della sessione inviando un BREAK seguito da 0x55 al termine dell'esecuzione.
 

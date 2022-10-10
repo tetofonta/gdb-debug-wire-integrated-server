@@ -4,7 +4,7 @@ In questo capitolo saranno discusse le funzionalità e le possibilità offerte d
 
 La difficoltà principale che un programmatore si trova ad affrontare nell'intraprendere un percorso di apprendimento della programmazione embedded consiste nel ritrovarsi in un mondo completamente diverso di gestione del software e ambienti di sviluppo. Vi è poi l'assoluta differenza del processo di programmazione e debug da un comune applicativo per calcolatore.
 
-Sebbene l'approccio a una nuova piattaforma hardware con differenti specifiche e funzionalità e, spesso, con un \textit{instruction set} limitato e non famigliare possa sembrare un ostacolo impegnativo, nella realtà, grazie a strumenti quali compilatori come \textit{gcc} e \textit{rustc}, è possibile scrivere notevoli porzioni di codice completamente indipendenti dall'architettura del dispositivo finale.
+Sebbene l'approccio a una nuova piattaforma hardware con differenti specifiche e funzionalità e, spesso, con un \textit{instruction set} limitato e non familiare possa sembrare un ostacolo impegnativo, nella realtà, grazie a strumenti quali compilatori come \textit{gcc} e \textit{rustc}, è possibile scrivere notevoli porzioni di codice completamente indipendenti dall'architettura del dispositivo finale.
 
 La difficoltà principale per lo sviluppatore nell'approcciarsi allo sviluppo di una piattaforma embedded è di fatto l'adattarsi ad un nuovo ambiente e strumenti spesso proprietari e male o per nulla documentati.
 
@@ -28,7 +28,7 @@ Come è possibile osservare dall'ambiente di sviluppo \textit{Arduino IDE} mostr
 
 Data l'assenza del \textit{debugger} per la piattaforma AVR, gli utenti sono obbligati all'utilizzo di logging tramite connessione seriale per analizzare il flusso del codice, pratica fortemente inefficiente per motivi prestazionali e per problemi di codifica dell'informazione.
 
-L'utilizzo del server GDB sviluppato nel corso di questo elaborato garantirebbe nuove possibilità e efficienza, risultano però complesso e poco intuitivo in quanto dotato di sola interfaccia testuale come mostrato dalla~\cref{fig:gdb-cli}
+L'utilizzo del server GDB sviluppato nel corso di questo elaborato garantirebbe nuove possibilità e maggiore efficienza, risultano però complesso e poco intuitivo in quanto dotato di sola interfaccia testuale come mostrato dalla~\cref{fig:gdb-cli}
 
 \begin{figure}
     \centering
@@ -42,7 +42,7 @@ Risulta quindi necessario sviluppare un insieme di strumenti che possano essere 
 
 Al fine di rendere la compilazione una procedura universale e generica è stato deciso l'utilizzo di un software di automazione del processo di compilazione altamente integrabile. Tale software è \textit{CMAKE}.
 
-Esso permette di descrivere ad un livello più astratto gli obiettivi della compilazione e di impostare alcune variabili di configurazione per poi generare una procedura di compilazione in funzione delle librerie disponibili e delle caratteristiche dell'\textit{host}, semplificando la scrittura di codice interoperabile.
+Esso permette di descrivere ad un livello più astratto gli obiettivi della compilazione e di impostare alcune variabili di configurazione per poi generare una procedura esecutiva in funzione delle librerie disponibili e delle caratteristiche dell'\textit{host}, semplificando la scrittura di codice interoperabile.
 
 Inoltre, al fine di garantire interoperabilità tra ambienti di sviluppo, è stato deciso di affidare tutte le azioni di upload del codice a processi esterni che CMAKE permette di lanciare come degli obiettivi personalizzati.
 
