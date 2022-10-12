@@ -1,0 +1,193 @@
+\documentclass[aspectratio=169]{beamer}
+
+\usetheme{metropolis}
+\setbeamercovered{transparent}
+\setbeamertemplate{navigation symbols}{}
+
+\bibliographystyle{alpha}
+
+\definecolor{unibsblue}{RGB}{60, 88, 155}
+\definecolor{lightbeige}{RGB}{255, 251, 241}
+\definecolor{textcolor}{RGB}{50, 50, 50}
+
+\usepackage{cmbright}
+\input{settings/utils.tex}
+\input{settings/language.tex}
+
+\title[Relazione Finale]{Sviluppo di un sistema di supporto alla programmazione per dispositivi integrati della famiglia AVR}
+\author[S.Fontana Matr. 727199]{Stefano Fontana}
+\date{2021/2022}
+\makeatletter 
+    \newcommand{\insertrawshotauthor}{\beamer@shortauthor} 
+    \newcommand{\insertrawshorttitle}{\beamer@shorttitle} 
+    \setlength{\metropolis@frametitle@padding}{3.5ex}% <- default 2.2 ex
+\makeatother
+
+\defbeamertemplate*{title page}{customized}[1][]
+{
+    \begin{center}
+        \includegraphics[width=.23\textwidth]{logo_unibs_40.png}
+
+        DIPARTIMENTO DI INGEGNERIA DELL'INFORMAZIONE
+        
+        Corso di Laurea in Ingegneria Informatica
+    \end{center}
+    \vfill
+    \begin{center}
+        \insertshorttitle\\
+        {\fontfamily{cmr}\fontsize{14}{27}\color{black}\selectfont\textbf{\inserttitle}}
+    \end{center}
+    \vfill
+    \begin{minipage}{.48\textwidth}
+        \textbf{Relatore:}\\
+        Chiar.mo~Prof.~Alessandro~Depari
+    \end{minipage}
+    \begin{minipage}{.5\textwidth}
+        \begin{flushright}
+            \textbf{Laureando:}\\
+            \insertauthor\\
+            Matr. 727199
+        \end{flushright}
+    \end{minipage}
+    \begin{center}
+        Anno Accademico \insertdate
+    \end{center}
+}
+\setbeamertemplate{frametitle continuation}{\hfill\insertcontinuationcount}
+\setbeamertemplate{footline}[text line]{%
+    
+    \parbox{\linewidth}{\vspace*{-10pt}\insertrawshotauthor\hspace{5mm}\insertrawshorttitle\hfill\vspace{10pt}\hspace{5mm}\includegraphics[height=10mm]{logo_unibs_40.png}\insertframenumber}}
+\setbeamertemplate{navigation symbols}{}
+
+\setbeamercolor{background canvas}{bg=white}
+\setbeamercolor{normal text}{fg=textcolor}
+\setbeamercolor{frametitle}{bg=unibsblue, fg=white}
+
+\hypersetup{
+    pdftitle={Sviluppo di un sistema di supporto alla programmazione per dispositivi integrati della famiglia AVR},
+    pdfsubject={RelazioneFinale},
+    pdfauthor={Stefano Fontana},
+    hidelinks
+}
+
+\usepackage{pgfpages}
+
+%\pgfpagesuselayout{2 on 1}[a4paper, border shrink=8mm]
+
+%\setbeameroption{show notes on second screen=bottom}
+
+\newlength{\parskipbackup}
+\setlength{\parskipbackup}{\parskip}
+\newlength{\parindentbackup}
+\setlength{\parindentbackup}{\parindent}
+\newcommand{\baselinestretchbackup}{\baselinestretch}
+
+\usetemplatenote{\rmfamily%
+  \setlength{\parindent}{1em} \setlength{\parskip}{1ex}%
+  \renewcommand{\baselinestretch}{1}%
+  \noindent \insertnote%
+
+  \setlength{\parskip}{\parskipbackup}%
+  \setlength{\parindent}{\parindentbackup}%
+  \renewcommand{\baselinestretch}{\baselinestretchbackup}%
+}
+
+\pgfpageslogicalpageoptions{1}{border code=\pgfusepath{stroke}}
+
+
+\begin{document}
+
+    \pagenumbering{gobble}
+    \maketitle
+
+    \begin{frame}
+        \frametitle{Stato dell'arte}
+
+        La programmazione di dispositivi integrati viene effettuata tramite tre macro passaggi
+
+        \begin{itemize}
+            \item<1-> Codifica \\
+            {\footnotesize Il codice viene scritto dal programmatore e compilato in formato binario}
+            \item<2-> Caricamento \\
+            {\footnotesize Il programma viene scritto sulla memoria del controllore tramite l'uso di un programmatore}
+            \item<3-> Execuzione\\
+            {\footnotesize Il controllore viene quindi avviato e il programma viene eseguito.}
+        \end{itemize}
+    
+    \end{frame}
+    \note{
+        Il programmatore converte un protocollo complesso (USB/seriale) in comandi adatti alla programmazione dell'integrato su bus parallelo/spi
+    }
+
+    \begin{frame}
+        \frametitle{Stato dell'arte}
+
+        Una volta avviata l'esecuzione, si passa alla verifica e alla validazione
+
+        \begin{figure}
+            \begin{tikzpicture}
+                \draw[fill=green!50] (0,0) rectangle (2,2) node[pos=.5] {\textit{host}};
+                \draw[fill=yellow!50] (3,0.5) rectangle (4,1.5) node[pos=.5] {Programmatore};
+                \draw[fill=blue!50] (5,0.5) rectangle (6,1.5) node[pos=.5] {\textit{target}};
+            \end{tikzpicture}
+        \end{figure}
+
+    \end{frame}
+    \note{
+        
+    }
+
+
+    \begin{frame}[allowframebreaks]
+        \frametitle{Problematiche comuni}
+        ciao
+        \framebreak
+        
+        ciao
+    \end{frame}
+    \note{
+        \begin{itemize}
+            \item Problema di utilizzo comunicazione seriale
+            \item Problema di reupload
+        \end{itemize}
+    }
+
+
+    \begin{frame}
+        \frametitle{Architettura GDB}
+
+    \end{frame}
+    \note{
+        Viene introdotta l'architettura di debugging
+    }
+
+
+    \begin{frame}
+        \frametitle{Real Time Terminal}
+
+    \end{frame}
+    \note{
+    }
+
+
+    \begin{frame}
+        \frametitle{Modifiche hardware}
+
+    \end{frame}
+    \note{
+        Motivazioni per la scelta\\
+        Vengono illustrate le modifiche all'hardware di arduino Uno
+    }
+
+
+    \begin{frame}
+        \frametitle{Ambiente di sviluppo}
+
+    \end{frame}
+    \note{
+        Illustrazione di vscode in modalità di debugging
+    }
+
+    
+    
+\end{document}
