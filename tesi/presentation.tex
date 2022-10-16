@@ -279,34 +279,35 @@
         \frametitle{Circuito di Reset}
 
         \begin{minipage}{.5\textwidth}
-            Il reset avviene all'asserzione della linea di reset\pause
+            Il reset avviene all'asserzione della linea di reset
         
-            Due modi di effettuare il reset:
+            Due possibili motivi di reset:
             \begin{itemize}
-                \item L'utente preme il pulsante \texttt{RESET}
-                \item Viene asserita la linea \texttt{DTR} (RS232)\cite{site:rs232}
+                \item <1-> L'utente preme il pulsante \texttt{RESET}
+                \item <2-> Viene asserita la linea \(\overline{\text{DTR}}\) (RS232)\cite{site:rs232}
             \end{itemize}
         \end{minipage}
         \begin{minipage}{.48\textwidth}
             \begin{figure}
                 %\includegraphics[width=\textwidth]{r3-rst-cap-pres-no-annotation.png}
-                \begin{circuitikz}[scale=.8]
-                    \draw (0, 0) node[label={[font=\footnotesize]above:\(\overline{\text{DTR}}\)}] {}
-                    to[short, *-] (1, 0) [C=C5] to (2,0);
-                    \draw (2,0) to[short, -*] (5, 0) node[label={[font=\footnotesize]above:\(\overline{\text{RST}}\)}] {};
+                \begin{circuitikz}[scale=.8, american]
 
-                    \draw (3,0) to[short, *-] (3, 1)[R] to (3,2);
+                    \draw 
+                        [short, *-] (0, 0) node[label={[font=\footnotesize]above:\(\overline{\text{DTR}}\)}] {} 
+                        [C=C5] to (2,0) 
+                        [short, -*] to (5, 0) node[label={[font=\footnotesize]above:\(\overline{\text{RST}}\)}] {};
+                    
+                    \draw [short, *-] (0.5,0) [R] to (0.5,-3);
+                    \draw [short, *-] (3,0) [R] to (3,2);
                     \draw (4,0) to[short, *-] (4, 1)[D] to (4,2);
 
-                    \draw (3,0) to (3, -1) [nopb] to (3, -2);
-                    \draw (3,-2) to (3, -3);
-
+                    \draw (3,0) [nopb] to (3, -3);
                     
                     \draw (3,2) to (3,2.5) to (3.5,2.5) to (3.5, 3);
                     \draw (4,2) to (4,2.5) to (3.5,2.5);
                     \draw (3,3) -- (4, 3) node[pos=.5, label=above:VCC] {};
                     \draw (2.5,-3) -- (3.5, -3) node[pos=.5, label=below:GND] {};
-
+                    \draw (0,-3) -- (1, -3) node[pos=.5, label=below:GND] {};
                 \end{circuitikz}
             \end{figure}
         \end{minipage}
@@ -337,30 +338,35 @@
         \begin{minipage}{.48\textwidth}
             \begin{figure}
                 %\includegraphics[width=\textwidth]{r3-rst-cap-pres.png}
-                \begin{circuitikz}[scale=.8]
+                \begin{circuitikz}[scale=.8, american]
                     \draw (0, 0) node[label={[font=\footnotesize]above:\(\overline{\text{DTR}}\)}] {}
                     to[short, *-] (1, 0) [C=C5] to (2,0);
                     \draw (2,0) to[short, -*] (5, 0) node[label={[font=\footnotesize]above:\(\overline{\text{RST}}\)}] {};
-
-                    \draw (3,0) to[short, *-] (3, 1)[R] to (3,2);
+                    
+                    \draw [short, *-] (0.5,0) [R] to (0.5,-3);
+                    \draw [short, *-] (3,0) [R] to (3,2);
                     \draw (4,0) to[short, *-] (4, 1)[D] to (4,2);
 
-                    \draw (3,0) to (3, -1) [nopb] to (3, -2);
-                    \draw (3,-2) to (3, -3);
-
+                    \draw (3,0) [nopb] to (3, -3);
                     
                     \draw (3,2) to (3,2.5) to (3.5,2.5) to (3.5, 3);
                     \draw (4,2) to (4,2.5) to (3.5,2.5);
                     \draw (3,3) -- (4, 3) node[pos=.5, label=above:VCC] {};
                     \draw (2.5,-3) -- (3.5, -3) node[pos=.5, label=below:GND] {};
+                    \draw (0,-3) -- (1, -3) node[pos=.5, label=below:GND] {};
+
 
                     \draw [red] (1, -0.5) -- (2, 0.5);
                     \draw [red] (1, 0.5) -- (2, -0.5);
 
-                    \draw [red] (2.75, -0.5) -- (3.25, -0.5);
-                    \draw [red] (2.75, -0.7) -- (3.25, -0.7);
+                    \draw [red] (2.75, -0.5) -- (3.25, -0.35);
+                    \draw [red] (2.75, -0.7) -- (3.25, -0.55);
 
-                    \draw [green, short, *-] (0.5, 0) to (0.5, -1) -- (2.5, -1) to[green, short, -*]  (2.5, 0);
+
+                    \draw [red] (0.25, -0.5) -- (0.75, -0.35);
+                    \draw [red] (0.25, -0.7) -- (0.75, -0.55);
+
+                    \draw [green, short, *-] (0.5, 0) to (0.5, 1.5) -- (2.5, 1.5) to[green, short, -*]  (2.5, 0);
 
                 \end{circuitikz}
             \end{figure}
@@ -474,95 +480,70 @@
         tank u bitches
     \end{frame}
     
-    %\begin{frame}
-    %    \frametitle{Implementazione \hfill 1}
-    %
-    %    \begin{figure}
-    %        \begin{tikzpicture}[scale=0.80]
-    %            \draw[fill=green!50] (0,3) rectangle (4,4) node[pos=.5] {GDB}; %GDB
-    %            \draw[fill=yellow!50] (0,2) rectangle (4,3) node[pos=.5] {GDB proto}; %gdb_proto
-    %            \draw[fill=red!50] (0,1) rectangle (4,2) node[pos=.5] {CDC}; %cdc
-    %            \draw[fill=blue!50] (0,0) rectangle (4,1) node[pos=.5] {USB PHY}; %usb_phy
-    %            
-    %            \draw[fill=purple!50,purple!50,text=black] (5,3) rectangle (9,4) node[pos=.5] {GDB server}; %GDB_SERVER
-    %            \draw[fill=purple!50,purple!50] (7.5,2) rectangle (9,3); 
-    %            \draw (5,3) -- (5,4) -- (9,4) -- (9,2);
-    %            \draw[fill=yellow] (7.75,2) rectangle (8.75,2.5) node[pos=.5] {RTT}; %RTT
-    %    
-    %            \draw[fill=yellow!50] (5,2) rectangle (7.5,3) node[pos=.5] {GDB proto}; %gdb_proto
-    %            \draw[fill=red!50] (5,1) rectangle (7.5,2) node[pos=.5] {CDC}; %cdc
-    %            \draw[fill=blue!50] (5,0) rectangle (7.5,1) node[pos=.5] {USB PHY}; %usb_phy
-    %            \draw[fill=gray!50] (7.5,1) rectangle (9,2) node[pos=.5] {dW}; %dw
-    %            \draw[fill=orange!50] (7.5,0) rectangle (9,1) node[pos=.5] {UART}; %uart
-    %    
-    %            \draw[fill=cyan!50] (10,2) rectangle (14,3) node[pos=.5] {Process}; %AVR
-    %            \draw[fill=yellow] (12.75,2) rectangle (13.75,2.5) node[pos=.5] {RTT}; %RTT
-    %            \draw[fill=gray!50] (10,1) rectangle (14,2) node[pos=.5] {dW}; %dw
-    %            \draw[fill=orange!50] (10,0) rectangle (14,1) node[pos=.5] {UART (O.D.)}; %UART
-    %    
-    %            \draw[black, thick] (2, 0) -- (2, -0.5) -- (6.25, -0.5) -- (6.25, 0);
-    %            \draw[black, thick] (8.5,0) -- (8.5, -0.5) -- (12, -0.5) -- (12, 0);
-    %    
-    %            \node (5) at (2, 4.5) {Host};
-    %            \node (5) at (7, 4.5) {Adapter};
-    %            \node (5) at (12, 4.5) {Tagret (AVR)};
-    %        \end{tikzpicture}
-    %    \end{figure}
-    %\end{frame}
-%
-    %\begin{frame}
-    %    \frametitle{Implementazione \hfill 2}
-    %
-    %    \begin{figure}
-    %        \begin{tikzpicture}
-    %            \node[inner sep=0pt] (arduino) at (0,0) {\includegraphics[width=.5\textwidth]{arduino-no-annotations.png}};
-%
-    %            \draw [fill=green!50] (-8, 0) rectangle (-6, 2) node [pos=.5] {Host};
-    %            \draw [fill=yellow!50] (-1.1, 0.45) rectangle (-0.65, 0.88) node [pos=.5] {A};
-    %            \draw [fill=blue!50] (2.75, -0.55) rectangle (-0.15, -1.15) node [pos=.5] {Target};
-%
-    %            \draw [semithick] (-6, 1) -- (-3.1, 1);
-    %            \draw [color=yellow, thick] (-1.8, 1) -- (-1.45, 1) -- (-1.235, 0.665) -- (-1.1, 0.665);
-    %            \draw [color=red, thick] (-0.65, 0.665) -- (2.3, 0.665) -- (2.5, 0.465) -- (2.5, -0.3) -- (2.7, -0.5);
-    %        \end{tikzpicture}
-    %    \end{figure}
-    %\end{frame}
-%
-    %\begin{frame}
-    %    \frametitle{Modifiche hardware}
-    %    \begin{minipage}{.55\textwidth}
-    %        Al fine di rendere la scheda compatibile con il protocollo debug wire:
-    %        \begin{itemize}
-    %            \item <1-> È stato rimosso il condensatore che isolava la connessione tra il pin dell'integrato adattatore e controllore target
-    %            \item <2->  Sono state isolate alcune resistenza di pull-down
-    %            \item <3->  È stato isolato il pulsante di reset
-    %        \end{itemize}
-    %    \end{minipage}
-    %    \begin{minipage}{.44\textwidth}
-    %        \begin{figure}
-    %            \hfill
-    %            \begin{minipage}{.45\textwidth}
-    %                \subfloat[][]{\includegraphics[width=.9\textwidth]{cap_begin.png}}
-    %            \end{minipage}
-    %            \begin{minipage}{.45\textwidth}
-    %                \subfloat[][]{\includegraphics[width=.5\textwidth]{cap_removed.png}} \\
-    %                \subfloat[][]{\includegraphics[width=.5\textwidth]{cap_shorted.png}}
-    %            \end{minipage}
-    %            \hfill
-    %        \end{figure}
-    %    \end{minipage}
-    %
-    %\end{frame}
-%
-    %\begin{frame}
-    %    \frametitle{Risultati}
-    %    
-    %    \begin{figure}
-    %        \includegraphics[height=.7\textheight]{vscode-dbg.png}
-    %    \end{figure}
-    %
-    %\end{frame}
-%
+    \begin{frame}
+        \frametitle{Livelli di comunicazione}
+    
+        \begin{figure}
+            \begin{tikzpicture}[scale=0.80]
+                \draw[fill=green!50] (0,3) rectangle (4,4) node[pos=.5] {GDB}; %GDB
+                \draw[fill=yellow!50] (0,2) rectangle (4,3) node[pos=.5] {GDB proto}; %gdb_proto
+                \draw[fill=red!50] (0,1) rectangle (4,2) node[pos=.5] {CDC}; %cdc
+                \draw[fill=blue!50] (0,0) rectangle (4,1) node[pos=.5] {USB PHY}; %usb_phy
+                
+                \draw[fill=purple!50,purple!50,text=black] (5,3) rectangle (9,4) node[pos=.5] {GDB server}; %GDB_SERVER
+                \draw[fill=purple!50,purple!50] (7.5,2) rectangle (9,3); 
+                \draw (5,3) -- (5,4) -- (9,4) -- (9,2);
+                \draw[fill=yellow] (7.75,2) rectangle (8.75,2.5) node[pos=.5] {RTT}; %RTT
+        
+                \draw[fill=yellow!50] (5,2) rectangle (7.5,3) node[pos=.5] {GDB proto}; %gdb_proto
+                \draw[fill=red!50] (5,1) rectangle (7.5,2) node[pos=.5] {CDC}; %cdc
+                \draw[fill=blue!50] (5,0) rectangle (7.5,1) node[pos=.5] {USB PHY}; %usb_phy
+                \draw[fill=gray!50] (7.5,1) rectangle (9,2) node[pos=.5] {dW}; %dw
+                \draw[fill=orange!50] (7.5,0) rectangle (9,1) node[pos=.5] {UART}; %uart
+        
+                \draw[fill=cyan!50] (10,2) rectangle (14,3) node[pos=.5] {Process}; %AVR
+                \draw[fill=yellow] (13,2) rectangle (14,2.5) node[pos=.5] {RTT}; %RTT
+                \draw[fill=gray!50] (10,1) rectangle (14,2) node[pos=.5] {dW}; %dw
+                \draw[fill=orange!50] (10,0) rectangle (14,1) node[pos=.5] {UART (O.D.)}; %UART
+        
+                \draw[black, thick] (2, 0) -- (2, -0.5) -- (6.25, -0.5) -- (6.25, 0);
+                \draw[black, thick] (8.5,0) -- (8.5, -0.5) -- (12, -0.5) -- (12, 0);
+        
+                \node (5) at (2, 4.5) {Host};
+                \node (5) at (7, 4.5) {Adapter};
+                \node (5) at (12, 4.5) {Tagret (AVR)};
+            \end{tikzpicture}
+        \end{figure}
+    \end{frame}
+
+
+    \begin{frame}
+        \frametitle{Modifiche hardware}
+        \begin{minipage}{.40\textwidth}
+        %    Al fine di rendere la scheda compatibile con il protocollo debug wire:
+        %    \begin{itemize}
+        %        \item <1-> È stato rimosso il condensatore che isolava la connessione tra il pin dell'integrato adattatore e controllore target
+        %        \item <2->  Sono state isolate alcune resistenza di pull-down
+        %        \item <3->  È stato isolato il pulsante di reset
+        %    \end{itemize}
+        \begin{figure}
+            \includegraphics[width=.68\textwidth]{cut_rnd2.png}
+        \end{figure}
+        \end{minipage}
+        \begin{minipage}{.44\textwidth}
+            \begin{figure}
+                \begin{minipage}{.58\textwidth}
+                    \subfloat[][]{\includegraphics[width=.9\textwidth]{cap_begin.png}}
+                \end{minipage}
+                \begin{minipage}{.4\textwidth}
+                    \subfloat[][]{\includegraphics[width=.8\textwidth]{cap_removed.png}} \\
+                    \subfloat[][]{\includegraphics[width=.8\textwidth]{cap_shorted.png}}
+                \end{minipage}
+            \end{figure}
+        \end{minipage}
+    
+    \end{frame}
+
     \begin{frame}[allowframebreaks]
         \frametitle{Bibliografia e Sitografia}
         \printbibliography[heading=none]%
