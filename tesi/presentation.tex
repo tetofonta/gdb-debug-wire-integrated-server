@@ -1,5 +1,5 @@
 \documentclass[aspectratio=169,
-%    handout
+   % handout
 ]{beamer}
 
 \usetheme{metropolis}
@@ -122,50 +122,49 @@
     
         La programmazione di microcontrollori è una pratica complessa:
 
-        \begin{itemize}
-            \item <1-> Programmazione a basso livello
-            \item <2-> Set di istruzioni specifici e poco conosciuti
-            \item <3-> Complessi flussi di codice, interrupt, esecuzioni in tempo reale
-            %\item <4-> Strumenti e software proprietari e costosi
-        \end{itemize}
-
-        %TODO IMMAGINE
-        
+        \begin{minipage}{.65\textwidth}
+            \begin{itemize}
+                \item <1-> Programmazione a basso livello
+                \item <2-> Set di istruzioni specifici e poco conosciuti
+                \item <3-> Complessi flussi di codice, interrupt, esecuzioni in tempo reale
+                %\item <4-> Strumenti e software proprietari e costosi
+            \end{itemize}
+        \end{minipage}
+        \begin{minipage}{.34\textwidth}
+            \begin{figure}
+                \includegraphics[width=\textwidth]{atmega328.jpg}
+            \end{figure}
+        \end{minipage}
     \end{frame}
 
     \begin{frame}
         \frametitle{Contesto \hfill 2}
-    
-        Sono disponibili strumenti per facilitare la programmazione
-        \begin{itemize}
-            \item <1-> Strumenti interattivi di analisi del flusso di esecuzione (\textit{debugger})
-            \item <2-> Ambienti di sviluppo avanzati
-        \end{itemize}
 
-        \begin{figure}
-            \hfill
-            \begin{minipage}{.45\textwidth}
-                \includegraphics[height=.35\textheight]{vscode-dbg-decoration.png}
-            \end{minipage}
-            \hfill
-            \begin{minipage}{.45\textwidth}
-                \includegraphics[height=.35\textheight]{vscode-dbg.png}
-            \end{minipage}
-        \end{figure}
-
-        \begin{itemize}
-            \item <3-> Tipicamente hardware e software proprietari
+        \begin{minipage}{.6\textwidth}
+            Sono disponibili strumenti per facilitare la programmazione
             \begin{itemize}
-                \item <4-> Compatibilità con sistemi operativi
-                \item <5-> Costo
+                \item <1-> Strumenti interattivi di analisi del flusso di esecuzione (\textit{debugger})
+                \item <2-> Ambienti di sviluppo avanzati
+                \item <3-> Tipicamente hardware e software proprietari
+                \begin{itemize}
+                    \item <4-> Compatibilità con sistemi operativi
+                    \item <5-> Costo
+                \end{itemize}
             \end{itemize}
-        \end{itemize}
+        \end{minipage}
+        \begin{minipage}{.38\textwidth}
+            \begin{figure}
+                \includegraphics<1|handout:0>[width=\textwidth]{vscode-dbg-decoration.png}
+                \includegraphics<2-4|handout:0>[width=\textwidth]{atmelstudio.png}
+                \includegraphics<5>[width=\textwidth]{avrisp.png}
+            \end{figure}
+        \end{minipage}
     \end{frame}
 
     \begin{frame}
         \frametitle{Obiettivi}
         
-        Sviluppo di un insieme di strumenti che consenta quanto detto
+        Sviluppo di un insieme di strumenti per il debugging
         \begin{itemize}
             \item <1-> \textbf{Open Source}
             \item <2-> \textit{Debugging} con limitato impiego di risorse
@@ -208,21 +207,21 @@
         La famiglia AVR di Atmel --- Ad oggi Microchip ---
         \begin{itemize}
             \item<1-> Comprende microcontrollori a 8bit \SI{20}{\mega\hertz} 20 MIPS
-            \item<1-> Programmazione ``in system'' tramite interfaccia seriale sincrona (SPI) 
-            \item<2-> {\color{red} Protocollo di debug non ufficialmente documentato}
-            \item<2-> {\color{red} Ambiente di sviluppo freeware ma mono-piattaforma (Windows)}
+            \item<2-> Programmazione ``in system'' (ISP) tramite interfaccia seriale sincrona
+            \item<3-> {\color{red} Protocollo di debug proprietario (debugWire) non ufficialmente documentato}
+            \item<4-> {\color{red} Ambiente di sviluppo freeware ma mono-piattaforma (Windows)}
         \end{itemize}
 
         \begin{figure}
             \begin{tikzpicture}[scale=.8]
-                \draw[fill=green!50] (-2,0) rectangle (1,2) node[pos=.5] {\textit{Atmel Studio}};
-                \draw[fill=yellow!50] (4,0) rectangle (9,2) node[pos=.5] {\textit{Programmer/Debugger}};
-                \draw[fill=blue!50] (12,0.5) rectangle (13.5,1.5) node[pos=.5] {\textit{AVR}};
-                \node (0) at (-0.5, -0.5) {Host};
-                \node (0) at (12.75, -0.5) {Target};
-                \draw [stealth-stealth](1,1) -- (4,1) node[label={[font=\footnotesize]above:USB},pos=.5] {};
-                \draw [stealth-stealth](9,0.6) -- (12,0.6) node[label={[font=\footnotesize]below:ISP},pos=.5] {};
-                \draw [stealth-stealth](9,1.2) -- (12,1.2) node[label={[font=\footnotesize]above:DebugWire},pos=.5] {};
+                \draw<5>[fill=green!50] (-2,0) rectangle (1,2) node[pos=.5] {\textit{Atmel Studio}};
+                \draw<5>[fill=yellow!50] (4,0) rectangle (9,2) node[pos=.5] {\textit{Programmer/Debugger}};
+                \draw<5>[fill=blue!50] (12,0.5) rectangle (13.5,1.5) node[pos=.5] {\textit{AVR}};
+                \node<5> (0) at (-0.5, -0.5) {Host};
+                \node<5> (0) at (12.75, -0.5) {Target};
+                \draw<5> [stealth-stealth](1,1) -- (4,1) node[label={[font=\footnotesize]above:USB},pos=.5] {};
+                \draw<5> [stealth-stealth](9,0.6) -- (12,0.6) node[label={[font=\footnotesize]below:ISP},pos=.5] {};
+                \draw<5> [stealth-stealth](9,1.2) -- (12,1.2) node[label={[font=\footnotesize]above:DebugWire},pos=.5] {};
             \end{tikzpicture}
         \end{figure}
     \end{frame}
@@ -231,15 +230,14 @@
         \frametitle{Target}
         \textbf{Arduino UNO R3}
         
-        ATMega328P-PU{\footnotesize Processore a 8 bit, \SI{20}{MIPS}, \SI{20}{\mega\hertz}@\SI{5}{\volt}}\cite{avr:m328p}
+        ATMega328P-PU {\footnotesize Processore a 8 bit, \SI{20}{MIPS}, \SI{20}{\mega\hertz}@\SI{5}{\volt}}
 
         \begin{itemize}
             \item<1-> Non è presente il programmatore
             \item[] <2-> \(\Rightarrow\) Programmazione tramite convertitore USB-RS232 + bootloader
             \item[] <3-> \(\Rightarrow\) Perdita di una porzione della memoria flash
             \item <4-> Non è implementato il debugger
-            \item[] <5-> \(\Rightarrow\) Solo Monitor Debugger Software
-            \item[] <6-> \(\Rightarrow\) Perdita dell'unica seriale hardware
+            \item[] <5-> \(\Rightarrow\) Solo Monitor Debugger Software \(\Rightarrow\) Perdita dell'unica seriale hardware
         \end{itemize}
 
         \begin{figure}
@@ -252,6 +250,8 @@
                 
                 \draw [stealth-stealth](1,1) -- (4,1) node[label={[font=\footnotesize]above:USB},pos=.5] {};
                 \draw [stealth-stealth](9,1) -- (12,1) node[label={[font=\footnotesize]above:RS232},pos=.5] {};
+                \node (0) at (-0.5, 2.5) {\textit{host}};
+                \node (0) at (13.25, 2.5) {\textit{target}};
             \end{tikzpicture}
         \end{figure}
     \end{frame}
@@ -274,7 +274,8 @@
                 \draw[fill=blue!50] (10.3,0.5) rectangle (12.5,1.5) node[pos=.5] {\textit{target}};
 
                 \draw [stealth-stealth](2,1) -- (5,1) node[label={[font=\footnotesize]above:Protocollo GDB},pos=.5] {};
-                \draw [stealth-stealth](8,1) -- (10.3,1) node[label={[font=\footnotesize]above:DBG Proto},pos=.5] {};
+                \draw [stealth-stealth](8,1) -- (10.3,1) node[label={[font=\footnotesize]above:Debug},pos=.5] {};
+                \draw [stealth-stealth](8,1) -- (10.3,1) node[label={[font=\footnotesize]below:Protocol},pos=.5] {};
 
                 %\draw (4.8, 0) rectangle (11.2, 2);
                 %\node (0) at (8, 2.5) {Ambito di sviluppo};
@@ -310,7 +311,7 @@
     \begin{frame}
         \frametitle{Implementazione - Architettura}
     
-        Server GDB sul convertitore $\rightarrow$ {\footnotesize Converte i comandi del client nelle controparti del protocollo di debug}
+        Server GDB sul convertitore $\rightarrow$ {\footnotesize Converte i comandi del client nelle controparti del protocollo debugWire}
 
         \begin{figure}
             \begin{tikzpicture}
@@ -385,13 +386,12 @@
     \begin{frame}
         \frametitle{DebugWire}
     
-        È il protocollo di debug di ATMega328P\pause
-        
-        Sono pubblicamente disponibili definizioni parziali dei comandi principali\pause
-
-        È basato su protocollo fisico UART su linea open drain $\Rightarrow$ richiede una connessione diretta ed esclusiva al pin di reset\pause
-
-        Sostituisce la funzionalità di reset.
+        \begin{itemize}
+            \item[]<1-> È il protocollo di debug di ATMega328P
+            \item[]<2-> Sono pubblicamente disponibili definizioni parziali non ufficiali dei comandi principali
+            \item[]<3-> Sostituisce la funzionalità di reset
+            \item[]<4-> Protocollo fisico UART, half-duplex, one-wire open drain
+        \end{itemize}
     \end{frame}
 
     %\begin{frame}
@@ -445,54 +445,60 @@
 
     \begin{frame}
         \frametitle{Circuito di Reset \hfill 1}
-        \begin{minipage}{.5\textwidth}
-            \begin{figure}
-                %\includegraphics[width=\textwidth]{r3-rst-cap-pres-no-annotation.png}
-                \begin{circuitikz}[scale=.8, american]
+        \begin{figure}
+            \begin{circuitikz}[scale=.8, american]
+                \draw (0, 0) node[label={[font=\footnotesize]left:PD7}] {}
+                to[short, *-] (1, 0) [C=C5] to (2,0);
+                \draw (2,0) to[short, -*] (5, 0) node[label={[font=\footnotesize]right:\(\overline{\text{RST}}/\text{dW}\)}] {};
+                
+                \draw [short, *-] (0.5,0) [R] to (0.5,-3);
+                \draw [short, *-] (3,0) [R] to (3,2);
+                \draw (4,0) to[short, *-] (4, 1)[D] to (4,2);
 
-                    \draw 
-                        [short, *-] (0, 0) node[label={[font=\footnotesize]left:\(\overline{\text{DTR}}\)}] {} 
-                        [C=C5] to (2,0) 
-                        [short, -*] to (5, 0) node[label={[font=\footnotesize]right:\(\overline{\text{RST}}/\text{dW}\)}] {};
-                    
-                    \draw [short, *-] (0.5,0) [R] to (0.5,-3);
-                    \draw [short, *-] (3,0) [R] to (3,2);
-                    \draw (4,0) to[short, *-] (4, 1)[D] to (4,2);
+                \draw (3,0) [nopb={RESET BTN}] to (3, -3);
+                
+                \draw (3,2) to (3,2.5) to (3.5,2.5) to (3.5, 3);
+                \draw (4,2) to (4,2.5) to (3.5,2.5);
+                \draw (3,3) -- (4, 3) node[pos=.5, label=above:VCC] {};
+                \draw (2.5,-3) -- (3.5, -3) node[pos=.5, label=below:GND] {};
+                \draw (0,-3) -- (1, -3) node[pos=.5, label=below:GND] {};
 
-                    \draw (3,0) [nopb={RESET BTN}] to (3, -3);
-                    
-                    \draw (3,2) to (3,2.5) to (3.5,2.5) to (3.5, 3);
-                    \draw (4,2) to (4,2.5) to (3.5,2.5);
-                    \draw (3,3) -- (4, 3) node[pos=.5, label=above:VCC] {};
-                    \draw (2.5,-3) -- (3.5, -3) node[pos=.5, label=below:GND] {};
-                    \draw (0,-3) -- (1, -3) node[pos=.5, label=below:GND] {};
 
-                    \draw (-1, -1) -- (0, -1) -- (0, 1) -- (-1, 1);
-                    \node (0) at (-0.5, 1) [label={above:16U2}] {};
+                \draw<2-> [red] (1, -0.5) -- (2, 0.5);
+                \draw<2-> [red] (1, 0.5) -- (2, -0.5);
 
-                    \draw (6, -1) -- (5, -1) -- (5, 1) -- (6, 1);
-                    \node (0) at (5.5, 1) [label={above:328P}] {};
+                \draw<3-> [red] (2.75, -0.5) -- (3.25, -0.35);
+                \draw<3-> [red] (2.75, -0.7) -- (3.25, -0.55);
 
-                \end{circuitikz}
-            \end{figure}        
-        \end{minipage}
+
+                \draw<4-> [red] (0.25, -0.5) -- (0.75, -0.35);
+                \draw<4-> [red] (0.25, -0.7) -- (0.75, -0.55);
+
+                \draw<2-> [green, short, *-] (0.5, 0) to (0.5, 1.5) -- (2.5, 1.5) to[green, short, -*]  (2.5, 0);
+                \draw (-1, -1) -- (0, -1) -- (0, 1) -- (-1, 1);
+                
+                \draw (-1.5, -1) -- (0, -1) -- (0, 1) -- (-1.5, 1);
+                \node (0) at (-0.8, 1) [label={above:\textit{Converter}}] {};
+
+                \draw (6.5, -1) -- (5, -1) -- (5, 1) -- (6.5, 1);
+                \node (0) at (5.5, 1) [label={above:\textit{target}}] {};
+            \end{circuitikz}
+        \end{figure}        
     \end{frame}
 
     \begin{frame}
-        \frametitle{Circuito di Reset \hfill 2}
-
+        \frametitle{Circuito di Reset - Risultato}
         \begin{minipage}{.5\textwidth}
             \begin{figure}
-                %\includegraphics[width=\textwidth]{r3-rst-cap-pres.png}
-                \begin{circuitikz}[scale=.8, american]
-                    \draw (0, 0) node[label={[font=\footnotesize]left:\(\overline{\text{DTR}}\)}] {}
+                \begin{circuitikz}[scale=.65, american]
+                    \draw (0, 0) node[label={[font=\footnotesize]left:PD7}] {}
                     to[short, *-] (1, 0) [C=C5] to (2,0);
-                    \draw (2,0) to[short, -*] (5, 0) node[label={[font=\footnotesize]right:\(\overline{\text{RST}}\)}] {};
+                    \draw (2,0) to[short, -*] (5, 0) node[label={[font=\footnotesize]right:\(\overline{\text{RST}}/\text{dW}\)}] {};
                     
                     \draw [short, *-] (0.5,0) [R] to (0.5,-3);
                     \draw [short, *-] (3,0) [R] to (3,2);
                     \draw (4,0) to[short, *-] (4, 1)[D] to (4,2);
-
+    
                     \draw (3,0) [nopb={RESET BTN}] to (3, -3);
                     
                     \draw (3,2) to (3,2.5) to (3.5,2.5) to (3.5, 3);
@@ -500,52 +506,55 @@
                     \draw (3,3) -- (4, 3) node[pos=.5, label=above:VCC] {};
                     \draw (2.5,-3) -- (3.5, -3) node[pos=.5, label=below:GND] {};
                     \draw (0,-3) -- (1, -3) node[pos=.5, label=below:GND] {};
-
-
-                    \draw [red] (1, -0.5) -- (2, 0.5);
-                    \draw [red] (1, 0.5) -- (2, -0.5);
-
-                    \draw [red] (2.75, -0.5) -- (3.25, -0.35);
-                    \draw [red] (2.75, -0.7) -- (3.25, -0.55);
-
-
-                    \draw [red] (0.25, -0.5) -- (0.75, -0.35);
-                    \draw [red] (0.25, -0.7) -- (0.75, -0.55);
-
-                    \draw [green, short, *-] (0.5, 0) to (0.5, 1.5) -- (2.5, 1.5) to[green, short, -*]  (2.5, 0);
+    
+    
+                    \draw[red] (1, -0.5) -- (2, 0.5);
+                    \draw[red] (1, 0.5) -- (2, -0.5);
+    
+                    \draw[red] (2.75, -0.5) -- (3.25, -0.35);
+                    \draw[red] (2.75, -0.7) -- (3.25, -0.55);
+    
+    
+                    \draw[red] (0.25, -0.5) -- (0.75, -0.35);
+                    \draw[red] (0.25, -0.7) -- (0.75, -0.55);
+    
+                    \draw[green, short, *-] (0.5, 0) to (0.5, 1.5) -- (2.5, 1.5) to[green, short, -*]  (2.5, 0);
                     \draw (-1, -1) -- (0, -1) -- (0, 1) -- (-1, 1);
                     
-                    \draw (-1, -1) -- (0, -1) -- (0, 1) -- (-1, 1);
-                    \node (0) at (-0.5, 1) [label={above:16U2}] {};
-
-                    \draw (6, -1) -- (5, -1) -- (5, 1) -- (6, 1);
-                    \node (0) at (5.5, 1) [label={above:328P}] {};
+                    \draw (-1.5, -1) -- (0, -1) -- (0, 1) -- (-1.5, 1);
+                    \node (0) at (-0.8, 1) [label={above:\textit{Converter}}] {};
+    
+                    \draw (6.5, -1) -- (5, -1) -- (5, 1) -- (6.5, 1);
+                    \node (0) at (5.5, 1) [label={above:\textit{target}}] {};
                 \end{circuitikz}
-            \end{figure}
+            \end{figure}        
         \end{minipage}
         \begin{minipage}{.48\textwidth}
             \begin{figure}
                 %\includegraphics[width=\textwidth]{r3-rst-cap-pres-no-annotation.png}
-                \begin{circuitikz}[scale=.8, american]
-
+                \begin{circuitikz}[scale=.65, american]
+    
                     \draw 
-                        [short, *-] (0, 0) node[label={[font=\footnotesize]left:\(\overline{\text{DTR}}\)}] {} 
+                        [short, *-] (0, 0) node[label={[font=\footnotesize]left:PD7}] {} 
                         to (5, 0) node[label={[font=\footnotesize]right:\(\overline{\text{RST}}/\text{dW}\)}] {};
                     
                     \draw [short, *-] (3,0) [R] to (3,2);
                     \draw (4,0) to[short, *-] (4, 1)[D] to (4,2);
-
+    
                     
                     \draw (3,2) to (3,2.5) to (3.5,2.5) to (3.5, 3);
                     \draw (4,2) to (4,2.5) to (3.5,2.5);
                     \draw (3,3) -- (4, 3) node[pos=.5, label=above:VCC] {};
+    
+                    \draw (-1.5, -1) -- (0, -1) -- (0, 1) -- (-1.5, 1);
+                    \node (0) at (-0.8, 1) [label={above:\textit{Converter}}] {};
+    
+                    \draw (6.5, -1) -- (5, -1) -- (5, 1) -- (6.5, 1);
+                    \node (0) at (5.5, 1) [label={above:\textit{target}}] {};
 
-                    \draw (-1, -1) -- (0, -1) -- (0, 1) -- (-1, 1);
-                    \node (0) at (-0.5, 1) [label={above:16U2}] {};
+                    \node (0) at (2.5, -0.5) {debugWire};
 
-                    \draw (6, -1) -- (5, -1) -- (5, 1) -- (6, 1);
-                    \node (0) at (5.5, 1) [label={above:328P}] {};
-
+    
                 \end{circuitikz}
             \end{figure}
         \end{minipage}
@@ -562,36 +571,40 @@
                 \item <1-> Gestione delle memorie persistenti (R/W)
             \end{itemize}
             \item[] <2-> Sono state implementate funzionalità aggiuntive quali
-            \item[] \begin{itemize}
+            \begin{itemize}
                 \item <2-> Monitor debugging (RTT)
+                \begin{itemize}\normalfont
+                    \item<2-> Sfrutta un buffer nella SRAM del target per la gestione del messaggio. 
+                    \item<3-> Locazione del buffer nota grazie a un linker script
+                    \item<4-> Non utilizza hardware aggiuntivo
+                \end{itemize}
             \end{itemize}
         \end{itemize}
-    
     \end{frame}
 
     \begin{frame}
-        \frametitle{Monitor Debugger}
+        \frametitle{Monitor Debugger -- Funzionamento}
         \hspace*{-10mm}\begin{minipage}{.7\textwidth}
             \begin{itemize}
-                \item[] Firmware target
+                \item[] {\color{blue} Firmware target}
                 \begin{enumerate}
-                    \item <1-> Scrittura del messaggio in un buffer in locazione nota
-                    \item <2-> Impostazione del flag \texttt{AVAILABLE} (locazione sram nota)
+                    \item <1-> Scrittura del messaggio in un {\color{purple} buffer} in locazione nota
+                    \item <2-> Impostazione del flag \texttt{\color{red} AVAILABLE} (locazione sram nota)
                     \item <3-> \texttt{asm("break");}
                 \end{enumerate}
-                \item[] <4-> Server gdb alla ricezione di un break
+                \item[] <4-> {\color{orange} Server gdb} alla ricezione di un break
                 \begin{enumerate}
                     \setcounter{enumi}{3}
-                    \item <4-> Lettura flag \texttt{AVAILABLE} dalla SRAM del target
+                    \item <4-> Lettura flag {\color{red} \texttt{AVAILABLE}} dalla {\color{gray} SRAM} del target
                     \item <5-> Se vero
                     \begin{enumerate}
-                        \item <5-> Lettura del buffer dalla SRAM
-                        \item <5-> Invio del messaggio al client
+                        \item <5-> Lettura del {\color{purple} buffer} dalla SRAM
+                        \item <5-> Invio del messaggio al {\color{brown} client}
                         \item <5-> Ripresa dell'esecuzione
                     \end{enumerate}
                     \item <6-> Se falso
                     \begin{enumerate}
-                        \item <6-> Invio notifica di interruzione al client
+                        \item <6-> Invio notifica di interruzione al {\color{brown} client}
                     \end{enumerate}
                 \end{enumerate}
             \end{itemize}     
@@ -600,58 +613,106 @@
             \begin{figure}
                 \begin{tikzpicture}[scale=.8, label distance=-2mm]
 
-                    \draw (0,0) rectangle (2,2) node[pos=.5] {\textit{firmware}};
-                    \draw (4,0) rectangle (5,0.2);
-                    \draw (4,0.2) rectangle (5,0.4);
-                    \draw (4,0.4) rectangle (5,1) node[pos=.5] {\tiny ...};
-                    \draw (4,1) rectangle (5,1.4) node[pos=.5] {\tiny buffer};
-                    \draw (4,1.4) rectangle (5,1.7) node[pos=.5] {\tiny avail};
-                    \draw (4,1.7) rectangle (5,2)  node[pos=.5] {\tiny SRAM};
-                    
-
-                    \draw (0,3.5) rectangle (5,4.5) node[pos=.5] {\textit{Server}};
-
-                    \draw (0,6) rectangle (5,7) node[pos=.5] {\textit{Client}};
-
                     \draw (-0.2,-0.5) rectangle (5.2,2.2) node[pos=.08] {\hspace*{5mm}\small\textit{Target}};
-
-
-                    \draw[-stealth] (2,1.15) -- (4,1.15) node[pos=.25, label={above: \tiny 1}] {};
-                    \draw[-stealth] (2,1.5) -- (4,1.5) node[pos=.25, label={above:\tiny 2}] {};
-                    \draw[-stealth] (1,2) -- (1,3.5) node[pos=.5, label={right:\tiny 3}] {};
+                    \draw [fill=blue!50] (0,0) rectangle (2,2) node[pos=.5] {\textit{firmware}};
+                    \draw [fill=green!50] (4,0) rectangle (5,0.2);
+                    \draw [fill=green!50] (4,0.2) rectangle (5,0.4);
+                    \draw [fill=green!50] (4,0.4) rectangle (5,1) node[pos=.5] {\tiny ...};
+                    \draw [fill=purple!50] (4,1) rectangle (5,1.4) node[pos=.5] {\tiny buffer};
+                    \draw [fill=red!50] (4,1.4) rectangle (5,1.7) node[pos=.5] {\tiny avail};
+                    \draw [fill=gray!50] (4,1.7) rectangle (5,2)  node[pos=.5] {\tiny SRAM};
                     
-                    \draw[-stealth] (2,3.5) -- (4,1.6) node[pos=.5, label={above:\tiny 4}] {};
 
-                    \draw[-stealth] (1.5,3.5) -- (4,1.25) node[pos=.3, label={below:\tiny 5.1}] {};
-                    \draw[-stealth] (1, 4.5) -- (1,6) node[pos=.5, label={left:\tiny 5.2}] {};
-                    \draw[-stealth] (0.5,3.5) -- (0.5,2) node[pos=.5, label={left:\tiny 5.3}] {};
+                    \draw [fill=orange!50] (0,3.5) rectangle (5,4.5) node[pos=.5] {\textit{Server}};
 
-                    \draw[-stealth] (1.5, 4.5) -- (1.5,6) node[pos=.5, label={right:\tiny 6.1}] {};
+                    \draw [fill=brown!50] (0,6) rectangle (5,7) node[pos=.5] {\textit{Client}};
+
+                    \draw<1->[-stealth] (2,1.15) -- (4,1.15) node[pos=.25, label={above: \tiny 1}] {};
+                    \draw<2->[-stealth] (2,1.5) -- (4,1.5) node[pos=.25, label={above:\tiny 2}] {};
+                    \draw<3->[-stealth] (1,2) -- (1,3.5) node[pos=.5, label={right:\tiny 3}] {};
+                    
+                    \draw<4->[-stealth] (2,3.5) -- (4,1.6) node[pos=.5, label={above:\tiny 4}] {};
+
+                    \draw<5->[-stealth] (1.5,3.5) -- (4,1.25) node[pos=.3, label={below:\tiny 5.1}] {};
+                    \draw<5->[-stealth] (1, 4.5) -- (1,6) node[pos=.5, label={left:\tiny 5.2}] {};
+                    \draw<5->[-stealth] (0.5,3.5) -- (0.5,2) node[pos=.5, label={left:\tiny 5.3}] {};
+
+                    \draw<6->[-stealth] (1.5, 4.5) -- (1.5,6) node[pos=.5, label={right:\tiny 6.1}] {};
                 \end{tikzpicture}
             \end{figure}
         \end{minipage}
     \end{frame}
     
     \begin{frame}
-        \frametitle{Conclusioni e sviluppi futuri}
+        \frametitle{Risultati}
     
-        \begin{itemize}
-            \item <1-> Adattamento di un'IDE al sistema
+        % \begin{itemize}
+        %     \item <1-> Adattamento di un'IDE al sistema
+        %     \begin{itemize}
+        %         \item <2-> Integrazione di GDB
+        %         \item <3-> Sviluppo di un sistema di compilazione
+        %     \end{itemize}
+        %     \item <4-> Monitoir debugging \(\Rightarrow\) Porzione di SRAM dedicata \(\Rightarrow\) Linker Script personalizzato
+        %     \item <5-> Progetto open source
+        %     \item <6-> Sarà possibile sviluppare nuove versioni sfruttando le funzionalità offerte da questa versione.
+        % \end{itemize}
+
+        \begin{minipage}{.4\textwidth}
             \begin{itemize}
-                \item <2-> Integrazione di GDB
-                \item <3-> Sviluppo di un sistema di compilazione
+                \item<1-> Debugging funzionante tramite GDB
+                \item<2-> Debugging integrato nell'IDE
+                \item<3-> Sistema di compilazione integrato nell'IDE
+                \item <4-> Software disponibile online con licenza Open Source
             \end{itemize}
-            \item <4-> Monitoir debugging \(\Rightarrow\) Porzione di SRAM dedicata \(\Rightarrow\) Linker Script personalizzato
-            \item <5-> Progetto open source
-            \item <6-> Sarà possibile sviluppare nuove versioni sfruttando le funzionalità offerte da questa versione.
+        \end{minipage}
+        \begin{minipage}{.58\textwidth}
+            \begin{figure}
+                \includegraphics<1|handout:0>[height=.8\textheight]{../gdb-cli.png}
+                \includegraphics<2|handout:0>[width=\textwidth]{vscode-dbg.png}
+                \includegraphics<3|handout:0>[width=\textwidth]{vscode-cmake.png}
+                \includegraphics<4>[width=\textwidth]{apache.jpg}
+            \end{figure}
+        \end{minipage}
+    \end{frame}
+
+    \begin{frame}
+        \frametitle{Conclusioni e Sviluppi futuri}
+
+        \begin{itemize}
+            \item <1-> Software \textbf{Open Source}
+            \item <1-> \textit{Debugging} con limitato impiego di risorse
+            \item <1-> Facilità d'uso
+            \item <1-> Compatibilità del software su piattaforme multiple (Windows, MacOS, Linux)
         \end{itemize}
     
-
+        \begin{itemize}
+            \item<2-> Sviluppo di un hardware dedicato
+            \item<2-> Migrazione a dispositivi più prestazionali
+            \item<2-> Sviluppo di nuove versioni con l'ausilio del sistema attuale a fine di debug.
+        \end{itemize}
+    
     \end{frame}
 
     \appendix
     \begin{frame}
-        Grazie per l'attenzione
+        \vspace*{4cm}
+        \begin{center}
+            \textit{Grazie per l'attenzione}
+        \end{center}
+        \vspace*{2cm}
+        \parbox{.85\linewidth}{
+            \tiny
+            \vspace*{10mm}
+            {\color{unibsblue}\par\noindent\rule{\linewidth}{0.1pt}}\\
+            \insertrawshotauthor\hfill
+            A.A. 2021/2022\hfill
+        }\hfill
+        \parbox{.15\textwidth}{
+            \vspace*{5mm}
+            \hspace*{5mm}
+            \includegraphics[height=10mm]{logo_unibs_40.png}
+        }
+        
     \end{frame}
     
     \begin{frame}
@@ -718,9 +779,18 @@
     
     \end{frame}
 
-    \begin{frame}[allowframebreaks]
-        \frametitle{Bibliografia e Sitografia}
-        \printbibliography[heading=none]%
+    \begin{frame}
+        \frametitle{Architettura AVR}
+        \begin{minipage}{.5\textwidth}
+            \begin{figure}
+                \includegraphics[width=\textwidth]{avr_arch.png}
+            \end{figure}
+        \end{minipage}
+        \begin{minipage}{.48\textwidth}
+            \begin{figure}
+                \includegraphics[width=\textwidth]{avr-sram-timings.pdf}
+            \end{figure}
+        \end{minipage}
     \end{frame}
 
 \end{document}
