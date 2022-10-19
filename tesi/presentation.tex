@@ -1,6 +1,11 @@
 \documentclass[aspectratio=169,
-   % handout
+   %handout
 ]{beamer}
+
+%\usepackage{pgfpages}
+%\pgfpagesuselayout{2 on 1}[a4paper, border shrink=8mm]
+%\setbeameroption{show notes on second screen=bottom}
+%\pgfpageslogicalpageoptions{1}{border code=\pgfusepath{stroke}}
 
 \usetheme{metropolis}
 \setbeamercovered{transparent}
@@ -87,12 +92,6 @@
     hidelinks
 }
 
-%\usepackage{pgfpages}
-
-%\pgfpagesuselayout{2 on 1}[a4paper, border shrink=8mm]
-
-%\setbeameroption{show notes on second screen=bottom}
-
 \newlength{\parskipbackup}
 \setlength{\parskipbackup}{\parskip}
 \newlength{\parindentbackup}
@@ -109,13 +108,11 @@
   \renewcommand{\baselinestretch}{\baselinestretchbackup}%
 }
 
-%\pgfpageslogicalpageoptions{1}{border code=\pgfusepath{stroke}}
-
-
 \begin{document}
 
     \pagenumbering{gobble}
     \maketitle
+    \note{Ringrazio il presidente per l'introduzione.\\Presenterò ora un elaborato sullo sviluppo si un sistema di debug per microcontrollori}
 
     \begin{frame}
         \frametitle{Contesto \hfill 1}
@@ -134,8 +131,21 @@
             \begin{figure}
                 \includegraphics[width=\textwidth]{atmega328.jpg}
             \end{figure}
-        \end{minipage}
+        \end{minipage}    
+
+        \note<1>[]{
+            Programmazione C e assembly a basso livello
+        }
+
+        \note<2>[]{
+            In genere set di istruzioni specifici per la famiglia e poco conosciuti
+        }
+
+        \note<3>[]{
+            La gestione logica degli interrupt è complessa e richiede profonde conoscenze dell'architettura. Inoltre si aggiunge complessità per via di questioni di tempo di esecuzione delle routine di interrupt.
+        }
     \end{frame}
+
 
     \begin{frame}
         \frametitle{Contesto \hfill 2}
@@ -159,6 +169,13 @@
                 \includegraphics<5>[width=\textwidth]{avrisp.png}
             \end{figure}
         \end{minipage}
+
+        \note<1->[]{
+            Esistono software in grado di facilitare la programmazione in questo ambito. Essi sono in grado di fornire assistenza allo sviluppatore agevolando operazioni ripetitive e analizzando il flusso del codice preventivamente.
+
+            In genere sono software proprietari e spesso sono compatibili con uno specifico sistema operativo, oltre che spesso fanno uso di dispositivi per interfacciarsi con il target che possono essere costosi.
+        }
+
     \end{frame}
 
     \begin{frame}
@@ -171,6 +188,10 @@
             \item <3-> Facilità d'uso
             \item <4-> Compatibilità del software su piattaforme multiple (Windows, MacOS, Linux)
         \end{itemize}
+
+        \note<1->[]{
+            Gli obiettivi dell'elaborato consistono nello sviluppo di una serie di strumenti per l'assistenza alla programmazione tali che siano open source, permettano il debugging limitando l'impiego di risorse del target, siano semplici da utilizzare e configurare e siano compatibili con una vasta gamma di piattaforme.
+        }
     \end{frame}
 
     %\begin{frame}
@@ -224,6 +245,13 @@
                 \draw<5> [stealth-stealth](9,1.2) -- (12,1.2) node[label={[font=\footnotesize]above:DebugWire},pos=.5] {};
             \end{tikzpicture}
         \end{figure}
+
+        \note<1->[]{
+            Gli obiettivi di questo elaborato sono stati applicati alla famiglia AVR di atmel.
+            
+            È una famiglia di controllori a 8 bit e 20 milioni di istruzioni al secondo, in grado di essere riprogrammata nel circuito di destinazione (ISP). Possiede anche una periferica di debug in hardware ma il protocollo di comunicazione è proprietario e non ufficialmente documentato.
+            Lo sviluppo per questa piattaforma avviene grazie ad Atmel Studio, software freeware ma non disponibile su tutti i sistemi operativi.
+        }
     \end{frame}
 
     \begin{frame}
@@ -254,6 +282,17 @@
                 \node (0) at (13.25, 2.5) {\textit{target}};
             \end{tikzpicture}
         \end{figure}
+
+        \note<1->[]{
+            L'hardware scelto per sviluppare l'elaborato è la scheda Arduino UNO R3, scelta per la grande diffusione e il supporto della community open source, oltre alla grande disponibilità di librerie.
+
+            Essa monta un ATMega328P.
+
+            Per motivi di costo, la scheda non fa uso di un programmatore dedicato bensì viene programmata grazie a un bootloader presente nella memoria flash del target e con il quale si interagisce grazie a un convertitore USB-Seriale.
+            Questo implica che parte della memoria flash sia dedicata al bootloader e non sia utilizzabile.
+
+            Inoltre, sempre per motivi di costi, non è stato implementato il debugger. Risulta quindi necessario praticare il monitor debugging inviando messaggi tramite la periferica UART del dispositivo rinunciandone all'utilizzo.
+        }
     \end{frame}
         
 
@@ -261,7 +300,7 @@
         \frametitle{Architettura Gnu Debugger (GDB)}
     
         \begin{itemize}
-            \item[] <1-> GDB è ua suite di software di \textit{debugging} multi-architettura open source
+            \item[] <1-> GDB è una suite di software di \textit{debugging} multi-architettura open source
             \item[] <2-> Permette di lavorare su un processo remoto tramite l'architettura client-server
             %\item[] <3-> Server GDB sul programmatore $\rightarrow$ {\footnotesize Converte i comandi del client nelle controparti del protocollo di debug}
         \end{itemize}
@@ -281,10 +320,11 @@
                 %\node (0) at (8, 2.5) {Ambito di sviluppo};
             \end{tikzpicture}
         \end{figure}
+        \note<1->{
+            Al fine di implementare le funzionalità di debugging, si è deciso di utilizzare ``Gnu Debugger'' in quanto permetta un'architettura client-server. Grazie a ciò è possibile implementare il server GDB, software in grado di comprendere i comandi a basso livello del client per poi tradurli in comandi debugWire, su un microcontrollore con la capacità di interagire con il target.
+        }
     \end{frame}
-    \note{
-        È possibile notare la similitudine con l'architettura host-programmatore-target
-    }
+    
 
     \begin{frame}
         \frametitle{Implementazione}
@@ -306,6 +346,11 @@
         La scheda Arduino implementa la comunicazione \textit{target-host} mediante un microcontrollore (ATMega16U2)\pause
 
         È stato sviluppato un server GDB e l'adattatore per debugWire sull'ATMega16U2 presente sulla scheda Arduino.
+        \note<1->[]{
+            La scheda Arduino UNO implementa il convertitore USB-Seriale tramite un controllore (ATMega16U2) dedicato alla commutazione tra USB-CDC e uart. Inoltre il controllore gestisce il pin di reset del target.
+
+            Tale controllore è stato usato per sviluppare il firmware che permette la conversione tra protocollo GDB e debugWire.
+        }
     \end{frame}
 
     \begin{frame}
@@ -332,57 +377,12 @@
                 \node (2) at (1, 2.5) {\small Visual Studio Code};
             \end{tikzpicture}
         \end{figure}
-    \end{frame}
-    \note{
-        È possibile notare la similitudine con l'architettura host-programmatore-target
-    }
 
-    %\begin{frame}
-    %    \frametitle{Circuito di Reset}
-%
-    %    \begin{minipage}{.5\textwidth}
-    %        Il reset avviene all'asserzione della linea di reset
-    %    
-    %        Due possibili motivi di reset:
-    %        \begin{itemize}
-    %            \item <1-> L'utente preme il pulsante \texttt{RESET}
-    %            \item <2-> Viene asserita la linea \(\overline{\text{DTR}}\) (RS232)\cite{site:rs232}
-    %        \end{itemize}
-    %    \end{minipage}
-    %    \begin{minipage}{.48\textwidth}
-    %        \begin{figure}
-    %            %\includegraphics[width=\textwidth]{r3-rst-cap-pres-no-annotation.png}
-    %            \begin{circuitikz}[scale=.8, american]
-%
-    %                \draw 
-    %                    [short, *-] (0, 0) node[label={[font=\footnotesize]left:\(\overline{\text{DTR}}\)}] {} 
-    %                    [C=C5] to (2,0) 
-    %                    [short, -*] to (5, 0) node[label={[font=\footnotesize]right:\(\overline{\text{RST}}/\text{dW}\)}] {};
-    %                
-    %                \draw [short, *-] (0.5,0) [R] to (0.5,-3);
-    %                \draw [short, *-] (3,0) [R] to (3,2);
-    %                \draw (4,0) to[short, *-] (4, 1)[D] to (4,2);
-%
-    %                \draw (3,0) [nopb={RESET BTN}] to (3, -3);
-    %                
-    %                \draw (3,2) to (3,2.5) to (3.5,2.5) to (3.5, 3);
-    %                \draw (4,2) to (4,2.5) to (3.5,2.5);
-    %                \draw (3,3) -- (4, 3) node[pos=.5, label=above:VCC] {};
-    %                \draw (2.5,-3) -- (3.5, -3) node[pos=.5, label=below:GND] {};
-    %                \draw (0,-3) -- (1, -3) node[pos=.5, label=below:GND] {};
-%
-    %                \draw (-1, -1) -- (0, -1) -- (0, 1) -- (-1, 1);
-    %                \node (0) at (-0.5, 1) [label={above:16U2}] {};
-%
-    %                \draw (6, -1) -- (5, -1) -- (5, 1) -- (6, 1);
-    %                \node (0) at (5.5, 1) [label={above:328P}] {};
-%
-    %            \end{circuitikz}
-    %        \end{figure}
-    %    \end{minipage}
-    %    
-    %\end{frame}
-    
+        \note<1->{
+            È possibile vedere dalla figura come il server GDB e il target risiedano sulla scheda Arduino UNO. Il firmware installato sull'ATMega16U2 si occuperà di convertire i comandi del client, integrato nell'ide Visual Studio Code, in comandi debugWire validi.
+        }
+    \end{frame}
+
     \begin{frame}
         \frametitle{DebugWire}
     
@@ -392,56 +392,14 @@
             \item[]<3-> Sostituisce la funzionalità di reset
             \item[]<4-> Protocollo fisico UART, half-duplex, one-wire open drain
         \end{itemize}
-    \end{frame}
 
-    %\begin{frame}
-    %    \frametitle{Modifiche Hardware}
-    %    
-    %    \noindent\begin{minipage}{.5\textwidth}
-    %        Sono necessarie modifiche alla scheda Arduino UNO per permettere il corretto funzionamento del protocollo debugWire
-    %        \begin{itemize}
-    %            \item <1-> È necessario collegare direttamente la linea di reset a un pin dell'adattatore
-    %            \item <2-> È necessario isolare carichi resistivi sulla linea
-    %            \item <3-> È necessario isolare il pulsante di reset
-    %        \end{itemize}
-    %    \end{minipage}
-    %    \begin{minipage}{.48\textwidth}
-    %        \begin{figure}
-    %            %\includegraphics[width=\textwidth]{r3-rst-cap-pres.png}
-    %            \begin{circuitikz}[scale=.8, american]
-    %                \draw (0, 0) node[label={[font=\footnotesize]above:\(\overline{\text{DTR}}\)}] {}
-    %                to[short, *-] (1, 0) [C=C5] to (2,0);
-    %                \draw (2,0) to[short, -*] (5, 0) node[label={[font=\footnotesize]above:\(\overline{\text{RST}}\)}] {};
-    %                
-    %                \draw [short, *-] (0.5,0) [R] to (0.5,-3);
-    %                \draw [short, *-] (3,0) [R] to (3,2);
-    %                \draw (4,0) to[short, *-] (4, 1)[D] to (4,2);
-%
-    %                \draw (3,0) [nopb] to (3, -3);
-    %                
-    %                \draw (3,2) to (3,2.5) to (3.5,2.5) to (3.5, 3);
-    %                \draw (4,2) to (4,2.5) to (3.5,2.5);
-    %                \draw (3,3) -- (4, 3) node[pos=.5, label=above:VCC] {};
-    %                \draw (2.5,-3) -- (3.5, -3) node[pos=.5, label=below:GND] {};
-    %                \draw (0,-3) -- (1, -3) node[pos=.5, label=below:GND] {};
-%
-%
-    %                \draw [red] (1, -0.5) -- (2, 0.5);
-    %                \draw [red] (1, 0.5) -- (2, -0.5);
-%
-    %                \draw [red] (2.75, -0.5) -- (3.25, -0.35);
-    %                \draw [red] (2.75, -0.7) -- (3.25, -0.55);
-%
-%
-    %                \draw [red] (0.25, -0.5) -- (0.75, -0.35);
-    %                \draw [red] (0.25, -0.7) -- (0.75, -0.55);
-%
-    %                \draw [green, short, *-] (0.5, 0) to (0.5, 1.5) -- (2.5, 1.5) to[green, short, -*]  (2.5, 0);
-%
-    %            \end{circuitikz}
-    %        \end{figure}
-    %    \end{minipage}    
-    %\end{frame}
+        \note<1->{
+            debugWire è il protocollo usato per il debugging dell'ATMega328P e più in generale per la famiglia AVR.
+            Il protocollo non è ufficialmente documentato ma sono disponibili definizioni parziali non ufficiali dei comandi e del livello fisico grazie ad operazioni di reverse engineering.
+
+            La comunicazione è basata su una linea UART one-wire open-drain half-duplex sul pin di reset, impedendo quindi la normale operazione, senza necessitare di un pin dedicato.
+        }
+    \end{frame}
 
     \begin{frame}
         \frametitle{Circuito di Reset \hfill 1}
@@ -484,6 +442,15 @@
                 \node (0) at (5.5, 1) [label={above:\textit{target}}] {};
             \end{circuitikz}
         \end{figure}        
+        \note<1->{
+            Al fine di utilizzare il protocollo debugWire è necessaria una connessione diretta ed esclusiva tra il pin del convertitore e il pin di reset del target.
+
+            A tal fine risulta necessario rimuovere il condensatore C5 e ristabilire la connessione.
+
+            Inoltre è necessario isolare il pulsante di reset, utilizzato per permettere all'utente il reset del controllore, in quanto non più funzionante.
+
+            Infine è necessario isolare il resistore di pulldown in quanto andrebbe a creare un partitore di tensione.
+        }
     \end{frame}
 
     \begin{frame}
@@ -558,7 +525,9 @@
                 \end{circuitikz}
             \end{figure}
         \end{minipage}
-        
+        \note<1->{
+            In figura è possibile osservare il circuito risultante.
+        }
     \end{frame}
     
     \begin{frame}
@@ -574,12 +543,21 @@
             \begin{itemize}
                 \item <2-> Monitor debugging (RTT)
                 \begin{itemize}\normalfont
-                    \item<2-> Sfrutta un buffer nella SRAM del target per la gestione del messaggio. 
-                    \item<3-> Locazione del buffer nota grazie a un linker script
-                    \item<4-> Non utilizza hardware aggiuntivo
+                    \item<2-> Non utilizza hardware aggiuntivo
+                    \item<3-> Sfrutta un buffer nella SRAM del target per la gestione del messaggio. 
+                    \item<4-> Locazione del buffer nota grazie a un linker script
                 \end{itemize}
             \end{itemize}
         \end{itemize}
+        \note<1->{
+            Sono state implementate le funzionalità presenti nel protocollo GDB le quali hanno un corrispettivo comando o sequenza di comandi debugWire.
+
+            Alcune di esse sono la gestione dei breakpoint software e gestione delle memorie e registri in lettura e scrittura.
+
+            Inoltre è stata implementata una funzionalità di monitor debugging attraverso la connessione debugWire, senza quindi fare affidamento su periferiche esterne per la comunicazione.
+            
+            Essa utilizza una libreria dedicata nel firmware del target la quale presenta un buffer nella memoria SRAM per gestire l'invio del messaggio. Questo buffer viene posizionato in un indirizzo noto (in principio alla memoria SRAM) grazie a un linker script.
+        }
     \end{frame}
 
     \begin{frame}
@@ -589,10 +567,10 @@
                 \item[] {\color{blue} Firmware target}
                 \begin{enumerate}
                     \item <1-> Scrittura del messaggio in un {\color{purple} buffer} in locazione nota
-                    \item <2-> Impostazione del flag \texttt{\color{red} AVAILABLE} (locazione sram nota)
+                    \item <2-> Impostazione del flag \texttt{\color{red} AVAILABLE} (locazione SRAM nota)
                     \item <3-> \texttt{asm("break");}
                 \end{enumerate}
-                \item[] <4-> {\color{orange} Server gdb} alla ricezione di un break
+                \item[] <4-> {\color{orange} Server GDB} alla ricezione di un break
                 \begin{enumerate}
                     \setcounter{enumi}{3}
                     \item <4-> Lettura flag {\color{red} \texttt{AVAILABLE}} dalla {\color{gray} SRAM} del target
@@ -641,22 +619,21 @@
                 \end{tikzpicture}
             \end{figure}
         \end{minipage}
+        \note<1->{
+            Il funzionamento della funzionalità di monitor debugging è descritto dalla sequenza seguente:
+            
+            Il firmware scrive nel buffer il messaggio da inviare\\
+            Per segnalare la presenza del messaggio viene impostata Available.\\
+            Viene eseguita l'istruzione BREAK che andrà a notificare il server dell'avvenuta interruzione\\
+            Il server legge la variabile available per identificare la volontà di inviare un messaggio o il raggiungimento di un breakpoint.\\
+            Se la variabile risulta vera, il server legge e inoltra il messaggio al client per poi riprendere l'esecuzione, mentre in caso contrario viene notificata l'interruzione.
+
+            È possibile notare come il server agisca da proxy per l'evento.
+        }
     \end{frame}
     
     \begin{frame}
         \frametitle{Risultati}
-    
-        % \begin{itemize}
-        %     \item <1-> Adattamento di un'IDE al sistema
-        %     \begin{itemize}
-        %         \item <2-> Integrazione di GDB
-        %         \item <3-> Sviluppo di un sistema di compilazione
-        %     \end{itemize}
-        %     \item <4-> Monitoir debugging \(\Rightarrow\) Porzione di SRAM dedicata \(\Rightarrow\) Linker Script personalizzato
-        %     \item <5-> Progetto open source
-        %     \item <6-> Sarà possibile sviluppare nuove versioni sfruttando le funzionalità offerte da questa versione.
-        % \end{itemize}
-
         \begin{minipage}{.4\textwidth}
             \begin{itemize}
                 \item<1-> Debugging funzionante tramite GDB
@@ -673,24 +650,44 @@
                 \includegraphics<4>[width=\textwidth]{apache.jpg}
             \end{figure}
         \end{minipage}
+        \note<1->{
+            I risultati ottenuti dallo sviluppo dell'elaborato possono essere visti dall'immagine presentata.
+
+            È stato implementato il server GDB ed è possibile effettuare il debugging.
+            
+            le operazioni di debugging sono state integrate nell'ide Visual Studio Code
+
+            È stato sviluppato un sistema di compilazione e gestione delle dipendenze integrato nell'ide.
+
+            Il software è disponibile sotto licenza open source.
+        }
     \end{frame}
 
     \begin{frame}
         \frametitle{Conclusioni e Sviluppi futuri}
+        
+        \begin{itemize}
+            \item[]<1-> \textbf{Conclusioni}
+            \begin{itemize}
+                \item <1-> Software \textbf{Open Source}
+                \item <1-> \textit{Debugging} con limitato impiego di risorse
+                \item <1-> Facilità d'uso
+                \item <1-> Compatibilità del software su piattaforme multiple (Windows, MacOS, Linux)
+            \end{itemize}
+            \item[]<2-> \textbf{Sviluppi Futuri}
+            \begin{itemize}
+                \item<2-> Sviluppo di un hardware dedicato
+                \item<2-> Migrazione a dispositivi più prestazionali
+                \item<2-> Sviluppo di nuove versioni con l'ausilio del sistema attuale a fine di debug.
+            \end{itemize}
+        \end{itemize}
+        \note<1->{
+            In conclusione tutti i punti precedentemente illustrati sono stati sviluppati e correttamente implementati.
 
-        \begin{itemize}
-            \item <1-> Software \textbf{Open Source}
-            \item <1-> \textit{Debugging} con limitato impiego di risorse
-            \item <1-> Facilità d'uso
-            \item <1-> Compatibilità del software su piattaforme multiple (Windows, MacOS, Linux)
-        \end{itemize}
-    
-        \begin{itemize}
-            \item<2-> Sviluppo di un hardware dedicato
-            \item<2-> Migrazione a dispositivi più prestazionali
-            \item<2-> Sviluppo di nuove versioni con l'ausilio del sistema attuale a fine di debug.
-        \end{itemize}
-    
+            In futuro sarà possibile sviluppare una piattaforma hardware dedicata in modo da favorire l'implementazione del firmware e sarà possibile migrare verso microcontrollori più preformanti. In particolare la scarsa quantità di memoria dell'ATMega16U2 è stata un fattore limitante delle funzionalità sviluppate.
+
+            Sarà inoltre possibile utilizzare le funzionalità messe a disposizione da questa versione del sistema per svilupparlo.
+        }
     \end{frame}
 
     \appendix
@@ -712,7 +709,9 @@
             \hspace*{5mm}
             \includegraphics[height=10mm]{logo_unibs_40.png}
         }
-        
+        \note{
+            Ringraziando per l'attenzione resto a disposizione per eventuali chiarimenti.
+        }
     \end{frame}
     
     \begin{frame}
