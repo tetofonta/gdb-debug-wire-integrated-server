@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "Cite this work."
+authors:
+- family-names: "Fontana"
+  given-names: "Stefano"
+  orcid: "https://orcid.org/0009-0009-4451-8622"
+title: "Sviluppo di un sistema di supporto alla programmazione per dispositivi integrati della famiglia AVR"
+version: 1.0.0
+date-released: 2022-10-19
+url: "https://github.com/tetofonta/gdb-debug-wire-integrated-server"
